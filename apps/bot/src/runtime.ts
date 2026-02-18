@@ -1,6 +1,12 @@
-import { Telegraf } from "telegraf";
-import { createServiceClient, listPublishedEvents } from "@event/db";
-import { loadEnv, logError, logInfo } from "@event/shared";
+import { Markup, Telegraf } from "telegraf";
+import {
+  cancelRegistration,
+  createServiceClient,
+  listPublishedEvents,
+  registerForEvent,
+  upsertTelegramUser
+} from "@event/db";
+import { loadEnv, logError, logInfo, type RegisterForEventResult } from "@event/shared";
 import { handleStart } from "./handlers/start";
 
 const env = loadEnv(process.env);
@@ -26,15 +32,96 @@ bot.command("events", async (ctx) => {
       return;
     }
 
-    const message = events
-      .map((event) => `• ${event.title} (${new Date(event.startsAt).toLocaleString()})`)
-      .join("\n");
+    for (const event of events) {
+      const message = [
+        `📅 ${event.title}`,
+        `🕒 ${new Date(event.startsAt).toLocaleString()}`,
+        `👥 Capacity: ${event.capacity}`,
+        event.description ? `📝 ${event.description}` : null
+      ]
+        .filter(Boolean)
+        .join("\n");
 
-    await ctx.reply(`Available events:\n${message}`);
+      await ctx.reply(
+        message,
+        Markup.inlineKeyboard([
+          [
+            Markup.button.callback("Register", `reg:${event.id}`),
+            Markup.button.callback("Cancel", `cancel:${event.id}`)
+          ]
+        ])
+      );
+    }
   } catch (error) {
     logError("events_command_failed", { error });
     await ctx.reply("Could not load events now. Try again later.");
   }
 });
+
+bot.action(/^reg:(.+)$/, async (ctx) => {
+  try {
+    const eventId = ctx.match[1];
+    const from = ctx.from;
+
+    if (!from) {
+      await ctx.answerCbQuery("User info not available.");
+      return;
+    }
+
+    const userId = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+
+    const result = await registerForEvent(db, eventId, userId);
+    await ctx.answerCbQuery(registrationStatusToText(result), { show_alert: true });
+  } catch (error) {
+    logError("register_action_failed", { error });
+    await ctx.answerCbQuery("Registration failed. Try again later.", { show_alert: true });
+  }
+});
+
+bot.action(/^cancel:(.+)$/, async (ctx) => {
+  try {
+    const eventId = ctx.match[1];
+    const from = ctx.from;
+
+    if (!from) {
+      await ctx.answerCbQuery("User info not available.");
+      return;
+    }
+
+    const userId = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+
+    const result = await cancelRegistration(db, eventId, userId);
+    const text =
+      result.status === "cancelled"
+        ? "Your registration has been cancelled."
+        : "You were not registered for this event.";
+
+    await ctx.answerCbQuery(text, { show_alert: true });
+  } catch (error) {
+    logError("cancel_action_failed", { error });
+    await ctx.answerCbQuery("Cancellation failed. Try again later.", { show_alert: true });
+  }
+});
+
+function registrationStatusToText(result: RegisterForEventResult): string {
+  if (result.status === "registered") {
+    return "You are registered ✅";
+  }
+  if (result.status === "waitlisted") {
+    return `Event is full. Added to waitlist (#${result.position ?? "?"})`;
+  }
+  if (result.status === "already_registered") {
+    return "You are already registered.";
+  }
+  return "You are already in waitlist.";
+}
 
 logInfo("bot_initialized");
