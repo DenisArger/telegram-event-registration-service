@@ -4,17 +4,18 @@
   "version": "0.1.0",
   "engines": {
     "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "yarn": ">=1.22.0"
   },
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -ws --if-present",
-    "build": "npm run build -ws --if-present",
-    "typecheck": "npm run typecheck -ws --if-present",
-    "lint": "npm run lint -ws --if-present",
+    "dev": "yarn workspaces run dev",
+    "build": "yarn workspaces run build",
+    "typecheck": "yarn workspaces run typecheck",
+    "lint": "yarn workspaces run lint",
     "test": "vitest run"
   },
   "devDependencies": {

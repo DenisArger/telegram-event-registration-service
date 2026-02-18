@@ -5,7 +5,7 @@ Monorepo scaffold for event registration via Telegram bot with web admin.
 ## Requirements
 
 - Node.js 20+
-- npm 10+
+- Yarn 1.22+
 
 ## Structure
 
@@ -18,15 +18,15 @@ Monorepo scaffold for event registration via Telegram bot with web admin.
 
 ```bash
 nvm use
-npm install
+yarn install
 cp .env.example .env
-npm run dev
+yarn dev
 ```
 
 Run tests:
 
 ```bash
-npm test
+yarn test
 ```
 
 ## Database (M1)
