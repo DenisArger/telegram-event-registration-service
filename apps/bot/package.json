@@ -1,0 +1,22 @@
+{
+  "name": "@event/bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Use vercel dev from this app root'",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'no lint configured for @event/bot'"
+  },
+  "dependencies": {
+    "@event/db": "workspace:*",
+    "@event/shared": "workspace:*",
+    "@vercel/node": "^5.1.15",
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.3"
+  }
+}

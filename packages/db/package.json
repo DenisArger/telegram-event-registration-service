@@ -1,0 +1,19 @@
+{
+  "name": "@event/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'no lint configured for @event/db'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@event/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
