@@ -17,6 +17,7 @@ Monorepo scaffold for event registration via Telegram bot with web admin.
 ## Quick start
 
 ```bash
+nvm install
 nvm use
 yarn install
 cp .env.example .env
@@ -28,6 +29,11 @@ Run tests:
 ```bash
 yarn test
 ```
+
+## Troubleshooting
+
+- If Yarn reports `Couldn't find package "@event/...@workspace:*"`, update to latest `main` and run `yarn install` again.
+- If `vitest: command not found`, dependencies were not installed. Run `yarn install` first.
 
 ## Database (M1)
 
