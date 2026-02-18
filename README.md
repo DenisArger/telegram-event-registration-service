@@ -2,6 +2,11 @@
 
 Monorepo scaffold for event registration via Telegram bot with web admin.
 
+## Requirements
+
+- Node.js 20+
+- npm 10+
+
 ## Structure
 
 - `apps/bot`: Telegram webhook service (Vercel-ready API routes)
@@ -12,15 +17,16 @@ Monorepo scaffold for event registration via Telegram bot with web admin.
 ## Quick start
 
 ```bash
-pnpm install
+nvm use
+npm install
 cp .env.example .env
-pnpm dev
+npm run dev
 ```
 
 Run tests:
 
 ```bash
-pnpm test
+npm test
 ```
 
 ## Database (M1)
