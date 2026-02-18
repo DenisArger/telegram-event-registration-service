@@ -17,6 +17,27 @@ cp .env.example .env
 pnpm dev
 ```
 
+## Database (M1)
+
+Core schema and transactional registration logic are in:
+
+- `supabase/migrations/20260218132000_m1_core.sql`
+
+Apply migration using Supabase SQL editor or CLI:
+
+```bash
+supabase db push
+```
+
+The migration creates:
+
+- tables: `users`, `events`, `registrations`, `waitlist`, `checkins`, `notifications`, `audit_logs`
+- RPC functions:
+  - `register_for_event(p_event_id uuid, p_user_id uuid)`
+  - `cancel_registration(p_event_id uuid, p_user_id uuid)`
+
+These RPCs are used from `packages/db/src/registrations.ts`.
+
 ## Deploy target
 
 - Vercel + Supabase

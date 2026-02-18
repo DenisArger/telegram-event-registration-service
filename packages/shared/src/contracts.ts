@@ -16,3 +16,13 @@ export interface RegistrationEntity {
   status: "registered" | "cancelled";
   paymentStatus: "mock_pending" | "mock_paid";
 }
+
+export interface RegisterForEventResult {
+  status: "registered" | "waitlisted" | "already_registered" | "already_waitlisted";
+  position?: number;
+}
+
+export interface CancelRegistrationResult {
+  status: "cancelled" | "not_registered";
+  promoted_user_id?: string | null;
+}

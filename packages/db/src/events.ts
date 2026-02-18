@@ -19,3 +19,40 @@ export async function listPublishedEvents(db: SupabaseClient): Promise<EventEnti
     status: row.status
   }));
 }
+
+export async function createEvent(
+  db: SupabaseClient,
+  payload: {
+    title: string;
+    description?: string | null;
+    location?: string | null;
+    startsAt: string;
+    capacity: number;
+    createdBy: string;
+  }
+): Promise<EventEntity> {
+  const { data, error } = await db
+    .from("events")
+    .insert({
+      title: payload.title,
+      description: payload.description ?? null,
+      location: payload.location ?? null,
+      starts_at: payload.startsAt,
+      capacity: payload.capacity,
+      status: "draft",
+      created_by: payload.createdBy
+    })
+    .select("id,title,description,starts_at,capacity,status")
+    .single();
+
+  if (error) throw error;
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    startsAt: data.starts_at,
+    capacity: data.capacity,
+    status: data.status
+  };
+}
