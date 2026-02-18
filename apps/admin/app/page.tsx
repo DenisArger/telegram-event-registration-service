@@ -1,4 +1,5 @@
 import { CheckInForm } from "./checkin-form";
+import { ExportButton } from "./export-button";
 import { PromoteButton } from "./promote-button";
 
 async function getHealth(): Promise<string> {
@@ -207,7 +208,12 @@ export default async function HomePage() {
             ))}
           </ul>
         )}
-        {firstEvent ? <PromoteButton eventId={firstEvent.id} /> : null}
+        {firstEvent ? (
+          <div style={{ display: "flex", gap: 8 }}>
+            <PromoteButton eventId={firstEvent.id} />
+            <ExportButton eventId={firstEvent.id} />
+          </div>
+        ) : null}
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
