@@ -56,3 +56,76 @@ export async function createEvent(
     status: data.status
   };
 }
+
+export async function getEventById(
+  db: SupabaseClient,
+  eventId: string
+): Promise<EventEntity | null> {
+  const { data, error } = await db
+    .from("events")
+    .select("id,title,description,starts_at,capacity,status")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    startsAt: data.starts_at,
+    capacity: data.capacity,
+    status: data.status
+  };
+}
+
+export async function publishEvent(
+  db: SupabaseClient,
+  eventId: string
+): Promise<EventEntity | null> {
+  const { data, error } = await db
+    .from("events")
+    .update({ status: "published" })
+    .eq("id", eventId)
+    .eq("status", "draft")
+    .select("id,title,description,starts_at,capacity,status")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    startsAt: data.starts_at,
+    capacity: data.capacity,
+    status: data.status
+  };
+}
+
+export async function closeEvent(
+  db: SupabaseClient,
+  eventId: string
+): Promise<EventEntity | null> {
+  const { data, error } = await db
+    .from("events")
+    .update({ status: "closed" })
+    .eq("id", eventId)
+    .eq("status", "published")
+    .select("id,title,description,starts_at,capacity,status")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    startsAt: data.starts_at,
+    capacity: data.capacity,
+    status: data.status
+  };
+}

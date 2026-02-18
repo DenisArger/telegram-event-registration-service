@@ -1,4 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { UserRole } from "@event/shared";
+
+export interface TelegramUserRecord {
+  id: string;
+  role: UserRole;
+}
 
 export async function upsertTelegramUser(
   db: SupabaseClient,
@@ -7,7 +13,7 @@ export async function upsertTelegramUser(
     fullName: string;
     username: string | null;
   }
-): Promise<string> {
+): Promise<TelegramUserRecord> {
   const { data, error } = await db
     .from("users")
     .upsert(
@@ -18,9 +24,13 @@ export async function upsertTelegramUser(
       },
       { onConflict: "telegram_id" }
     )
-    .select("id")
+    .select("id,role")
     .single();
 
   if (error) throw error;
-  return data.id as string;
+
+  return {
+    id: data.id as string,
+    role: data.role as UserRole
+  };
 }

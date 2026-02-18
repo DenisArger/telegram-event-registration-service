@@ -56,6 +56,17 @@ The migration creates:
 
 These RPCs are used from `packages/db/src/registrations.ts`.
 
+## Telegram commands (M2/M3)
+
+Participant:
+- `/start`
+- `/events`
+
+Organizer/Admin:
+- `/create_event Title | 2026-03-01T10:00:00Z | 30 | Optional description`
+- `/publish_event <event_id>`
+- `/close_event <event_id>`
+
 ## Deploy target
 
 - Vercel + Supabase
