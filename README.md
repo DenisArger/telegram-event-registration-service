@@ -40,6 +40,7 @@ yarn test
 Core schema and transactional registration logic are in:
 
 - `supabase/migrations/20260218132000_m1_core.sql`
+- `supabase/migrations/20260218162000_m6_waitlist_promote.sql`
 
 Apply migration using Supabase SQL editor or CLI:
 
@@ -53,6 +54,7 @@ The migration creates:
 - RPC functions:
   - `register_for_event(p_event_id uuid, p_user_id uuid)`
   - `cancel_registration(p_event_id uuid, p_user_id uuid)`
+  - `promote_next_waitlist(p_event_id uuid)`
 
 These RPCs are used from `packages/db/src/registrations.ts`.
 
@@ -72,7 +74,10 @@ Organizer/Admin:
 Endpoints in `apps/bot/api/admin`:
 - `GET /api/admin/events`
 - `GET /api/admin/attendees?eventId=<uuid>`
+- `GET /api/admin/waitlist?eventId=<uuid>`
+- `GET /api/admin/stats?eventId=<uuid>`
 - `POST /api/admin/checkin`
+- `POST /api/admin/promote`
 
 Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
 

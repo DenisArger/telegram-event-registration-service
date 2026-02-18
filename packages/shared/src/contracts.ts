@@ -28,6 +28,23 @@ export interface EventAttendeeEntity {
   checkedIn: boolean;
 }
 
+export interface WaitlistEntryEntity {
+  userId: string;
+  fullName: string;
+  username: string | null;
+  telegramId: number | null;
+  position: number;
+  createdAt: string;
+}
+
+export interface EventStatsEntity {
+  eventId: string;
+  registeredCount: number;
+  checkedInCount: number;
+  waitlistCount: number;
+  noShowRate: number;
+}
+
 export interface RegisterForEventResult {
   status: "registered" | "waitlisted" | "already_registered" | "already_waitlisted";
   position?: number;

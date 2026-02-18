@@ -1,5 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { EventAttendeeEntity, EventEntity } from "@event/shared";
+import type {
+  EventAttendeeEntity,
+  EventEntity,
+  EventStatsEntity,
+  WaitlistEntryEntity
+} from "@event/shared";
 
 export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
   const { data, error } = await db
@@ -183,4 +188,93 @@ export async function listEventAttendees(
     registeredAt: row.created_at,
     checkedIn: Array.isArray(row.checkins) && row.checkins.length > 0
   }));
+}
+
+export async function listEventWaitlist(
+  db: SupabaseClient,
+  eventId: string
+): Promise<WaitlistEntryEntity[]> {
+  const { data, error } = await db
+    .from("waitlist")
+    .select(
+      `
+      user_id,
+      position,
+      created_at,
+      users!inner(
+        full_name,
+        username,
+        telegram_id
+      )
+    `
+    )
+    .eq("event_id", eventId)
+    .order("position", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    userId: row.user_id,
+    fullName: row.users.full_name,
+    username: row.users.username,
+    telegramId: row.users.telegram_id,
+    position: row.position,
+    createdAt: row.created_at
+  }));
+}
+
+export function calculateNoShowRate(registeredCount: number, checkedInCount: number): number {
+  if (registeredCount <= 0) return 0;
+  const value = ((registeredCount - checkedInCount) / registeredCount) * 100;
+  return Number(Math.max(0, value).toFixed(2));
+}
+
+export async function getEventStats(
+  db: SupabaseClient,
+  eventId: string
+): Promise<EventStatsEntity> {
+  const [{ count: registeredCount, error: regError }, { count: checkedInCount, error: checkError }, { count: waitlistCount, error: waitError }] =
+    await Promise.all([
+      db
+        .from("registrations")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", eventId)
+        .eq("status", "registered"),
+      db
+        .from("checkins")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", eventId),
+      db
+        .from("waitlist")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", eventId)
+    ]);
+
+  if (regError) throw regError;
+  if (checkError) throw checkError;
+  if (waitError) throw waitError;
+
+  const reg = registeredCount ?? 0;
+  const chk = checkedInCount ?? 0;
+  const wait = waitlistCount ?? 0;
+
+  return {
+    eventId,
+    registeredCount: reg,
+    checkedInCount: chk,
+    waitlistCount: wait,
+    noShowRate: calculateNoShowRate(reg, chk)
+  };
+}
+
+export async function promoteNextFromWaitlist(
+  db: SupabaseClient,
+  eventId: string
+): Promise<{ status: "promoted" | "empty_waitlist"; user_id?: string }> {
+  const { data, error } = await db.rpc("promote_next_waitlist", {
+    p_event_id: eventId
+  });
+
+  if (error) throw error;
+  return data as { status: "promoted" | "empty_waitlist"; user_id?: string };
 }
