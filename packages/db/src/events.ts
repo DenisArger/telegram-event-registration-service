@@ -164,7 +164,8 @@ export async function listEventAttendees(
         full_name,
         username,
         telegram_id
-      )
+      ),
+      checkins(id)
     `
     )
     .eq("event_id", eventId)
@@ -179,6 +180,7 @@ export async function listEventAttendees(
     telegramId: row.users.telegram_id,
     status: row.status,
     paymentStatus: row.payment_status,
-    registeredAt: row.created_at
+    registeredAt: row.created_at,
+    checkedIn: Array.isArray(row.checkins) && row.checkins.length > 0
   }));
 }

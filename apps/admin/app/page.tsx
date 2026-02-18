@@ -1,3 +1,5 @@
+import { CheckInForm } from "./checkin-form";
+
 async function getHealth(): Promise<string> {
   const url = process.env.NEXT_PUBLIC_BOT_HEALTH_URL;
   if (!url) return "unknown (NEXT_PUBLIC_BOT_HEALTH_URL not set)";
@@ -24,6 +26,7 @@ interface AttendeeItem {
   fullName: string;
   username: string | null;
   status: "registered" | "cancelled";
+  checkedIn: boolean;
 }
 
 async function getAdminEvents(): Promise<EventItem[]> {
@@ -110,10 +113,16 @@ export default async function HomePage() {
               <li key={attendee.userId}>
                 {attendee.fullName}
                 {attendee.username ? ` (@${attendee.username})` : ""} — {attendee.status}
+                {attendee.checkedIn ? " — checked in ✅" : ""}
               </li>
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="card" style={{ marginTop: 16 }}>
+        <h2>Check-in</h2>
+        <CheckInForm />
       </section>
     </main>
   );

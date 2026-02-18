@@ -72,12 +72,15 @@ Organizer/Admin:
 Endpoints in `apps/bot/api/admin`:
 - `GET /api/admin/events`
 - `GET /api/admin/attendees?eventId=<uuid>`
+- `POST /api/admin/checkin`
 
 Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
 
 Admin web (`apps/admin`) reads:
 - `ADMIN_API_BASE_URL`
 - `ADMIN_REQUEST_EMAIL`
+- `NEXT_PUBLIC_ADMIN_API_BASE_URL`
+- `NEXT_PUBLIC_ADMIN_REQUEST_EMAIL`
 
 ## Deploy target
 

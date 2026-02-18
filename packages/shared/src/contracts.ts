@@ -25,6 +25,7 @@ export interface EventAttendeeEntity {
   status: "registered" | "cancelled";
   paymentStatus: "mock_pending" | "mock_paid";
   registeredAt: string;
+  checkedIn: boolean;
 }
 
 export interface RegisterForEventResult {
