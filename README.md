@@ -67,6 +67,18 @@ Organizer/Admin:
 - `/publish_event <event_id>`
 - `/close_event <event_id>`
 
+## Admin API (M4)
+
+Endpoints in `apps/bot/api/admin`:
+- `GET /api/admin/events`
+- `GET /api/admin/attendees?eventId=<uuid>`
+
+Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
+
+Admin web (`apps/admin`) reads:
+- `ADMIN_API_BASE_URL`
+- `ADMIN_REQUEST_EMAIL`
+
 ## Deploy target
 
 - Vercel + Supabase

@@ -17,6 +17,16 @@ export interface RegistrationEntity {
   paymentStatus: "mock_pending" | "mock_paid";
 }
 
+export interface EventAttendeeEntity {
+  userId: string;
+  fullName: string;
+  username: string | null;
+  telegramId: number | null;
+  status: "registered" | "cancelled";
+  paymentStatus: "mock_pending" | "mock_paid";
+  registeredAt: string;
+}
+
 export interface RegisterForEventResult {
   status: "registered" | "waitlisted" | "already_registered" | "already_waitlisted";
   position?: number;
