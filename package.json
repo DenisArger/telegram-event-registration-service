@@ -11,6 +11,10 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.5"
   }
 }

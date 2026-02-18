@@ -6,8 +6,9 @@ import {
   registerForEvent,
   upsertTelegramUser
 } from "@event/db";
-import { loadEnv, logError, logInfo, type RegisterForEventResult } from "@event/shared";
+import { loadEnv, logError, logInfo } from "@event/shared";
 import { handleStart } from "./handlers/start";
+import { buildEventMessage, registrationStatusToText } from "./messages";
 
 const env = loadEnv(process.env);
 const db = createServiceClient(process.env);
@@ -33,14 +34,7 @@ bot.command("events", async (ctx) => {
     }
 
     for (const event of events) {
-      const message = [
-        `📅 ${event.title}`,
-        `🕒 ${new Date(event.startsAt).toLocaleString()}`,
-        `👥 Capacity: ${event.capacity}`,
-        event.description ? `📝 ${event.description}` : null
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const message = buildEventMessage(event);
 
       await ctx.reply(
         message,
@@ -110,18 +104,5 @@ bot.action(/^cancel:(.+)$/, async (ctx) => {
     await ctx.answerCbQuery("Cancellation failed. Try again later.", { show_alert: true });
   }
 });
-
-function registrationStatusToText(result: RegisterForEventResult): string {
-  if (result.status === "registered") {
-    return "You are registered ✅";
-  }
-  if (result.status === "waitlisted") {
-    return `Event is full. Added to waitlist (#${result.position ?? "?"})`;
-  }
-  if (result.status === "already_registered") {
-    return "You are already registered.";
-  }
-  return "You are already in waitlist.";
-}
 
 logInfo("bot_initialized");

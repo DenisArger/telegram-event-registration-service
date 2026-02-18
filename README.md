@@ -17,6 +17,12 @@ cp .env.example .env
 pnpm dev
 ```
 
+Run tests:
+
+```bash
+pnpm test
+```
+
 ## Database (M1)
 
 Core schema and transactional registration logic are in:
