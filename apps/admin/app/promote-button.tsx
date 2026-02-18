@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 export function PromoteButton({ eventId }: { eventId: string }) {
   const [loading, setLoading] = useState(false);

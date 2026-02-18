@@ -16,9 +16,14 @@
     "build": "yarn workspaces run build",
     "typecheck": "yarn workspaces run typecheck",
     "lint": "yarn workspaces run lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@vitest/coverage-v8": "3.2.4",
+    "jsdom": "^28.1.0",
     "vitest": "^3.0.5"
   }
 }

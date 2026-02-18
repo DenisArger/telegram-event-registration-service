@@ -1,3 +1,4 @@
+import React from "react";
 import { CheckInForm } from "./checkin-form";
 import { ExportButton } from "./export-button";
 import { PromoteButton } from "./promote-button";

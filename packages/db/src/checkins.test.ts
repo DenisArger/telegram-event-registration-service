@@ -80,4 +80,41 @@ describe("markCheckIn", () => {
       })
     ).rejects.toThrow("registration_not_active");
   });
+
+  it("throws when registration lookup fails", async () => {
+    const regError = new Error("reg_error");
+    const registrationsQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(async () => ({ data: null, error: regError }))
+    };
+    const db = {
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        return { select: vi.fn(), eq: vi.fn(), maybeSingle: vi.fn(), insert: vi.fn() };
+      })
+    } as any;
+
+    await expect(
+      markCheckIn(db, {
+        eventId: "event-1",
+        userId: "user-1"
+      })
+    ).rejects.toThrow("reg_error");
+  });
+
+  it("throws when insert fails", async () => {
+    const { db } = createMockDb({
+      registration: { status: "registered" },
+      existingCheckin: null,
+      insertError: new Error("insert_error")
+    });
+
+    await expect(
+      markCheckIn(db, {
+        eventId: "event-1",
+        userId: "user-1"
+      })
+    ).rejects.toThrow("insert_error");
+  });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 export function CheckInForm() {
   const [eventId, setEventId] = useState("");
