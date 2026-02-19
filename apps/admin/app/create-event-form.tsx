@@ -145,7 +145,17 @@ export function CreateEventForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <small>{ru ? "Короткое понятное название. Например: Team Sync #12" : "Short clear title. Example: Team Sync #12"}</small>
+        <small>
+          {ru
+            ? "Короткое понятное название. Поддерживается Markdown. Например: **POWER** #12"
+            : "Short clear title. Markdown is supported. Example: **POWER** #12"}
+        </small>
+        {title.trim() ? (
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+            <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
+            <MarkdownPreview markdown={title} />
+          </div>
+        ) : null}
         <input
           type="datetime-local"
           placeholder="startsAt"

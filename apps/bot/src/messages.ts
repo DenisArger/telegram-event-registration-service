@@ -32,13 +32,29 @@ function markdownToTelegramHtml(markdown: string): string {
     .join("\n");
 }
 
-export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"): string {
+function formatEventDate(value: string | null | undefined, locale: BotLocale): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
   const dateLocale = locale === "ru" ? "ru-RU" : "en-US";
+  return date.toLocaleString(dateLocale);
+}
+
+function formatCapacity(value: number | null | undefined): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return null;
+  return String(value);
+}
+
+export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"): string {
+  const startsAt = formatEventDate(event.startsAt, locale);
+  const endsAt = formatEventDate(event.endsAt, locale);
+  const capacity = formatCapacity(event.capacity);
+
   return [
     `📅 ${event.title}`,
-    `🕒 ${new Date(event.startsAt).toLocaleString(dateLocale)}`,
-    event.endsAt ? `🏁 ${new Date(event.endsAt).toLocaleString(dateLocale)}` : null,
-    `👥 ${t(locale, "capacity_label")}: ${event.capacity}`,
+    startsAt ? `🕒 ${startsAt}` : null,
+    endsAt ? `🏁 ${endsAt}` : null,
+    capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null,
     event.description ? `📝 ${event.description}` : null
   ]
     .filter(Boolean)
@@ -46,14 +62,17 @@ export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"):
 }
 
 export function buildEventMessageHtml(event: EventEntity, locale: BotLocale = "en"): string {
-  const dateLocale = locale === "ru" ? "ru-RU" : "en-US";
+  const titleHtml = inlineMarkdownToHtml(escapeHtml(event.title));
+  const startsAt = formatEventDate(event.startsAt, locale);
+  const endsAt = formatEventDate(event.endsAt, locale);
+  const capacity = formatCapacity(event.capacity);
   const descriptionHtml = event.description ? markdownToTelegramHtml(event.description) : null;
 
   return [
-    `📅 <b>${escapeHtml(event.title)}</b>`,
-    `🕒 ${escapeHtml(new Date(event.startsAt).toLocaleString(dateLocale))}`,
-    event.endsAt ? `🏁 ${escapeHtml(new Date(event.endsAt).toLocaleString(dateLocale))}` : null,
-    `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${event.capacity}`,
+    `📅 ${titleHtml}`,
+    startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
+    endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
+    capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
     descriptionHtml ? `📝 ${descriptionHtml}` : null
   ]
     .filter(Boolean)

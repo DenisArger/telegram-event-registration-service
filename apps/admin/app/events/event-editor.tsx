@@ -108,7 +108,13 @@ export function EventEditor({ event }: { event: EditableEvent }) {
         <p>{ru ? "Редактировать событие" : "Edit event"}</p>
         <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
           <input placeholder="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <small>{ru ? "Короткое понятное название." : "Short clear title."}</small>
+          <small>{ru ? "Короткое понятное название. Поддерживается Markdown." : "Short clear title. Markdown is supported."}</small>
+          {title.trim() ? (
+            <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+              <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
+              <MarkdownPreview markdown={title} />
+            </div>
+          ) : null}
           <input type="datetime-local" placeholder="startsAt" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
           <small>{ru ? "Дата и время начала мероприятия" : "Event start date and time"}</small>
           <input type="datetime-local" placeholder="endsAt" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
