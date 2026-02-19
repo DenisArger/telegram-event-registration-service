@@ -21,7 +21,7 @@ import {
 import type { EventRegistrationQuestion, RegistrationQuestionAnswer } from "@event/shared";
 import { loadEnv, logError, logInfo } from "@event/shared";
 import { handleStart } from "./handlers/start.js";
-import { buildEventMessage, registrationStatusToText } from "./messages.js";
+import { buildEventMessage, buildEventMessageHtml, registrationStatusToText } from "./messages.js";
 import { getLocaleFromCtx, t } from "./i18n.js";
 import {
   canManageEvents,
@@ -55,16 +55,20 @@ bot.command("events", async (ctx) => {
     }
 
     for (const event of events) {
-      const message = buildEventMessage(event, locale);
+      const message = buildEventMessageHtml(event, locale);
+      const keyboard = Markup.inlineKeyboard([
+        [
+          Markup.button.callback(t(locale, "register_btn"), `reg:${event.id}`),
+          Markup.button.callback(t(locale, "cancel_btn"), `cancel:${event.id}`)
+        ]
+      ]);
 
       await ctx.reply(
         message,
-        Markup.inlineKeyboard([
-          [
-            Markup.button.callback(t(locale, "register_btn"), `reg:${event.id}`),
-            Markup.button.callback(t(locale, "cancel_btn"), `cancel:${event.id}`)
-          ]
-        ])
+        {
+          ...keyboard,
+          parse_mode: "HTML"
+        }
       );
     }
   } catch (error) {

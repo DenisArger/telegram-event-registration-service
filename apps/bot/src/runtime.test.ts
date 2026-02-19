@@ -30,6 +30,7 @@ const mocks = vi.hoisted(() => ({
   closeEvent: vi.fn(),
   handleStart: vi.fn(),
   buildEventMessage: vi.fn(),
+  buildEventMessageHtml: vi.fn(),
   registrationStatusToText: vi.fn(),
   canManageEvents: vi.fn(),
   parseCreateEventCommand: vi.fn(),
@@ -106,6 +107,7 @@ vi.mock("./handlers/start.js", () => ({
 
 vi.mock("./messages.js", () => ({
   buildEventMessage: mocks.buildEventMessage,
+  buildEventMessageHtml: mocks.buildEventMessageHtml,
   registrationStatusToText: mocks.registrationStatusToText
 }));
 
@@ -168,6 +170,7 @@ describe("bot runtime", () => {
     });
     mocks.createEvent.mockResolvedValue({ id: "e1", title: "T", status: "draft" });
     mocks.buildEventMessage.mockReturnValue("event message");
+    mocks.buildEventMessageHtml.mockReturnValue("event message html");
     mocks.registrationStatusToText.mockReturnValue("registered");
     mocks.getEventById.mockResolvedValue({ id: "e1", status: "draft", title: "T" });
     mocks.validateLifecycleTransition.mockReturnValue(true);
