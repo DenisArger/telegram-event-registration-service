@@ -31,6 +31,11 @@ describe("/api/admin/event-questions", () => {
   it("validates method and auth", async () => {
     const { default: handler } = await import("../../../api/admin/event-questions");
 
+    const resOptions = createRes();
+    await handler({ method: "OPTIONS", headers: {}, query: {} } as any, resOptions as any);
+    expect(resOptions.statusCode).toBe(204);
+    expect(resOptions.headers["access-control-allow-methods"]).toContain("PUT");
+
     const resMethod = createRes();
     await handler({ method: "POST", headers: {}, query: {} } as any, resMethod as any);
     expect(resMethod.statusCode).toBe(405);

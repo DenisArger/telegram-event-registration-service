@@ -31,6 +31,8 @@ export function createRes() {
     return res;
   });
 
+  res.end = vi.fn(() => res);
+
   res.setHeader = vi.fn((key: string, value: string) => {
     res.headers[key.toLowerCase()] = value;
     return res;
