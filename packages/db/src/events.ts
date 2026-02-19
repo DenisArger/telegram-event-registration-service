@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  EventRegistrationQuestion,
   EventAttendeeEntity,
   EventEntity,
   EventStatsEntity,
@@ -185,6 +186,41 @@ export async function listEventAttendees(
   if (checkinsError) throw checkinsError;
   const checkedInIds = new Set((checkins ?? []).map((row: any) => String(row.user_id)));
 
+  const { data: answers, error: answersError } = await db
+    .from("registration_question_answers")
+    .select(
+      `
+      user_id,
+      question_id,
+      question_version,
+      answer_text,
+      is_skipped,
+      created_at,
+      event_registration_questions!inner(
+        prompt
+      )
+    `
+    )
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: true });
+
+  if (answersError) throw answersError;
+
+  const answersByUser = new Map<string, EventAttendeeEntity["answers"]>();
+  for (const row of answers ?? []) {
+    const key = String((row as any).user_id);
+    const list = answersByUser.get(key) ?? [];
+    list.push({
+      questionId: String((row as any).question_id),
+      questionVersion: Number((row as any).question_version),
+      prompt: String((row as any).event_registration_questions.prompt),
+      answerText: (row as any).answer_text,
+      isSkipped: Boolean((row as any).is_skipped),
+      createdAt: String((row as any).created_at)
+    });
+    answersByUser.set(key, list);
+  }
+
   return (data ?? []).map((row: any) => ({
     userId: row.user_id,
     fullName: row.users.full_name,
@@ -193,7 +229,8 @@ export async function listEventAttendees(
     status: row.status,
     paymentStatus: row.payment_status,
     registeredAt: row.created_at,
-    checkedIn: checkedInIds.has(String(row.user_id))
+    checkedIn: checkedInIds.has(String(row.user_id)),
+    answers: answersByUser.get(String(row.user_id)) ?? []
   }));
 }
 
@@ -284,4 +321,55 @@ export async function promoteNextFromWaitlist(
 
   if (error) throw error;
   return data as { status: "promoted" | "empty_waitlist"; user_id?: string };
+}
+
+export async function listEventQuestions(
+  db: SupabaseClient,
+  eventId: string
+): Promise<EventRegistrationQuestion[]> {
+  const { data, error } = await db.rpc("list_active_event_questions", {
+    p_event_id: eventId
+  });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    eventId: row.event_id,
+    version: row.version,
+    prompt: row.prompt,
+    isRequired: row.is_required,
+    position: row.position,
+    isActive: row.is_active
+  }));
+}
+
+export async function upsertEventQuestions(
+  db: SupabaseClient,
+  eventId: string,
+  questions: Array<{ id?: string; prompt: string; isRequired: boolean; position: number }>
+): Promise<EventRegistrationQuestion[]> {
+  const payload = questions.map((question) => ({
+    id: question.id,
+    prompt: question.prompt,
+    isRequired: question.isRequired,
+    position: question.position
+  }));
+
+  const { data, error } = await db.rpc("upsert_event_questions", {
+    p_event_id: eventId,
+    p_questions: payload
+  });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    eventId: row.event_id,
+    version: row.version,
+    prompt: row.prompt,
+    isRequired: row.is_required,
+    position: row.position,
+    isActive: row.is_active
+  }));
 }

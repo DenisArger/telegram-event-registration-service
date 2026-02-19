@@ -54,7 +54,40 @@ export function buildEventExportCsv(
     item.createdAt
   ]);
 
-  const rows = [header, ...attendeeRows, ...waitlistRows];
+  const answerRows = attendees.flatMap((item) =>
+    (item.answers ?? []).map((answer) => [
+      "answer",
+      eventId,
+      item.userId,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      answer.createdAt,
+      answer.questionId,
+      String(answer.questionVersion),
+      answer.prompt,
+      answer.answerText ?? "",
+      answer.isSkipped ? "true" : "false"
+    ])
+  );
+
+  const extendedHeader = [
+    ...header,
+    "question_id",
+    "question_version",
+    "question_prompt",
+    "answer_text",
+    "is_skipped"
+  ];
+
+  const attendeeRowsExtended = attendeeRows.map((row) => [...row, "", "", "", "", ""]);
+  const waitlistRowsExtended = waitlistRows.map((row) => [...row, "", "", "", "", ""]);
+
+  const rows = [extendedHeader, ...attendeeRowsExtended, ...waitlistRowsExtended, ...answerRows];
   return rows
     .map((row) => row.map((v) => escapeCsv(String(v))).join(","))
     .join("\n");

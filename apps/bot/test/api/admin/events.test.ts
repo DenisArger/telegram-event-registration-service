@@ -5,13 +5,15 @@ const mocks = vi.hoisted(() => ({
   db: {},
   listAllEvents: vi.fn(),
   createEvent: vi.fn(),
+  upsertEventQuestions: vi.fn(),
   logError: vi.fn()
 }));
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
   listAllEvents: mocks.listAllEvents,
-  createEvent: mocks.createEvent
+  createEvent: mocks.createEvent,
+  upsertEventQuestions: mocks.upsertEventQuestions
 }));
 
 vi.mock("@event/shared", async () => {
@@ -114,6 +116,7 @@ describe("GET /api/admin/events", () => {
 
   it("creates event for admin request", async () => {
     mocks.createEvent.mockResolvedValueOnce({ id: "e2", title: "New Event", status: "draft" });
+    mocks.upsertEventQuestions.mockResolvedValueOnce([]);
     const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
@@ -141,7 +144,35 @@ describe("GET /api/admin/events", () => {
         createdBy: creatorId
       })
     );
-    expect(res.payload).toEqual({ event: { id: "e2", title: "New Event", status: "draft" } });
+    expect(res.payload).toEqual({ event: { id: "e2", title: "New Event", status: "draft" }, questions: [] });
+  });
+
+  it("creates event with questions", async () => {
+    mocks.createEvent.mockResolvedValueOnce({ id: "e2", title: "New Event", status: "draft" });
+    mocks.upsertEventQuestions.mockResolvedValueOnce([{ id: "q1", prompt: "Why?", isRequired: true }]);
+    const { default: handler } = await import("../../../api/admin/events");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "POST",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          title: "New Event",
+          startsAt: "2026-03-02T12:00:00Z",
+          capacity: 15,
+          questions: [{ prompt: "Why?", required: true }]
+        }
+      } as any,
+      res as any
+    );
+
+    expect(mocks.upsertEventQuestions).toHaveBeenCalledWith(
+      mocks.db,
+      "e2",
+      [{ prompt: "Why?", isRequired: true, position: 1 }]
+    );
+    expect(res.statusCode).toBe(201);
   });
 
   it("returns 500 when event creation fails", async () => {

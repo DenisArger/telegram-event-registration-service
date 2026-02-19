@@ -14,7 +14,17 @@ describe("buildEventExportCsv", () => {
           status: "registered",
           paymentStatus: "mock_paid",
           registeredAt: "2026-02-18T10:00:00Z",
-          checkedIn: true
+          checkedIn: true,
+          answers: [
+            {
+              questionId: "q1",
+              questionVersion: 1,
+              prompt: "Why join?",
+              answerText: "Networking",
+              isSkipped: false,
+              createdAt: "2026-02-18T10:00:10Z"
+            }
+          ]
         }
       ],
       [
@@ -32,6 +42,8 @@ describe("buildEventExportCsv", () => {
     expect(csv).toContain("row_type,event_id,user_id");
     expect(csv).toContain("attendee,event-1,u1");
     expect(csv).toContain("waitlist,event-1,u2");
+    expect(csv).toContain("answer,event-1,u1");
+    expect(csv).toContain("Why join?");
   });
 
   it("escapes comma and quotes", () => {
@@ -46,7 +58,8 @@ describe("buildEventExportCsv", () => {
           status: "registered",
           paymentStatus: "mock_paid",
           registeredAt: "2026-02-18T10:00:00Z",
-          checkedIn: false
+          checkedIn: false,
+          answers: []
         }
       ],
       []

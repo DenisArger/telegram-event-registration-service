@@ -47,7 +47,17 @@ const translations: Record<BotLocale, Messages> = {
     status_waitlisted: (v) => `Event is full. Added to waitlist (#${String(v?.position ?? "?")})`,
     status_already_registered: "You are already registered.",
     status_already_waitlisted: "You are already in waitlist.",
-    capacity_label: "Capacity"
+    capacity_label: "Capacity",
+    question_prompt: (v) => `Question ${String(v?.index ?? 1)}/${String(v?.total ?? 1)}:\n${String(v?.prompt ?? "")}`,
+    question_optional_hint: "Optional question. You can skip.",
+    question_required_hint: "This question is required.",
+    question_skip_btn: "Skip",
+    question_cancel_btn: "Cancel",
+    question_cancelled: "Questionnaire cancelled.",
+    question_invalid_required: "Answer is required.",
+    question_too_long: "Answer is too long (max 500 chars).",
+    question_expired: "Questionnaire session expired. Please tap Register again.",
+    question_collect_failed: "Could not save your answers."
   },
   ru: {
     start_welcome: "Добро пожаловать в бот регистрации на мероприятия. Используйте /events для просмотра событий.",
@@ -83,7 +93,17 @@ const translations: Record<BotLocale, Messages> = {
     status_waitlisted: (v) => `Мест нет. Вы добавлены в лист ожидания (#${String(v?.position ?? "?")})`,
     status_already_registered: "Вы уже зарегистрированы.",
     status_already_waitlisted: "Вы уже в листе ожидания.",
-    capacity_label: "Вместимость"
+    capacity_label: "Вместимость",
+    question_prompt: (v) => `Вопрос ${String(v?.index ?? 1)}/${String(v?.total ?? 1)}:\n${String(v?.prompt ?? "")}`,
+    question_optional_hint: "Необязательный вопрос. Можно пропустить.",
+    question_required_hint: "Обязательный вопрос.",
+    question_skip_btn: "Пропустить",
+    question_cancel_btn: "Отменить",
+    question_cancelled: "Анкета отменена.",
+    question_invalid_required: "Нужен ответ на вопрос.",
+    question_too_long: "Ответ слишком длинный (максимум 500 символов).",
+    question_expired: "Сессия анкеты истекла. Нажмите «Записаться» снова.",
+    question_collect_failed: "Не удалось сохранить ответы."
   }
 };
 

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createEvent, createServiceClient, listAllEvents } from "@event/db";
+import { createEvent, createServiceClient, listAllEvents, upsertEventQuestions } from "@event/db";
 import { logError } from "@event/shared";
 import { isAdminRequest } from "../../src/adminAuth.js";
 import { applyCors } from "../../src/cors.js";
@@ -41,6 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const capacity = Number(req.body?.capacity);
   const description = String(req.body?.description ?? "").trim() || null;
   const location = String(req.body?.location ?? "").trim() || null;
+  const rawQuestions = Array.isArray(req.body?.questions) ? req.body.questions : [];
 
   if (!title) {
     res.status(400).json({ message: "title is required" });
@@ -63,6 +64,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
+  if (rawQuestions.length > 10) {
+    res.status(400).json({ message: "questions count must be <= 10" });
+    return;
+  }
+
+  const questions = rawQuestions.map((item: any, index: number) => ({
+    prompt: String(item?.prompt ?? "").trim(),
+    isRequired: Boolean(item?.required),
+    position: index + 1
+  }));
+
+  if (questions.some((item) => item.prompt.length < 1 || item.prompt.length > 500)) {
+    res.status(400).json({ message: "question prompt length must be 1..500" });
+    return;
+  }
+
   try {
     const event = await createEvent(db, {
       title,
@@ -72,7 +89,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       location,
       createdBy: creatorId
     });
-    res.status(201).json({ event });
+    const savedQuestions =
+      questions.length > 0 ? await upsertEventQuestions(db, event.id, questions) : [];
+
+    res.status(201).json({ event, questions: savedQuestions });
   } catch (error) {
     logError("admin_create_event_failed", { error, title, startsAt: startsAtRaw, capacity });
     res.status(500).json({ message: "Failed to create event" });

@@ -5,6 +5,7 @@ import { CreateEventForm } from "./create-event-form";
 import { ExportButton } from "./export-button";
 import { PublishButton } from "./publish-button";
 import { PromoteButton } from "./promote-button";
+import { EventQuestionsEditor } from "./event-questions-editor";
 import { getUiLocale, ui } from "./i18n";
 
 async function getHealth(): Promise<string> {
@@ -34,6 +35,14 @@ interface AttendeeItem {
   username: string | null;
   status: "registered" | "cancelled";
   checkedIn: boolean;
+  answers?: Array<{
+    questionId: string;
+    questionVersion: number;
+    prompt: string;
+    answerText: string | null;
+    isSkipped: boolean;
+    createdAt: string;
+  }>;
 }
 
 interface WaitlistItem {
@@ -175,6 +184,7 @@ export default async function HomePage() {
                     <CloseButton eventId={event.id} />
                   </>
                 ) : null}
+                <EventQuestionsEditor eventId={event.id} />
               </li>
             ))}
           </ul>
@@ -194,6 +204,15 @@ export default async function HomePage() {
                 {attendee.fullName}
                 {attendee.username ? ` (@${attendee.username})` : ""} — {attendee.status}
                 {attendee.checkedIn ? ` — ${ui("checked_in_mark", locale)}` : ""}
+                {(attendee.answers ?? []).length > 0 ? (
+                  <ul>
+                    {(attendee.answers ?? []).map((answer) => (
+                      <li key={`${attendee.userId}-${answer.questionId}-${answer.questionVersion}`}>
+                        {answer.prompt}: {answer.isSkipped ? "Skipped" : answer.answerText}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -3,6 +3,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface NewQuestionInput {
+  prompt: string;
+  required: boolean;
+}
+
 export function CreateEventForm() {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
@@ -11,8 +16,22 @@ export function CreateEventForm() {
   const [capacity, setCapacity] = useState("20");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [questions, setQuestions] = useState<NewQuestionInput[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  function updateQuestion(index: number, patch: Partial<NewQuestionInput>) {
+    setQuestions((prev) => prev.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
+  }
+
+  function removeQuestion(index: number) {
+    setQuestions((prev) => prev.filter((_, idx) => idx !== index));
+  }
+
+  function addQuestion() {
+    if (questions.length >= 10) return;
+    setQuestions((prev) => [...prev, { prompt: "", required: false }]);
+  }
 
   async function submit() {
     const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
@@ -39,6 +58,21 @@ export function CreateEventForm() {
       return;
     }
 
+    if (questions.length > 10) {
+      setMessage(ru ? "Максимум 10 вопросов." : "Maximum 10 questions.");
+      return;
+    }
+
+    const normalizedQuestions = questions.map((item) => ({
+      prompt: item.prompt.trim(),
+      required: item.required
+    }));
+
+    if (normalizedQuestions.some((item) => item.prompt.length < 1 || item.prompt.length > 500)) {
+      setMessage(ru ? "Текст вопроса должен быть 1..500 символов." : "Question text must be 1..500 chars.");
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     try {
@@ -53,7 +87,8 @@ export function CreateEventForm() {
           startsAt: normalizedStartsAt,
           capacity: numericCapacity,
           description: description.trim() || null,
-          location: location.trim() || null
+          location: location.trim() || null,
+          questions: normalizedQuestions
         })
       });
 
@@ -68,6 +103,7 @@ export function CreateEventForm() {
       setCapacity("20");
       setDescription("");
       setLocation("");
+      setQuestions([]);
       setMessage(ru ? "Событие создано в статусе draft." : "Event created in draft status.");
       router.refresh();
     } catch {
@@ -106,6 +142,37 @@ export function CreateEventForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+
+        <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 12, display: "grid", gap: 8 }}>
+          <strong>{ru ? "Вопросы при регистрации" : "Registration questions"}</strong>
+          {questions.length === 0 ? (
+            <p style={{ margin: 0 }}>{ru ? "Вопросов пока нет." : "No questions yet."}</p>
+          ) : null}
+          {questions.map((question, index) => (
+            <div key={index} style={{ display: "grid", gap: 6, border: "1px solid #eee", borderRadius: 6, padding: 8 }}>
+              <input
+                placeholder={ru ? `Вопрос #${index + 1}` : `Question #${index + 1}`}
+                value={question.prompt}
+                onChange={(e) => updateQuestion(index, { prompt: e.target.value })}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="checkbox"
+                  checked={question.required}
+                  onChange={(e) => updateQuestion(index, { required: e.target.checked })}
+                />
+                {ru ? "Обязательный" : "Required"}
+              </label>
+              <button type="button" onClick={() => removeQuestion(index)}>
+                {ru ? "Удалить вопрос" : "Remove question"}
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addQuestion} disabled={questions.length >= 10}>
+            {ru ? "Добавить вопрос" : "Add question"}
+          </button>
+        </div>
+
         <button onClick={submit} disabled={loading}>
           {loading ? (ru ? "Создание..." : "Creating...") : (ru ? "Создать событие" : "Create event")}
         </button>

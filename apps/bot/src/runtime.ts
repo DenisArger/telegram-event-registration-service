@@ -1,15 +1,24 @@
 import { Markup, Telegraf } from "telegraf";
 import {
+  advanceQuestionSession,
   cancelRegistration,
+  cancelQuestionSession,
+  completeQuestionSession,
   createServiceClient,
   createEvent,
+  getActiveQuestionSession,
+  getExistingRegistrationStatus,
   getEventById,
+  getOrCreateQuestionSession,
+  getRegistrationQuestions,
   closeEvent,
   listPublishedEvents,
   publishEvent,
   registerForEvent,
+  saveAnswersAndRegister,
   upsertTelegramUser
 } from "@event/db";
+import type { EventRegistrationQuestion, RegistrationQuestionAnswer } from "@event/shared";
 import { loadEnv, logError, logInfo } from "@event/shared";
 import { handleStart } from "./handlers/start.js";
 import { buildEventMessage, registrationStatusToText } from "./messages.js";
@@ -149,8 +158,27 @@ bot.action(/^reg:(.+)$/, async (ctx) => {
       username: from.username ?? null
     });
 
-    const result = await registerForEvent(db, eventId, user.id);
-    await ctx.answerCbQuery(registrationStatusToText(result, locale), { show_alert: true });
+    const existing = await getExistingRegistrationStatus(db, eventId, user.id);
+    if (existing) {
+      await ctx.answerCbQuery(registrationStatusToText(existing, locale), { show_alert: true });
+      return;
+    }
+
+    const questions = await getRegistrationQuestions(db, eventId);
+    if (questions.length === 0) {
+      const result = await registerForEvent(db, eventId, user.id);
+      await ctx.answerCbQuery(registrationStatusToText(result, locale), { show_alert: true });
+      return;
+    }
+
+    const session = await getOrCreateQuestionSession(db, eventId, user.id, 30);
+    const currentIndex = Math.max(1, Math.min(session.currentIndex, questions.length));
+    if (currentIndex !== session.currentIndex) {
+      await advanceQuestionSession(db, eventId, user.id, currentIndex, session.answers, 30);
+    }
+
+    await ctx.answerCbQuery();
+    await askRegistrationQuestion(ctx, locale, eventId, questions, currentIndex);
   } catch (error) {
     logError("register_action_failed", { error });
     await ctx.answerCbQuery(t(locale, "registration_failed"), { show_alert: true });
@@ -193,6 +221,135 @@ bot.action(/^pub:(.+)$/, async (ctx) => {
 
 bot.action(/^cls:(.+)$/, async (ctx) => {
   await handleOrganizerLifecycleAction(ctx, "closed");
+});
+
+bot.action(/^qskip:(.+):([0-9]+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    const eventId = String(ctx.match[1] ?? "");
+    const from = ctx.from;
+    if (!from || !eventId) {
+      await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
+      return;
+    }
+
+    const user = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+
+    const session = await getActiveQuestionSession(db, user.id);
+    if (!session || session.eventId !== eventId) {
+      await ctx.answerCbQuery(t(locale, "question_expired"), { show_alert: true });
+      return;
+    }
+
+    if (session.isExpired) {
+      await cancelQuestionSession(db, eventId, user.id);
+      await ctx.answerCbQuery(t(locale, "question_expired"), { show_alert: true });
+      return;
+    }
+
+    const questions = await getRegistrationQuestions(db, eventId);
+    const question = questions[session.currentIndex - 1];
+    if (!question) {
+      await cancelQuestionSession(db, eventId, user.id);
+      await ctx.answerCbQuery(t(locale, "question_expired"), { show_alert: true });
+      return;
+    }
+
+    if (question.isRequired) {
+      await ctx.answerCbQuery(t(locale, "question_invalid_required"), { show_alert: true });
+      return;
+    }
+
+    await processQuestionAnswer(ctx, locale, user.id, eventId, questions, session, {
+      questionId: question.id,
+      questionVersion: question.version,
+      answerText: null,
+      isSkipped: true
+    });
+    await ctx.answerCbQuery();
+  } catch (error) {
+    logError("question_skip_failed", { error });
+    await ctx.answerCbQuery(t(locale, "question_collect_failed"), { show_alert: true });
+  }
+});
+
+bot.action(/^qcancel:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    const eventId = String(ctx.match[1] ?? "");
+    const from = ctx.from;
+    if (!from || !eventId) {
+      await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
+      return;
+    }
+
+    const user = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+    await cancelQuestionSession(db, eventId, user.id);
+    await ctx.answerCbQuery(t(locale, "question_cancelled"), { show_alert: true });
+  } catch (error) {
+    logError("question_cancel_failed", { error });
+    await ctx.answerCbQuery(t(locale, "question_collect_failed"), { show_alert: true });
+  }
+});
+
+bot.on("text", async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    const from = ctx.from;
+    const text = "text" in (ctx.message ?? {}) ? String(ctx.message.text ?? "") : "";
+    if (!from || !text || text.startsWith("/")) return;
+
+    const user = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+
+    const session = await getActiveQuestionSession(db, user.id);
+    if (!session) return;
+
+    if (session.isExpired) {
+      await cancelQuestionSession(db, session.eventId, user.id);
+      await ctx.reply(t(locale, "question_expired"));
+      return;
+    }
+
+    const questions = await getRegistrationQuestions(db, session.eventId);
+    const question = questions[session.currentIndex - 1];
+    if (!question) {
+      await cancelQuestionSession(db, session.eventId, user.id);
+      await ctx.reply(t(locale, "question_expired"));
+      return;
+    }
+
+    const answerText = text.trim();
+    if (answerText.length > 500) {
+      await ctx.reply(t(locale, "question_too_long"));
+      return;
+    }
+    if (question.isRequired && answerText.length === 0) {
+      await ctx.reply(t(locale, "question_invalid_required"));
+      return;
+    }
+
+    await processQuestionAnswer(ctx, locale, user.id, session.eventId, questions, session, {
+      questionId: question.id,
+      questionVersion: question.version,
+      answerText,
+      isSkipped: false
+    });
+  } catch (error) {
+    logError("question_text_handler_failed", { error });
+    await ctx.reply(t(locale, "question_collect_failed"));
+  }
 });
 
 async function handleOrganizerLifecycleCommand(
@@ -247,6 +404,75 @@ async function handleOrganizerLifecycleCommand(
     logError("organizer_lifecycle_command_failed", { error });
     await ctx.reply(t(locale, "event_update_failed"));
   }
+}
+
+async function askRegistrationQuestion(
+  ctx: any,
+  locale: "en" | "ru",
+  eventId: string,
+  questions: EventRegistrationQuestion[],
+  currentIndex: number
+): Promise<void> {
+  const question = questions[currentIndex - 1];
+  if (!question) {
+    await ctx.reply(t(locale, "question_expired"));
+    return;
+  }
+
+  const message = [
+    t(locale, "question_prompt", { index: currentIndex, total: questions.length, prompt: question.prompt }),
+    question.isRequired ? t(locale, "question_required_hint") : t(locale, "question_optional_hint")
+  ].join("\n");
+
+  const actionRows: any[] = [];
+  const row: any[] = [];
+  if (!question.isRequired) {
+    row.push(Markup.button.callback(t(locale, "question_skip_btn"), `qskip:${eventId}:${currentIndex}`));
+  }
+  row.push(Markup.button.callback(t(locale, "question_cancel_btn"), `qcancel:${eventId}`));
+  actionRows.push(row);
+
+  await ctx.reply(message, Markup.inlineKeyboard(actionRows));
+}
+
+function mergeSessionAnswers(
+  existing: RegistrationQuestionAnswer[],
+  next: RegistrationQuestionAnswer
+): RegistrationQuestionAnswer[] {
+  const filtered = existing.filter((item) => !(item.questionId === next.questionId && item.questionVersion === next.questionVersion));
+  return [...filtered, next];
+}
+
+async function processQuestionAnswer(
+  ctx: any,
+  locale: "en" | "ru",
+  userId: string,
+  eventId: string,
+  questions: EventRegistrationQuestion[],
+  session: { currentIndex: number; answers: RegistrationQuestionAnswer[] },
+  answer: RegistrationQuestionAnswer
+): Promise<void> {
+  const nextAnswers = mergeSessionAnswers(session.answers ?? [], answer);
+  const nextIndex = session.currentIndex + 1;
+
+  if (session.currentIndex >= questions.length) {
+    const result = await saveAnswersAndRegister(
+      db,
+      eventId,
+      userId,
+      nextAnswers.map((item) => ({
+        questionId: item.questionId,
+        answerText: item.answerText,
+        isSkipped: item.isSkipped
+      }))
+    );
+    await completeQuestionSession(db, eventId, userId);
+    await ctx.reply(registrationStatusToText(result, locale));
+    return;
+  }
+
+  await advanceQuestionSession(db, eventId, userId, nextIndex, nextAnswers, 30);
+  await askRegistrationQuestion(ctx, locale, eventId, questions, nextIndex);
 }
 
 async function handleOrganizerLifecycleAction(

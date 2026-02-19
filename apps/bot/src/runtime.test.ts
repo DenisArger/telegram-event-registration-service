@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const state = vi.hoisted(() => ({
   startHandler: undefined as undefined | ((ctx: any) => Promise<void>),
   commands: new Map<string, (ctx: any) => Promise<void>>(),
-  actions: [] as Array<{ pattern: RegExp; handler: (ctx: any) => Promise<void> }>
+  actions: [] as Array<{ pattern: RegExp; handler: (ctx: any) => Promise<void> }>,
+  textHandler: undefined as undefined | ((ctx: any) => Promise<void>)
 }));
 
 const mocks = vi.hoisted(() => ({
@@ -14,7 +15,15 @@ const mocks = vi.hoisted(() => ({
   listPublishedEvents: vi.fn(),
   upsertTelegramUser: vi.fn(),
   registerForEvent: vi.fn(),
+  saveAnswersAndRegister: vi.fn(),
   cancelRegistration: vi.fn(),
+  getRegistrationQuestions: vi.fn(),
+  getOrCreateQuestionSession: vi.fn(),
+  getActiveQuestionSession: vi.fn(),
+  advanceQuestionSession: vi.fn(),
+  cancelQuestionSession: vi.fn(),
+  completeQuestionSession: vi.fn(),
+  getExistingRegistrationStatus: vi.fn(),
   createEvent: vi.fn(),
   getEventById: vi.fn(),
   publishEvent: vi.fn(),
@@ -48,6 +57,10 @@ vi.mock("telegraf", () => {
     action(pattern: RegExp, handler: (ctx: any) => Promise<void>) {
       state.actions.push({ pattern, handler });
     }
+
+    on(name: string, handler: (ctx: any) => Promise<void>) {
+      if (name === "text") state.textHandler = handler;
+    }
   }
 
   return {
@@ -72,7 +85,15 @@ vi.mock("@event/db", () => ({
   listPublishedEvents: mocks.listPublishedEvents,
   upsertTelegramUser: mocks.upsertTelegramUser,
   registerForEvent: mocks.registerForEvent,
+  saveAnswersAndRegister: mocks.saveAnswersAndRegister,
   cancelRegistration: mocks.cancelRegistration,
+  getRegistrationQuestions: mocks.getRegistrationQuestions,
+  getOrCreateQuestionSession: mocks.getOrCreateQuestionSession,
+  getActiveQuestionSession: mocks.getActiveQuestionSession,
+  advanceQuestionSession: mocks.advanceQuestionSession,
+  cancelQuestionSession: mocks.cancelQuestionSession,
+  completeQuestionSession: mocks.completeQuestionSession,
+  getExistingRegistrationStatus: mocks.getExistingRegistrationStatus,
   createEvent: mocks.createEvent,
   getEventById: mocks.getEventById,
   publishEvent: mocks.publishEvent,
@@ -116,13 +137,27 @@ describe("bot runtime", () => {
     state.commands.clear();
     state.actions.length = 0;
     state.startHandler = undefined;
+    state.textHandler = undefined;
 
     mocks.loadEnv.mockReturnValue({ TELEGRAM_BOT_TOKEN: "token" });
     mocks.createServiceClient.mockReturnValue({});
     mocks.listPublishedEvents.mockResolvedValue([]);
     mocks.upsertTelegramUser.mockResolvedValue({ id: "u1", role: "participant" });
     mocks.registerForEvent.mockResolvedValue({ status: "registered" });
+    mocks.saveAnswersAndRegister.mockResolvedValue({ status: "registered" });
     mocks.cancelRegistration.mockResolvedValue({ status: "cancelled" });
+    mocks.getRegistrationQuestions.mockResolvedValue([]);
+    mocks.getOrCreateQuestionSession.mockResolvedValue({
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getActiveQuestionSession.mockResolvedValue(null);
+    mocks.advanceQuestionSession.mockResolvedValue(undefined);
+    mocks.cancelQuestionSession.mockResolvedValue(undefined);
+    mocks.completeQuestionSession.mockResolvedValue(undefined);
+    mocks.getExistingRegistrationStatus.mockResolvedValue(null);
     mocks.canManageEvents.mockReturnValue(false);
     mocks.parseCreateEventCommand.mockReturnValue({
       title: "T",
@@ -277,6 +312,19 @@ describe("bot runtime", () => {
     expect(cancelErr.answerCbQuery).toHaveBeenCalledWith("Cancellation failed. Try again later.", {
       show_alert: true
     });
+  });
+
+  it("starts questionnaire flow when event has questions", async () => {
+    const regAction = state.actions.find((item) => String(item.pattern) === String(/^reg:(.+)$/));
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", version: 1, prompt: "Why?", isRequired: true, position: 1, isActive: true, eventId: "e1" }
+    ]);
+
+    const regCtx = baseCtx({ match: ["reg:e1", "e1"] });
+    await regAction?.handler(regCtx);
+
+    expect(mocks.getOrCreateQuestionSession).toHaveBeenCalled();
+    expect(regCtx.reply).toHaveBeenCalled();
   });
 
   it("handles organizer lifecycle command and action", async () => {

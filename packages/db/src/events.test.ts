@@ -6,10 +6,12 @@ import {
   getEventStats,
   listAllEvents,
   listEventAttendees,
+  listEventQuestions,
   listEventWaitlist,
   listPublishedEvents,
   promoteNextFromWaitlist,
-  publishEvent
+  publishEvent,
+  upsertEventQuestions
 } from "./events";
 
 describe("events data layer", () => {
@@ -126,13 +128,50 @@ describe("events data layer", () => {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn(async () => ({ data: [{ user_id: "u1" }], error: null }))
     };
+    const answersQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({
+        data: [
+          {
+            user_id: "u1",
+            question_id: "q1",
+            question_version: 1,
+            answer_text: "Networking",
+            is_skipped: false,
+            created_at: "2026-02-18T10:00:00Z",
+            event_registration_questions: { prompt: "Why join?" }
+          }
+        ],
+        error: null
+      }))
+    };
     const db = {
-      from: vi.fn((table: string) => (table === "registrations" ? registrationsQuery : checkinsQuery))
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        if (table === "checkins") return checkinsQuery;
+        if (table === "registration_question_answers") return answersQuery;
+        throw new Error(`Unexpected table: ${table}`);
+      })
     } as any;
 
     const result = await listEventAttendees(db, "e1");
     expect(result[0]).toEqual(
-      expect.objectContaining({ fullName: "John", checkedIn: true, userId: "u1" })
+      expect.objectContaining({
+        fullName: "John",
+        checkedIn: true,
+        userId: "u1",
+        answers: [
+          {
+            questionId: "q1",
+            questionVersion: 1,
+            prompt: "Why join?",
+            answerText: "Networking",
+            isSkipped: false,
+            createdAt: "2026-02-18T10:00:00Z"
+          }
+        ]
+      })
     );
   });
 
@@ -202,6 +241,51 @@ describe("events data layer", () => {
 
     expect(rpc).toHaveBeenCalledWith("promote_next_waitlist", { p_event_id: "e1" });
     expect(result.status).toBe("promoted");
+  });
+
+  it("listEventQuestions and upsertEventQuestions call rpc", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "q1",
+            event_id: "e1",
+            version: 1,
+            prompt: "Why join?",
+            is_required: true,
+            position: 1,
+            is_active: true
+          }
+        ],
+        error: null
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "q2",
+            event_id: "e1",
+            version: 1,
+            prompt: "Meal pref",
+            is_required: false,
+            position: 1,
+            is_active: true
+          }
+        ],
+        error: null
+      });
+    const db = { rpc } as any;
+
+    const listed = await listEventQuestions(db, "e1");
+    const saved = await upsertEventQuestions(db, "e1", [{ prompt: "Meal pref", isRequired: false, position: 1 }]);
+
+    expect(rpc).toHaveBeenNthCalledWith(1, "list_active_event_questions", { p_event_id: "e1" });
+    expect(rpc).toHaveBeenNthCalledWith(2, "upsert_event_questions", {
+      p_event_id: "e1",
+      p_questions: [{ id: undefined, prompt: "Meal pref", isRequired: false, position: 1 }]
+    });
+    expect(listed[0].id).toBe("q1");
+    expect(saved[0].id).toBe("q2");
   });
 
   it("throws on db errors", async () => {

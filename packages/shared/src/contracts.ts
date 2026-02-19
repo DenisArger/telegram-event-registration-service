@@ -9,6 +9,32 @@ export interface EventEntity {
   status: "draft" | "published" | "closed";
 }
 
+export interface EventRegistrationQuestion {
+  id: string;
+  eventId: string;
+  version: number;
+  prompt: string;
+  isRequired: boolean;
+  position: number;
+  isActive: boolean;
+}
+
+export interface RegistrationQuestionAnswer {
+  questionId: string;
+  questionVersion: number;
+  answerText: string | null;
+  isSkipped: boolean;
+}
+
+export interface AttendeeQuestionAnswerView {
+  questionId: string;
+  questionVersion: number;
+  prompt: string;
+  answerText: string | null;
+  isSkipped: boolean;
+  createdAt: string;
+}
+
 export interface RegistrationEntity {
   id: string;
   eventId: string;
@@ -26,6 +52,7 @@ export interface EventAttendeeEntity {
   paymentStatus: "mock_pending" | "mock_paid";
   registeredAt: string;
   checkedIn: boolean;
+  answers: AttendeeQuestionAnswerView[];
 }
 
 export interface WaitlistEntryEntity {

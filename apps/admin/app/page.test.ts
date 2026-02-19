@@ -8,6 +8,9 @@ vi.mock("./create-event-form", () => ({
 vi.mock("./close-button", () => ({
   CloseButton: () => null
 }));
+vi.mock("./event-questions-editor", () => ({
+  EventQuestionsEditor: () => null
+}));
 
 import HomePage from "./page";
 
