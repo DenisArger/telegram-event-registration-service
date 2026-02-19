@@ -1,7 +1,9 @@
 import React from "react";
 import { CheckInForm } from "./checkin-form";
+import { CloseButton } from "./close-button";
 import { CreateEventForm } from "./create-event-form";
 import { ExportButton } from "./export-button";
+import { PublishButton } from "./publish-button";
 import { PromoteButton } from "./promote-button";
 import { getUiLocale, ui } from "./i18n";
 
@@ -161,6 +163,18 @@ export default async function HomePage() {
               <li key={event.id}>
                 <strong>{event.title}</strong> ({event.status}) —{" "}
                 {new Date(event.startsAt).toLocaleString()} — cap: {event.capacity}
+                {event.status === "draft" ? (
+                  <>
+                    {" "}
+                    <PublishButton eventId={event.id} />
+                  </>
+                ) : null}
+                {event.status === "published" ? (
+                  <>
+                    {" "}
+                    <CloseButton eventId={event.id} />
+                  </>
+                ) : null}
               </li>
             ))}
           </ul>

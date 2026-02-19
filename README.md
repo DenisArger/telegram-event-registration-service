@@ -79,6 +79,8 @@ Endpoints in `apps/bot/api/admin`:
 - `GET /api/admin/stats?eventId=<uuid>`
 - `GET /api/admin/export?eventId=<uuid>`
 - `POST /api/admin/checkin`
+- `POST /api/admin/publish`
+- `POST /api/admin/close`
 - `POST /api/admin/promote`
 
 Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.

@@ -5,6 +5,10 @@ vi.mock("./create-event-form", () => ({
   CreateEventForm: () => null
 }));
 
+vi.mock("./close-button", () => ({
+  CloseButton: () => null
+}));
+
 import HomePage from "./page";
 
 describe("HomePage", () => {
