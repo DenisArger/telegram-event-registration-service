@@ -8,6 +8,6 @@ describe("handleStart", () => {
     await handleStart({ reply } as any);
 
     expect(reply).toHaveBeenCalledOnce();
-    expect(String(reply.mock.calls[0][0])).toContain("Welcome");
+    expect(reply).toHaveBeenCalledWith(expect.stringContaining("Welcome"));
   });
 });

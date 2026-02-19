@@ -133,7 +133,7 @@ bot.action(/^reg:(.+)$/, async (ctx) => {
     const eventId = ctx.match[1];
     const from = ctx.from;
 
-    if (!from) {
+    if (!from || !eventId) {
       await ctx.answerCbQuery("User info not available.");
       return;
     }
@@ -157,7 +157,7 @@ bot.action(/^cancel:(.+)$/, async (ctx) => {
     const eventId = ctx.match[1];
     const from = ctx.from;
 
-    if (!from) {
+    if (!from || !eventId) {
       await ctx.answerCbQuery("User info not available.");
       return;
     }
