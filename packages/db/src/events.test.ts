@@ -116,14 +116,19 @@ describe("events data layer", () => {
           status: "registered",
           payment_status: "mock_paid",
           created_at: "2026",
-          users: { full_name: "John", username: "john", telegram_id: 1 },
-          checkins: [{ id: "c1" }]
+          users: { full_name: "John", username: "john", telegram_id: 1 }
         }
       ],
       error: null
     }));
-    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
-    const db = { from: vi.fn(() => query) } as any;
+    const registrationsQuery = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
+    const checkinsQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: [{ user_id: "u1" }], error: null }))
+    };
+    const db = {
+      from: vi.fn((table: string) => (table === "registrations" ? registrationsQuery : checkinsQuery))
+    } as any;
 
     const result = await listEventAttendees(db, "e1");
     expect(result[0]).toEqual(

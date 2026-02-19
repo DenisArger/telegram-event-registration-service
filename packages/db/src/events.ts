@@ -169,14 +169,21 @@ export async function listEventAttendees(
         full_name,
         username,
         telegram_id
-      ),
-      checkins(id)
+      )
     `
     )
     .eq("event_id", eventId)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
+
+  const { data: checkins, error: checkinsError } = await db
+    .from("checkins")
+    .select("user_id")
+    .eq("event_id", eventId);
+
+  if (checkinsError) throw checkinsError;
+  const checkedInIds = new Set((checkins ?? []).map((row: any) => String(row.user_id)));
 
   return (data ?? []).map((row: any) => ({
     userId: row.user_id,
@@ -186,7 +193,7 @@ export async function listEventAttendees(
     status: row.status,
     paymentStatus: row.payment_status,
     registeredAt: row.created_at,
-    checkedIn: Array.isArray(row.checkins) && row.checkins.length > 0
+    checkedIn: checkedInIds.has(String(row.user_id))
   }));
 }
 
