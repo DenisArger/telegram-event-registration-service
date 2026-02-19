@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+
+vi.mock("./create-event-form", () => ({
+  CreateEventForm: () => null
+}));
+
 import HomePage from "./page";
 
 describe("HomePage", () => {

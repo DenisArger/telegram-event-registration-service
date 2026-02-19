@@ -73,6 +73,7 @@ Organizer/Admin:
 
 Endpoints in `apps/bot/api/admin`:
 - `GET /api/admin/events`
+- `POST /api/admin/events`
 - `GET /api/admin/attendees?eventId=<uuid>`
 - `GET /api/admin/waitlist?eventId=<uuid>`
 - `GET /api/admin/stats?eventId=<uuid>`
@@ -81,6 +82,7 @@ Endpoints in `apps/bot/api/admin`:
 - `POST /api/admin/promote`
 
 Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
+Creating events from admin API also requires `ADMIN_DEFAULT_CREATOR_ID` (UUID from `users.id`), used as `events.created_by`.
 
 Admin web (`apps/admin`) reads:
 - `ADMIN_API_BASE_URL`

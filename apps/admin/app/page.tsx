@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckInForm } from "./checkin-form";
+import { CreateEventForm } from "./create-event-form";
 import { ExportButton } from "./export-button";
 import { PromoteButton } from "./promote-button";
 import { getUiLocale, ui } from "./i18n";
@@ -144,6 +145,10 @@ export default async function HomePage() {
       <section className="card">
         <h2>{ui("system_status", locale)}</h2>
         <p>{ui("bot_health", locale)}: {health}</p>
+      </section>
+
+      <section className="card" style={{ marginTop: 16 }}>
+        <CreateEventForm />
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
