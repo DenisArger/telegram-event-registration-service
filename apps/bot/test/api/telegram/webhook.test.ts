@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   logError: vi.fn()
 }));
 
-vi.mock("../../../src/runtime", () => ({
+vi.mock("../../../src/runtime.js", () => ({
   bot: {
     handleUpdate: mocks.handleUpdate
   }

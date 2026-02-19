@@ -11,13 +11,13 @@ import {
   upsertTelegramUser
 } from "@event/db";
 import { loadEnv, logError, logInfo } from "@event/shared";
-import { handleStart } from "./handlers/start";
-import { buildEventMessage, registrationStatusToText } from "./messages";
+import { handleStart } from "./handlers/start.js";
+import { buildEventMessage, registrationStatusToText } from "./messages.js";
 import {
   canManageEvents,
   parseCreateEventCommand,
   validateLifecycleTransition
-} from "./organizer";
+} from "./organizer.js";
 
 const env = loadEnv(process.env);
 const db = createServiceClient(process.env);

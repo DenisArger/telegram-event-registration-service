@@ -12,6 +12,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "yarn workspace @event/shared build && yarn workspace @event/db build",
     "dev": "yarn workspaces run dev",
     "build": "yarn workspaces run build",
     "typecheck": "yarn workspaces run typecheck",

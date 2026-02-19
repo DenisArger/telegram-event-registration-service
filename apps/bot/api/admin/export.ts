@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createServiceClient, listEventAttendees, listEventWaitlist } from "@event/db";
 import { logError } from "@event/shared";
-import { isAdminRequest } from "../../src/adminAuth";
-import { buildEventExportCsv } from "../../src/csv";
+import { isAdminRequest } from "../../src/adminAuth.js";
+import { buildEventExportCsv } from "../../src/csv.js";
 
 const db = createServiceClient(process.env);
 

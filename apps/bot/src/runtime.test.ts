@@ -79,16 +79,16 @@ vi.mock("@event/db", () => ({
   closeEvent: mocks.closeEvent
 }));
 
-vi.mock("./handlers/start", () => ({
+vi.mock("./handlers/start.js", () => ({
   handleStart: mocks.handleStart
 }));
 
-vi.mock("./messages", () => ({
+vi.mock("./messages.js", () => ({
   buildEventMessage: mocks.buildEventMessage,
   registrationStatusToText: mocks.registrationStatusToText
 }));
 
-vi.mock("./organizer", () => ({
+vi.mock("./organizer.js", () => ({
   canManageEvents: mocks.canManageEvents,
   parseCreateEventCommand: mocks.parseCreateEventCommand,
   validateLifecycleTransition: mocks.validateLifecycleTransition

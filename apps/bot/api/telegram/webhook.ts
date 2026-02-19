@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { bot } from "../../src/runtime";
+import { bot } from "../../src/runtime.js";
 import { loadEnv, logError } from "@event/shared";
 
 const env = loadEnv(process.env);

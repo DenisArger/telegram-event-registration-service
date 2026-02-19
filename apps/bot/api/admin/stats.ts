@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createServiceClient, getEventStats } from "@event/db";
 import { logError } from "@event/shared";
-import { isAdminRequest } from "../../src/adminAuth";
+import { isAdminRequest } from "../../src/adminAuth.js";
 
 const db = createServiceClient(process.env);
 
