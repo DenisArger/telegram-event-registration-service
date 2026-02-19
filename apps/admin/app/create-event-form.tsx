@@ -24,6 +24,7 @@ export function CreateEventForm({
   const [endsAt, setEndsAt] = useState("");
   const [capacity, setCapacity] = useState("");
   const [description, setDescription] = useState("");
+  const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState("");
   const [location, setLocation] = useState("");
   const [questions, setQuestions] = useState<NewQuestionInput[]>([]);
   const [loading, setLoading] = useState(false);
@@ -113,6 +114,7 @@ export function CreateEventForm({
           endsAt: endsAtIso,
           capacity: numericCapacity,
           description: description.trim() || null,
+          registrationSuccessMessage: registrationSuccessMessage.trim() || null,
           location: location.trim() || null,
           questions: normalizedQuestions
         })
@@ -129,6 +131,7 @@ export function CreateEventForm({
       setEndsAt("");
       setCapacity("");
       setDescription("");
+      setRegistrationSuccessMessage("");
       setLocation("");
       setQuestions([]);
       setMessage(ru ? "Событие создано в статусе draft." : "Event created in draft status.");
@@ -197,6 +200,22 @@ export function CreateEventForm({
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
             <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр описания" : "Description preview"}</p>
             <MarkdownPreview markdown={description} />
+          </div>
+        ) : null}
+        <textarea
+          placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
+          value={registrationSuccessMessage}
+          onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
+        />
+        <small>
+          {ru
+            ? "Этот текст бот отправит после успешной регистрации."
+            : "Bot sends this text after successful registration."}
+        </small>
+        {registrationSuccessMessage.trim() ? (
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+            <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
+            <MarkdownPreview markdown={registrationSuccessMessage} />
           </div>
         ) : null}
 

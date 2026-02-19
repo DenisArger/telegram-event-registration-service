@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => ({
   handleStart: vi.fn(),
   buildEventMessage: vi.fn(),
   buildEventMessageHtml: vi.fn(),
+  renderMarkdownToTelegramHtml: vi.fn(),
   registrationStatusToText: vi.fn(),
   canManageEvents: vi.fn(),
   parseCreateEventCommand: vi.fn(),
@@ -108,6 +109,7 @@ vi.mock("./handlers/start.js", () => ({
 vi.mock("./messages.js", () => ({
   buildEventMessage: mocks.buildEventMessage,
   buildEventMessageHtml: mocks.buildEventMessageHtml,
+  renderMarkdownToTelegramHtml: mocks.renderMarkdownToTelegramHtml,
   registrationStatusToText: mocks.registrationStatusToText
 }));
 
@@ -171,6 +173,7 @@ describe("bot runtime", () => {
     mocks.createEvent.mockResolvedValue({ id: "e1", title: "T", status: "draft" });
     mocks.buildEventMessage.mockReturnValue("event message");
     mocks.buildEventMessageHtml.mockReturnValue("event message html");
+    mocks.renderMarkdownToTelegramHtml.mockReturnValue("<b>custom success</b>");
     mocks.registrationStatusToText.mockReturnValue("registered");
     mocks.getEventById.mockResolvedValue({ id: "e1", status: "draft", title: "T" });
     mocks.validateLifecycleTransition.mockReturnValue(true);
@@ -279,13 +282,30 @@ describe("bot runtime", () => {
 
     const regCtx = baseCtx({ match: ["reg:e1", "e1"] });
     await regAction?.handler(regCtx);
-    expect(regCtx.answerCbQuery).toHaveBeenCalledWith("registered", { show_alert: true });
+    expect(regCtx.answerCbQuery).toHaveBeenCalledWith();
+    expect(regCtx.reply).toHaveBeenCalledWith("registered");
 
     const cancelCtx = baseCtx({ match: ["cancel:e1", "e1"] });
     await cancelAction?.handler(cancelCtx);
     expect(cancelCtx.answerCbQuery).toHaveBeenCalledWith("Your registration has been cancelled.", {
       show_alert: true
     });
+  });
+
+  it("sends custom registration success message when configured", async () => {
+    const regAction = state.actions.find((item) => String(item.pattern) === String(/^reg:(.+)$/));
+    mocks.getEventById.mockResolvedValueOnce({
+      id: "e1",
+      status: "published",
+      title: "T",
+      registrationSuccessMessage: "**Welcome**"
+    });
+
+    const regCtx = baseCtx({ match: ["reg:e1", "e1"] });
+    await regAction?.handler(regCtx);
+
+    expect(mocks.renderMarkdownToTelegramHtml).toHaveBeenCalledWith("**Welcome**");
+    expect(regCtx.reply).toHaveBeenCalledWith("<b>custom success</b>", { parse_mode: "HTML" });
   });
 
   it("handles register/cancel callback edge cases", async () => {

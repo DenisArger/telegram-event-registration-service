@@ -17,7 +17,7 @@ import {
 describe("events data layer", () => {
   it("listPublishedEvents maps rows", async () => {
     const order = vi.fn(async () => ({
-      data: [{ id: "e1", title: "T", description: null, starts_at: "2026", ends_at: null, capacity: 10, status: "published" }],
+      data: [{ id: "e1", title: "T", description: null, starts_at: "2026", ends_at: null, capacity: 10, registration_success_message: null, status: "published" }],
       error: null
     }));
     const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
@@ -32,6 +32,7 @@ describe("events data layer", () => {
       startsAt: "2026",
       endsAt: null,
       capacity: 10,
+      registrationSuccessMessage: null,
       status: "published"
     });
   });

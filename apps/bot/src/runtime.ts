@@ -21,7 +21,7 @@ import {
 import type { EventRegistrationQuestion, RegistrationQuestionAnswer } from "@event/shared";
 import { loadEnv, logError, logInfo } from "@event/shared";
 import { handleStart } from "./handlers/start.js";
-import { buildEventMessage, buildEventMessageHtml, registrationStatusToText } from "./messages.js";
+import { buildEventMessage, buildEventMessageHtml, registrationStatusToText, renderMarkdownToTelegramHtml } from "./messages.js";
 import { getLocaleFromCtx, t } from "./i18n.js";
 import {
   canManageEvents,
@@ -171,7 +171,12 @@ bot.action(/^reg:(.+)$/, async (ctx) => {
     const questions = await getRegistrationQuestions(db, eventId);
     if (questions.length === 0) {
       const result = await registerForEvent(db, eventId, user.id);
-      await ctx.answerCbQuery(registrationStatusToText(result, locale), { show_alert: true });
+      if (result.status === "registered") {
+        await ctx.answerCbQuery();
+        await sendRegistrationResultMessage(ctx, locale, eventId, result);
+      } else {
+        await ctx.answerCbQuery(registrationStatusToText(result, locale), { show_alert: true });
+      }
       return;
     }
 
@@ -471,7 +476,7 @@ async function processQuestionAnswer(
       }))
     );
     await completeQuestionSession(db, eventId, userId);
-    await ctx.reply(registrationStatusToText(result, locale));
+    await sendRegistrationResultMessage(ctx, locale, eventId, result);
     return;
   }
 
@@ -526,3 +531,24 @@ async function handleOrganizerLifecycleAction(
 }
 
 logInfo("bot_initialized");
+
+async function sendRegistrationResultMessage(
+  ctx: any,
+  locale: "en" | "ru",
+  eventId: string,
+  result: { status: "registered" | "waitlisted" | "already_registered" | "already_waitlisted"; position?: number }
+): Promise<void> {
+  if (result.status !== "registered") {
+    await ctx.reply(registrationStatusToText(result, locale));
+    return;
+  }
+
+  const event = await getEventById(db, eventId);
+  const customMessage = event?.registrationSuccessMessage?.trim();
+  if (!customMessage) {
+    await ctx.reply(registrationStatusToText(result, locale));
+    return;
+  }
+
+  await ctx.reply(renderMarkdownToTelegramHtml(customMessage), { parse_mode: "HTML" });
+}

@@ -7,6 +7,7 @@ export interface EventEntity {
   startsAt: string | null;
   endsAt: string | null;
   capacity: number | null;
+  registrationSuccessMessage?: string | null;
   status: "draft" | "published" | "closed";
 }
 

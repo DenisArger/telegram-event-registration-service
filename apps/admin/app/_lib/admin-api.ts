@@ -7,6 +7,7 @@ export interface EventItem {
   endsAt?: string | null;
   status: "draft" | "published" | "closed";
   capacity: number | null;
+  registrationSuccessMessage?: string | null;
 }
 
 export interface AttendeeItem {

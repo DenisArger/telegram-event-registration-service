@@ -12,6 +12,7 @@ interface EditableEvent {
   id: string;
   title: string;
   description?: string | null;
+  registrationSuccessMessage?: string | null;
   location?: string | null;
   startsAt: string | null;
   endsAt?: string | null;
@@ -27,6 +28,7 @@ export function EventEditor({ event }: { event: EditableEvent }) {
   const [endsAt, setEndsAt] = useState(isoToDatetimeLocal(event.endsAt));
   const [capacity, setCapacity] = useState(event.capacity == null ? "" : String(event.capacity));
   const [description, setDescription] = useState(event.description ?? "");
+  const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState(event.registrationSuccessMessage ?? "");
   const [location, setLocation] = useState(event.location ?? "");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -88,6 +90,7 @@ export function EventEditor({ event }: { event: EditableEvent }) {
           endsAt: endsAtIso,
           capacity: numericCapacity,
           description: description.trim() || null,
+          registrationSuccessMessage: registrationSuccessMessage.trim() || null,
           location: location.trim() || null
         })
       });
@@ -134,6 +137,22 @@ export function EventEditor({ event }: { event: EditableEvent }) {
             <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
               <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр описания" : "Description preview"}</p>
               <MarkdownPreview markdown={description} />
+            </div>
+          ) : null}
+          <textarea
+            placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
+            value={registrationSuccessMessage}
+            onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
+          />
+          <small>
+            {ru
+              ? "Этот текст бот отправит после успешной регистрации."
+              : "Bot sends this text after successful registration."}
+          </small>
+          {registrationSuccessMessage.trim() ? (
+            <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+              <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
+              <MarkdownPreview markdown={registrationSuccessMessage} />
             </div>
           ) : null}
 

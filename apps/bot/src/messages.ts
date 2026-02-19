@@ -17,7 +17,7 @@ function inlineMarkdownToHtml(value: string): string {
     .replace(/\*([^*]+)\*/g, "<i>$1</i>");
 }
 
-function markdownToTelegramHtml(markdown: string): string {
+export function renderMarkdownToTelegramHtml(markdown: string): string {
   const lines = markdown.split(/\r?\n/);
   return lines
     .map((rawLine) => {
@@ -66,7 +66,7 @@ export function buildEventMessageHtml(event: EventEntity, locale: BotLocale = "e
   const startsAt = formatEventDate(event.startsAt, locale);
   const endsAt = formatEventDate(event.endsAt, locale);
   const capacity = formatCapacity(event.capacity);
-  const descriptionHtml = event.description ? markdownToTelegramHtml(event.description) : null;
+  const descriptionHtml = event.description ? renderMarkdownToTelegramHtml(event.description) : null;
 
   return [
     titleHtml,

@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       try {
         const { data, error } = await db
           .from("events")
-          .select("id,title,description,location,starts_at,ends_at,capacity,status")
+          .select("id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
           .eq("id", eventId)
           .maybeSingle();
 
@@ -45,6 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             startsAt: data.starts_at,
             endsAt: data.ends_at,
             capacity: data.capacity,
+            registrationSuccessMessage: data.registration_success_message,
             status: data.status
           }
         });
@@ -71,6 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const startsAtRaw = String(req.body?.startsAt ?? "").trim();
     const endsAtRaw = String(req.body?.endsAt ?? "").trim();
     const capacityRaw = String(req.body?.capacity ?? "").trim();
+    const registrationSuccessMessage = String(req.body?.registrationSuccessMessage ?? "").trim() || null;
     const description = String(req.body?.description ?? "").trim() || null;
     const location = String(req.body?.location ?? "").trim() || null;
 
@@ -102,6 +104,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       res.status(400).json({ message: "capacity must be a positive integer" });
       return;
     }
+    if (registrationSuccessMessage && registrationSuccessMessage.length > 4000) {
+      res.status(400).json({ message: "registrationSuccessMessage is too long" });
+      return;
+    }
 
     try {
       const { data, error } = await db
@@ -112,10 +118,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           location,
           starts_at: startsAt ? startsAt.toISOString() : null,
           ends_at: endsAt ? endsAt.toISOString() : null,
-          capacity
+          capacity,
+          registration_success_message: registrationSuccessMessage
         })
         .eq("id", eventId)
-        .select("id,title,description,location,starts_at,ends_at,capacity,status")
+        .select("id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
         .maybeSingle();
 
       if (error) throw error;
@@ -133,6 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           startsAt: data.starts_at,
           endsAt: data.ends_at,
           capacity: data.capacity,
+          registrationSuccessMessage: data.registration_success_message,
           status: data.status
         }
       });
@@ -153,6 +161,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const startsAtRaw = String(req.body?.startsAt ?? "").trim();
   const endsAtRaw = String(req.body?.endsAt ?? "").trim();
   const capacityRaw = String(req.body?.capacity ?? "").trim();
+  const registrationSuccessMessage = String(req.body?.registrationSuccessMessage ?? "").trim() || null;
   const description = String(req.body?.description ?? "").trim() || null;
   const location = String(req.body?.location ?? "").trim() || null;
   const rawQuestions = Array.isArray(req.body?.questions) ? req.body.questions : [];
@@ -182,6 +191,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(400).json({ message: "capacity must be a positive integer" });
     return;
   }
+  if (registrationSuccessMessage && registrationSuccessMessage.length > 4000) {
+    res.status(400).json({ message: "registrationSuccessMessage is too long" });
+    return;
+  }
 
   if (rawQuestions.length > 10) {
     res.status(400).json({ message: "questions count must be <= 10" });
@@ -205,6 +218,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       startsAt: startsAt ? startsAt.toISOString() : null,
       endsAt: endsAt ? endsAt.toISOString() : null,
       capacity,
+      registrationSuccessMessage,
       description,
       location,
       createdBy: creatorId

@@ -10,7 +10,7 @@ import type {
 export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,ends_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("status", "published")
     .order("starts_at", { ascending: true });
 
@@ -23,6 +23,7 @@ export async function listPublishedEvents(db: SupabaseClient): Promise<EventEnti
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     capacity: row.capacity,
+    registrationSuccessMessage: row.registration_success_message,
     status: row.status
   }));
 }
@@ -36,6 +37,7 @@ export async function createEvent(
     startsAt?: string | null;
     endsAt?: string | null;
     capacity?: number | null;
+    registrationSuccessMessage?: string | null;
     createdBy: string;
   }
 ): Promise<EventEntity> {
@@ -48,10 +50,11 @@ export async function createEvent(
       starts_at: payload.startsAt ?? null,
       ends_at: payload.endsAt ?? null,
       capacity: payload.capacity ?? null,
+      registration_success_message: payload.registrationSuccessMessage ?? null,
       status: "draft",
       created_by: payload.createdBy
     })
-    .select("id,title,description,starts_at,ends_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .single();
 
   if (error) throw error;
@@ -63,6 +66,7 @@ export async function createEvent(
     startsAt: data.starts_at,
     endsAt: data.ends_at,
     capacity: data.capacity,
+    registrationSuccessMessage: data.registration_success_message,
     status: data.status
   };
 }
@@ -73,7 +77,7 @@ export async function getEventById(
 ): Promise<EventEntity | null> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,ends_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -87,6 +91,7 @@ export async function getEventById(
     startsAt: data.starts_at,
     endsAt: data.ends_at,
     capacity: data.capacity,
+    registrationSuccessMessage: data.registration_success_message,
     status: data.status
   };
 }
@@ -100,7 +105,7 @@ export async function publishEvent(
     .update({ status: "published" })
     .eq("id", eventId)
     .eq("status", "draft")
-    .select("id,title,description,starts_at,ends_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
 
   if (error) throw error;
@@ -113,6 +118,7 @@ export async function publishEvent(
     startsAt: data.starts_at,
     endsAt: data.ends_at,
     capacity: data.capacity,
+    registrationSuccessMessage: data.registration_success_message,
     status: data.status
   };
 }
@@ -126,7 +132,7 @@ export async function closeEvent(
     .update({ status: "closed" })
     .eq("id", eventId)
     .eq("status", "published")
-    .select("id,title,description,starts_at,ends_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
 
   if (error) throw error;
@@ -139,6 +145,7 @@ export async function closeEvent(
     startsAt: data.starts_at,
     endsAt: data.ends_at,
     capacity: data.capacity,
+    registrationSuccessMessage: data.registration_success_message,
     status: data.status
   };
 }
@@ -146,7 +153,7 @@ export async function closeEvent(
 export async function listAllEvents(db: SupabaseClient): Promise<EventEntity[]> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,ends_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .order("starts_at", { ascending: false });
 
   if (error) throw error;
@@ -158,6 +165,7 @@ export async function listAllEvents(db: SupabaseClient): Promise<EventEntity[]> 
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     capacity: row.capacity,
+    registrationSuccessMessage: row.registration_success_message,
     status: row.status
   }));
 }
