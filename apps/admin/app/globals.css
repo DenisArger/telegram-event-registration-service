@@ -4,9 +4,63 @@
 
 body {
   margin: 0;
-  padding: 24px;
   background: #f5f7fb;
   color: #111827;
+}
+
+.page-shell {
+  min-height: 100vh;
+}
+
+.page-content {
+  padding: 20px 24px 32px;
+}
+
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+}
+
+.admin-brand {
+  color: #111827;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.admin-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-nav-link {
+  text-decoration: none;
+  color: #334155;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+}
+
+.admin-nav-link:hover {
+  background: #f1f5f9;
+}
+
+.admin-nav-link.active {
+  color: #0f172a;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
 }
 
 .card {
@@ -14,4 +68,27 @@ body {
   border-radius: 12px;
   padding: 16px;
   border: 1px solid #e5e7eb;
+}
+
+.section-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.event-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.quick-links {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.quick-link-card {
+  display: grid;
+  gap: 8px;
 }

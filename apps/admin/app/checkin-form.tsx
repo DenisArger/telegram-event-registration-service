@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 
-export function CheckInForm() {
+export function CheckInForm({ initialEventId = "" }: { initialEventId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
-  const [eventId, setEventId] = useState("");
+  const [eventId, setEventId] = useState(initialEventId);
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

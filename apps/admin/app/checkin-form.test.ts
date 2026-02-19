@@ -41,8 +41,7 @@ describe("CheckInForm", () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ status: "already_checked_in" }) });
     vi.stubGlobal("fetch", fetch);
 
-    render(React.createElement(CheckInForm));
-    fireEvent.change(screen.getByPlaceholderText("eventId"), { target: { value: "e1" } });
+    render(React.createElement(CheckInForm, { initialEventId: "e1" }));
     fireEvent.change(screen.getByPlaceholderText("userId"), { target: { value: "u1" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
@@ -52,6 +51,24 @@ describe("CheckInForm", () => {
     await screen.findByText("Already checked in.");
 
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("allows editing prefilled eventId", async () => {
+    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
+    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
+
+    const fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ status: "checked_in" }) });
+    vi.stubGlobal("fetch", fetch);
+
+    render(React.createElement(CheckInForm, { initialEventId: "e1" }));
+    fireEvent.change(screen.getByPlaceholderText("eventId"), { target: { value: "e2" } });
+    fireEvent.change(screen.getByPlaceholderText("userId"), { target: { value: "u1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
+
+    await screen.findByText("Check-in successful.");
+    expect(fetch.mock.calls[0]?.[1]).toMatchObject({
+      body: JSON.stringify({ eventId: "e2", userId: "u1", method: "manual" })
+    });
   });
 
   it("handles api and network errors", async () => {
