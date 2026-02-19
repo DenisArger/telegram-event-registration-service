@@ -3,10 +3,13 @@ import { createServiceClient, listEventAttendees, listEventWaitlist } from "@eve
 import { logError } from "@event/shared";
 import { isAdminRequest } from "../../src/adminAuth.js";
 import { buildEventExportCsv } from "../../src/csv.js";
+import { applyCors } from "../../src/cors.js";
 
 const db = createServiceClient(process.env);
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  if (applyCors(req, res)) return;
+
   if (req.method !== "GET") {
     res.status(405).json({ message: "Method not allowed" });
     return;
