@@ -17,7 +17,7 @@ import {
 describe("events data layer", () => {
   it("listPublishedEvents maps rows", async () => {
     const order = vi.fn(async () => ({
-      data: [{ id: "e1", title: "T", description: null, starts_at: "2026", capacity: 10, status: "published" }],
+      data: [{ id: "e1", title: "T", description: null, starts_at: "2026", ends_at: null, capacity: 10, status: "published" }],
       error: null
     }));
     const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
@@ -30,6 +30,7 @@ describe("events data layer", () => {
       title: "T",
       description: null,
       startsAt: "2026",
+      endsAt: null,
       capacity: 10,
       status: "published"
     });
@@ -37,7 +38,7 @@ describe("events data layer", () => {
 
   it("createEvent inserts draft event", async () => {
     const single = vi.fn(async () => ({
-      data: { id: "e1", title: "T", description: "D", starts_at: "2026", capacity: 10, status: "draft" },
+      data: { id: "e1", title: "T", description: "D", starts_at: "2026", ends_at: null, capacity: 10, status: "draft" },
       error: null
     }));
     const select = vi.fn(() => ({ single }));
@@ -68,11 +69,11 @@ describe("events data layer", () => {
 
   it("publishEvent and closeEvent update lifecycle", async () => {
     const maybeSinglePublish = vi.fn(async () => ({
-      data: { id: "e1", title: "T", description: null, starts_at: "2026", capacity: 10, status: "published" },
+      data: { id: "e1", title: "T", description: null, starts_at: "2026", ends_at: null, capacity: 10, status: "published" },
       error: null
     }));
     const maybeSingleClose = vi.fn(async () => ({
-      data: { id: "e1", title: "T", description: null, starts_at: "2026", capacity: 10, status: "closed" },
+      data: { id: "e1", title: "T", description: null, starts_at: "2026", ends_at: null, capacity: 10, status: "closed" },
       error: null
     }));
 
@@ -99,7 +100,7 @@ describe("events data layer", () => {
 
   it("listAllEvents maps rows", async () => {
     const order = vi.fn(async () => ({
-      data: [{ id: "e1", title: "All", description: null, starts_at: "2026", capacity: 1, status: "draft" }],
+      data: [{ id: "e1", title: "All", description: null, starts_at: "2026", ends_at: null, capacity: 1, status: "draft" }],
       error: null
     }));
     const db = {

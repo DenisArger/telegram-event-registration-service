@@ -28,7 +28,10 @@ export default async function EventDetailsPage({
     <div className="section-grid">
       <section className="card">
         <h1>{event.title}</h1>
-        <p>{event.status} — {new Date(event.startsAt).toLocaleString()}</p>
+        <p>
+          {event.status} — {new Date(event.startsAt).toLocaleString()}
+          {event.endsAt ? ` → ${new Date(event.endsAt).toLocaleString()}` : ""}
+        </p>
       </section>
       <EventEditor event={event} />
     </div>

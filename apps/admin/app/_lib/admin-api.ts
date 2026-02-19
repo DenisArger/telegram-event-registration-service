@@ -4,6 +4,7 @@ export interface EventItem {
   description?: string | null;
   location?: string | null;
   startsAt: string;
+  endsAt?: string | null;
   status: "draft" | "published" | "closed";
   capacity: number;
 }

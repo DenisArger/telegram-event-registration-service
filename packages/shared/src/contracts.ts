@@ -5,6 +5,7 @@ export interface EventEntity {
   title: string;
   description: string | null;
   startsAt: string;
+  endsAt: string | null;
   capacity: number;
   status: "draft" | "published" | "closed";
 }

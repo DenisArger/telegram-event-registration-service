@@ -10,7 +10,7 @@ import type {
 export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,status")
     .eq("status", "published")
     .order("starts_at", { ascending: true });
 
@@ -21,6 +21,7 @@ export async function listPublishedEvents(db: SupabaseClient): Promise<EventEnti
     title: row.title,
     description: row.description,
     startsAt: row.starts_at,
+    endsAt: row.ends_at,
     capacity: row.capacity,
     status: row.status
   }));
@@ -33,6 +34,7 @@ export async function createEvent(
     description?: string | null;
     location?: string | null;
     startsAt: string;
+    endsAt?: string | null;
     capacity: number;
     createdBy: string;
   }
@@ -44,11 +46,12 @@ export async function createEvent(
       description: payload.description ?? null,
       location: payload.location ?? null,
       starts_at: payload.startsAt,
+      ends_at: payload.endsAt ?? null,
       capacity: payload.capacity,
       status: "draft",
       created_by: payload.createdBy
     })
-    .select("id,title,description,starts_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,status")
     .single();
 
   if (error) throw error;
@@ -58,6 +61,7 @@ export async function createEvent(
     title: data.title,
     description: data.description,
     startsAt: data.starts_at,
+    endsAt: data.ends_at,
     capacity: data.capacity,
     status: data.status
   };
@@ -69,7 +73,7 @@ export async function getEventById(
 ): Promise<EventEntity | null> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,status")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -81,6 +85,7 @@ export async function getEventById(
     title: data.title,
     description: data.description,
     startsAt: data.starts_at,
+    endsAt: data.ends_at,
     capacity: data.capacity,
     status: data.status
   };
@@ -95,7 +100,7 @@ export async function publishEvent(
     .update({ status: "published" })
     .eq("id", eventId)
     .eq("status", "draft")
-    .select("id,title,description,starts_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,status")
     .maybeSingle();
 
   if (error) throw error;
@@ -106,6 +111,7 @@ export async function publishEvent(
     title: data.title,
     description: data.description,
     startsAt: data.starts_at,
+    endsAt: data.ends_at,
     capacity: data.capacity,
     status: data.status
   };
@@ -120,7 +126,7 @@ export async function closeEvent(
     .update({ status: "closed" })
     .eq("id", eventId)
     .eq("status", "published")
-    .select("id,title,description,starts_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,status")
     .maybeSingle();
 
   if (error) throw error;
@@ -131,6 +137,7 @@ export async function closeEvent(
     title: data.title,
     description: data.description,
     startsAt: data.starts_at,
+    endsAt: data.ends_at,
     capacity: data.capacity,
     status: data.status
   };
@@ -139,7 +146,7 @@ export async function closeEvent(
 export async function listAllEvents(db: SupabaseClient): Promise<EventEntity[]> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,capacity,status")
+    .select("id,title,description,starts_at,ends_at,capacity,status")
     .order("starts_at", { ascending: false });
 
   if (error) throw error;
@@ -149,6 +156,7 @@ export async function listAllEvents(db: SupabaseClient): Promise<EventEntity[]> 
     title: row.title,
     description: row.description,
     startsAt: row.starts_at,
+    endsAt: row.ends_at,
     capacity: row.capacity,
     status: row.status
   }));

@@ -26,6 +26,7 @@ describe("buildEventMessage", () => {
       title: "Team Sync",
       description: "Weekly internal sync",
       startsAt: "2026-02-19T10:00:00.000Z",
+      endsAt: "2026-02-19T11:00:00.000Z",
       capacity: 20,
       status: "published"
     });

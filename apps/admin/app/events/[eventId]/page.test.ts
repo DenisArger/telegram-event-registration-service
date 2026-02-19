@@ -8,6 +8,7 @@ vi.mock("../../_lib/admin-api", () => ({
     description: null,
     location: null,
     startsAt: "2026-03-01T10:00:00Z",
+    endsAt: "2026-03-01T11:00:00Z",
     status: "published",
     capacity: 20
   }))

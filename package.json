@@ -14,7 +14,7 @@
   "scripts": {
     "postinstall": "yarn workspace @event/shared build && yarn workspace @event/db build",
     "dev": "yarn workspaces run dev",
-    "build": "yarn workspaces run build",
+    "build": "yarn workspace @event/shared build && yarn workspace @event/db build && yarn workspace @event/admin build && yarn workspace @event/bot build",
     "typecheck": "yarn workspaces run typecheck",
     "lint": "yarn workspaces run lint",
     "test": "vitest run",

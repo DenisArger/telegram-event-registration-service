@@ -12,7 +12,7 @@ export function buildEventExportCsv(
   attendees: EventAttendeeEntity[],
   waitlist: WaitlistEntryEntity[]
 ): string {
-  const header = [
+  const header: string[] = [
     "row_type",
     "event_id",
     "user_id",
@@ -26,7 +26,7 @@ export function buildEventExportCsv(
     "created_at"
   ];
 
-  const attendeeRows = attendees.map((item) => [
+  const attendeeRows: string[][] = attendees.map((item) => [
     "attendee",
     eventId,
     item.userId,
@@ -40,7 +40,7 @@ export function buildEventExportCsv(
     item.registeredAt
   ]);
 
-  const waitlistRows = waitlist.map((item) => [
+  const waitlistRows: string[][] = waitlist.map((item) => [
     "waitlist",
     eventId,
     item.userId,
@@ -54,7 +54,7 @@ export function buildEventExportCsv(
     item.createdAt
   ]);
 
-  const answerRows = attendees.flatMap((item) =>
+  const answerRows: string[][] = attendees.flatMap((item) =>
     (item.answers ?? []).map((answer) => [
       "answer",
       eventId,
@@ -75,7 +75,7 @@ export function buildEventExportCsv(
     ])
   );
 
-  const extendedHeader = [
+  const extendedHeader: string[] = [
     ...header,
     "question_id",
     "question_version",
@@ -84,11 +84,11 @@ export function buildEventExportCsv(
     "is_skipped"
   ];
 
-  const attendeeRowsExtended = attendeeRows.map((row) => [...row, "", "", "", "", ""]);
-  const waitlistRowsExtended = waitlistRows.map((row) => [...row, "", "", "", "", ""]);
+  const attendeeRowsExtended: string[][] = attendeeRows.map((row) => [...row, "", "", "", "", ""]);
+  const waitlistRowsExtended: string[][] = waitlistRows.map((row) => [...row, "", "", "", "", ""]);
 
-  const rows = [extendedHeader, ...attendeeRowsExtended, ...waitlistRowsExtended, ...answerRows];
+  const rows: string[][] = [extendedHeader, ...attendeeRowsExtended, ...waitlistRowsExtended, ...answerRows];
   return rows
-    .map((row) => row.map((v) => escapeCsv(String(v))).join(","))
+    .map((row) => row.map((v: string) => escapeCsv(v)).join(","))
     .join("\n");
 }

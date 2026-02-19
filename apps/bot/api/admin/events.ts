@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       try {
         const { data, error } = await db
           .from("events")
-          .select("id,title,description,location,starts_at,capacity,status")
+          .select("id,title,description,location,starts_at,ends_at,capacity,status")
           .eq("id", eventId)
           .maybeSingle();
 
@@ -43,6 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             description: data.description,
             location: data.location,
             startsAt: data.starts_at,
+            endsAt: data.ends_at,
             capacity: data.capacity,
             status: data.status
           }
@@ -68,6 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const eventId = String(req.body?.eventId ?? "").trim();
     const title = String(req.body?.title ?? "").trim();
     const startsAtRaw = String(req.body?.startsAt ?? "").trim();
+    const endsAtRaw = String(req.body?.endsAt ?? "").trim();
     const capacity = Number(req.body?.capacity);
     const description = String(req.body?.description ?? "").trim() || null;
     const location = String(req.body?.location ?? "").trim() || null;
@@ -90,6 +92,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       res.status(400).json({ message: "startsAt must be a valid date" });
       return;
     }
+    const endsAt = endsAtRaw ? new Date(endsAtRaw) : null;
+    if (endsAtRaw && (!endsAt || Number.isNaN(endsAt.getTime()))) {
+      res.status(400).json({ message: "endsAt must be a valid date" });
+      return;
+    }
+    if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
+      res.status(400).json({ message: "endsAt must be greater than startsAt" });
+      return;
+    }
 
     if (!Number.isInteger(capacity) || capacity <= 0) {
       res.status(400).json({ message: "capacity must be a positive integer" });
@@ -104,10 +115,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           description,
           location,
           starts_at: startsAt.toISOString(),
+          ends_at: endsAt ? endsAt.toISOString() : null,
           capacity
         })
         .eq("id", eventId)
-        .select("id,title,description,location,starts_at,capacity,status")
+        .select("id,title,description,location,starts_at,ends_at,capacity,status")
         .maybeSingle();
 
       if (error) throw error;
@@ -123,6 +135,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           description: data.description,
           location: data.location,
           startsAt: data.starts_at,
+          endsAt: data.ends_at,
           capacity: data.capacity,
           status: data.status
         }
@@ -142,6 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const title = String(req.body?.title ?? "").trim();
   const startsAtRaw = String(req.body?.startsAt ?? "").trim();
+  const endsAtRaw = String(req.body?.endsAt ?? "").trim();
   const capacity = Number(req.body?.capacity);
   const description = String(req.body?.description ?? "").trim() || null;
   const location = String(req.body?.location ?? "").trim() || null;
@@ -162,6 +176,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(400).json({ message: "startsAt must be a valid date" });
     return;
   }
+  const endsAt = endsAtRaw ? new Date(endsAtRaw) : null;
+  if (endsAtRaw && (!endsAt || Number.isNaN(endsAt.getTime()))) {
+    res.status(400).json({ message: "endsAt must be a valid date" });
+    return;
+  }
+  if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
+    res.status(400).json({ message: "endsAt must be greater than startsAt" });
+    return;
+  }
 
   if (!Number.isInteger(capacity) || capacity <= 0) {
     res.status(400).json({ message: "capacity must be a positive integer" });
@@ -173,7 +196,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const questions = rawQuestions.map((item: any, index: number) => ({
+  const questions: Array<{ prompt: string; isRequired: boolean; position: number }> = rawQuestions.map((item: any, index: number) => ({
     prompt: String(item?.prompt ?? "").trim(),
     isRequired: Boolean(item?.required),
     position: index + 1
@@ -188,6 +211,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const event = await createEvent(db, {
       title,
       startsAt: startsAt.toISOString(),
+      endsAt: endsAt ? endsAt.toISOString() : null,
       capacity,
       description,
       location,

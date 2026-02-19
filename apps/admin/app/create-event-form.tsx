@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { MarkdownPreview } from "./_components/markdown-preview";
+import { datetimeLocalToIso } from "./_lib/datetime";
 
 interface NewQuestionInput {
   prompt: string;
@@ -19,6 +21,7 @@ export function CreateEventForm({
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
   const [capacity, setCapacity] = useState("20");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -52,15 +55,26 @@ export function CreateEventForm({
     }
 
     const normalizedTitle = title.trim();
-    const normalizedStartsAt = startsAt.trim();
+    const normalizedStartsAt = startsAt;
+    const normalizedEndsAt = endsAt;
+    const startsAtIso = datetimeLocalToIso(normalizedStartsAt);
+    const endsAtIso = datetimeLocalToIso(normalizedEndsAt);
     const numericCapacity = Number(capacity);
 
-    if (!normalizedTitle || !normalizedStartsAt || !Number.isInteger(numericCapacity) || numericCapacity <= 0) {
+    if (!normalizedTitle || !startsAtIso || !Number.isInteger(numericCapacity) || numericCapacity <= 0) {
       setMessage(
         ru
           ? "Нужны корректные title, startsAt и capacity."
           : "Valid title, startsAt, and capacity are required."
       );
+      return;
+    }
+    if (normalizedEndsAt && !endsAtIso) {
+      setMessage(ru ? "Нужен корректный endsAt." : "Valid endsAt is required.");
+      return;
+    }
+    if (endsAtIso && new Date(endsAtIso).getTime() <= new Date(startsAtIso).getTime()) {
+      setMessage(ru ? "Дата окончания должна быть позже начала." : "End date must be later than start date.");
       return;
     }
 
@@ -90,7 +104,8 @@ export function CreateEventForm({
         },
         body: JSON.stringify({
           title: normalizedTitle,
-          startsAt: normalizedStartsAt,
+          startsAt: startsAtIso,
+          endsAt: endsAtIso,
           capacity: numericCapacity,
           description: description.trim() || null,
           location: location.trim() || null,
@@ -106,6 +121,7 @@ export function CreateEventForm({
 
       setTitle("");
       setStartsAt("");
+      setEndsAt("");
       setCapacity("20");
       setDescription("");
       setLocation("");
@@ -125,30 +141,49 @@ export function CreateEventForm({
       {showTitle ? <p>{ru ? "Создать мероприятие" : "Create event"}</p> : null}
       <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
         <input
-          placeholder="title"
+          placeholder={ru ? "Название мероприятия" : "Event title"}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+        <small>{ru ? "Короткое понятное название. Например: Team Sync #12" : "Short clear title. Example: Team Sync #12"}</small>
         <input
-          placeholder="startsAt (ISO)"
+          type="datetime-local"
+          placeholder="startsAt"
           value={startsAt}
           onChange={(e) => setStartsAt(e.target.value)}
         />
+        <small>{ru ? "Дата и время начала мероприятия" : "Event start date and time"}</small>
         <input
-          placeholder="capacity"
+          type="datetime-local"
+          placeholder="endsAt"
+          value={endsAt}
+          onChange={(e) => setEndsAt(e.target.value)}
+        />
+        <small>{ru ? "Дата и время окончания (необязательно)" : "Event end date and time (optional)"}</small>
+        <input
+          placeholder={ru ? "Вместимость" : "Capacity"}
           value={capacity}
           onChange={(e) => setCapacity(e.target.value)}
         />
+        <small>{ru ? "Количество доступных мест (целое число)" : "Number of available seats (integer)"}</small>
         <input
-          placeholder="location (optional)"
+          placeholder={ru ? "Локация (опционально)" : "Location (optional)"}
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
+        <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
         <textarea
-          placeholder="description (optional)"
+          placeholder={ru ? "Описание (поддерживает Markdown)" : "Description (Markdown supported)"}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <small>{ru ? "Поддерживаются # заголовки, **жирный**, *курсив*, `код`, [ссылка](https://...)" : "Supports # headings, **bold**, *italic*, `code`, [link](https://...)"}</small>
+        {description.trim() ? (
+          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+            <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр описания" : "Description preview"}</p>
+            <MarkdownPreview markdown={description} />
+          </div>
+        ) : null}
 
         <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 12, display: "grid", gap: 8 }}>
           <strong>{ru ? "Вопросы при регистрации" : "Registration questions"}</strong>

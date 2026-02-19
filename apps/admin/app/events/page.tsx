@@ -1,6 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import { getAdminEvents } from "../_lib/admin-api";
+import { MarkdownPreview } from "../_components/markdown-preview";
 import { getUiLocale, ui } from "../i18n";
 
 export default async function EventsPage() {
@@ -25,8 +26,9 @@ export default async function EventsPage() {
                 <Link href={`/events/${event.id}`}>
                   <strong>{event.title}</strong>
                 </Link>{" "}
-                ({event.status}) — {new Date(event.startsAt).toLocaleString()} — cap: {event.capacity}
-                {event.description ? <p>{event.description}</p> : null}
+                ({event.status}) — {new Date(event.startsAt).toLocaleString()}
+                {event.endsAt ? ` → ${new Date(event.endsAt).toLocaleString()}` : ""} — cap: {event.capacity}
+                {event.description ? <MarkdownPreview markdown={event.description} /> : null}
               </li>
             ))}
           </ul>

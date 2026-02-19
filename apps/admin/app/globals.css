@@ -93,6 +93,20 @@ body {
   gap: 8px;
 }
 
+.markdown-preview p,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview ul {
+  margin: 8px 0;
+}
+
+.markdown-preview code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

@@ -162,6 +162,7 @@ describe("bot runtime", () => {
     mocks.parseCreateEventCommand.mockReturnValue({
       title: "T",
       startsAt: "2026-03-01T10:00:00Z",
+      endsAt: null,
       capacity: 10,
       description: "D"
     });
@@ -202,7 +203,7 @@ describe("bot runtime", () => {
     expect(emptyCtx.reply).toHaveBeenCalledWith("No published events right now.");
 
     mocks.listPublishedEvents.mockResolvedValueOnce([
-      { id: "e1", title: "Event", description: null, startsAt: "2026", capacity: 10, status: "published" }
+      { id: "e1", title: "Event", description: null, startsAt: "2026", endsAt: null, capacity: 10, status: "published" }
     ]);
     const filledCtx = baseCtx();
     await command?.(filledCtx);

@@ -7,6 +7,7 @@ export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"):
   return [
     `📅 ${event.title}`,
     `🕒 ${new Date(event.startsAt).toLocaleString(dateLocale)}`,
+    event.endsAt ? `🏁 ${new Date(event.endsAt).toLocaleString(dateLocale)}` : null,
     `👥 ${t(locale, "capacity_label")}: ${event.capacity}`,
     event.description ? `📝 ${event.description}` : null
   ]
