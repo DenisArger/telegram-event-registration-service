@@ -37,7 +37,7 @@ describe("CreateEventForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));
 
-    await screen.findByText("Valid title, startsAt, and capacity are required.");
+    await screen.findByText("Event title is required.");
   });
 
   it("creates event and refreshes page", async () => {
@@ -50,7 +50,7 @@ describe("CreateEventForm", () => {
     render(React.createElement(CreateEventForm));
     fireEvent.change(screen.getByPlaceholderText("Event title"), { target: { value: "Team Meetup" } });
     fireEvent.change(screen.getByPlaceholderText("startsAt"), { target: { value: "2026-03-01T10:00" } });
-    fireEvent.change(screen.getByPlaceholderText("Capacity"), { target: { value: "30" } });
+    fireEvent.change(screen.getByPlaceholderText("Capacity (optional)"), { target: { value: "30" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));
 
@@ -70,7 +70,7 @@ describe("CreateEventForm", () => {
     render(React.createElement(CreateEventForm, { onCreated }));
     fireEvent.change(screen.getByPlaceholderText("Event title"), { target: { value: "Team Meetup" } });
     fireEvent.change(screen.getByPlaceholderText("startsAt"), { target: { value: "2026-03-01T10:00" } });
-    fireEvent.change(screen.getByPlaceholderText("Capacity"), { target: { value: "30" } });
+    fireEvent.change(screen.getByPlaceholderText("Capacity (optional)"), { target: { value: "30" } });
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));
 
     await screen.findByText("Event created in draft status.");
@@ -90,7 +90,7 @@ describe("CreateEventForm", () => {
     render(React.createElement(CreateEventForm));
     fireEvent.change(screen.getByPlaceholderText("Event title"), { target: { value: "Team Meetup" } });
     fireEvent.change(screen.getByPlaceholderText("startsAt"), { target: { value: "2026-03-01T10:00" } });
-    fireEvent.change(screen.getByPlaceholderText("Capacity"), { target: { value: "30" } });
+    fireEvent.change(screen.getByPlaceholderText("Capacity (optional)"), { target: { value: "30" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));
     await screen.findByText("Custom API error");

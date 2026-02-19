@@ -3,10 +3,10 @@ export interface EventItem {
   title: string;
   description?: string | null;
   location?: string | null;
-  startsAt: string;
+  startsAt: string | null;
   endsAt?: string | null;
   status: "draft" | "published" | "closed";
-  capacity: number;
+  capacity: number | null;
 }
 
 export interface AttendeeItem {

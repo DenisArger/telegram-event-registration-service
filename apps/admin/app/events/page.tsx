@@ -26,8 +26,14 @@ export default async function EventsPage() {
                 <Link href={`/events/${event.id}`}>
                   <strong>{event.title}</strong>
                 </Link>{" "}
-                ({event.status}) — {new Date(event.startsAt).toLocaleString()}
-                {event.endsAt ? ` → ${new Date(event.endsAt).toLocaleString()}` : ""} — cap: {event.capacity}
+                ({event.status})
+                {event.startsAt ? ` — ${new Date(event.startsAt).toLocaleString()}` : ""}
+                {event.endsAt
+                  ? event.startsAt
+                    ? ` → ${new Date(event.endsAt).toLocaleString()}`
+                    : ` — ${new Date(event.endsAt).toLocaleString()}`
+                  : ""}
+                {typeof event.capacity === "number" && event.capacity > 0 ? ` — cap: ${event.capacity}` : ""}
                 {event.description ? <MarkdownPreview markdown={event.description} /> : null}
               </li>
             ))}

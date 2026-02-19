@@ -13,9 +13,9 @@ interface EditableEvent {
   title: string;
   description?: string | null;
   location?: string | null;
-  startsAt: string;
+  startsAt: string | null;
   endsAt?: string | null;
-  capacity: number;
+  capacity: number | null;
   status: "draft" | "published" | "closed";
 }
 
@@ -25,7 +25,7 @@ export function EventEditor({ event }: { event: EditableEvent }) {
   const [title, setTitle] = useState(event.title);
   const [startsAt, setStartsAt] = useState(isoToDatetimeLocal(event.startsAt));
   const [endsAt, setEndsAt] = useState(isoToDatetimeLocal(event.endsAt));
-  const [capacity, setCapacity] = useState(String(event.capacity));
+  const [capacity, setCapacity] = useState(event.capacity == null ? "" : String(event.capacity));
   const [description, setDescription] = useState(event.description ?? "");
   const [location, setLocation] = useState(event.location ?? "");
   const [loading, setLoading] = useState(false);
@@ -48,21 +48,26 @@ export function EventEditor({ event }: { event: EditableEvent }) {
     const normalizedEndsAt = endsAt;
     const startsAtIso = datetimeLocalToIso(normalizedStartsAt);
     const endsAtIso = datetimeLocalToIso(normalizedEndsAt);
-    const numericCapacity = Number(capacity);
+    const normalizedCapacity = capacity.trim();
+    const numericCapacity = normalizedCapacity ? Number(normalizedCapacity) : null;
 
-    if (!normalizedTitle || !startsAtIso || !Number.isInteger(numericCapacity) || numericCapacity <= 0) {
-      setMessage(
-        ru
-          ? "Нужны корректные title, startsAt и capacity."
-          : "Valid title, startsAt, and capacity are required."
-      );
+    if (!normalizedTitle) {
+      setMessage(ru ? "Укажите название мероприятия." : "Event title is required.");
+      return;
+    }
+    if (normalizedStartsAt && !startsAtIso) {
+      setMessage(ru ? "Укажите корректные дату и время начала." : "Valid start date and time are required.");
+      return;
+    }
+    if (normalizedCapacity && (!Number.isInteger(numericCapacity) || (numericCapacity ?? 0) <= 0)) {
+      setMessage(ru ? "Вместимость должна быть положительным целым числом." : "Capacity must be a positive integer.");
       return;
     }
     if (normalizedEndsAt && !endsAtIso) {
       setMessage(ru ? "Нужен корректный endsAt." : "Valid endsAt is required.");
       return;
     }
-    if (endsAtIso && new Date(endsAtIso).getTime() <= new Date(startsAtIso).getTime()) {
+    if (startsAtIso && endsAtIso && new Date(endsAtIso).getTime() <= new Date(startsAtIso).getTime()) {
       setMessage(ru ? "Дата окончания должна быть позже начала." : "End date must be later than start date.");
       return;
     }
@@ -116,11 +121,11 @@ export function EventEditor({ event }: { event: EditableEvent }) {
             </div>
           ) : null}
           <input type="datetime-local" placeholder="startsAt" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-          <small>{ru ? "Дата и время начала мероприятия" : "Event start date and time"}</small>
+          <small>{ru ? "Дата и время начала мероприятия (необязательно)" : "Event start date and time (optional)"}</small>
           <input type="datetime-local" placeholder="endsAt" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
           <small>{ru ? "Дата и время окончания (необязательно)" : "Event end date and time (optional)"}</small>
-          <input placeholder="capacity" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
-          <small>{ru ? "Количество доступных мест (целое число)" : "Number of available seats (integer)"}</small>
+          <input placeholder="capacity (optional)" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+          <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
           <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
           <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
           <textarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />

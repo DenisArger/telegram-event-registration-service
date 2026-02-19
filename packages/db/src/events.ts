@@ -33,9 +33,9 @@ export async function createEvent(
     title: string;
     description?: string | null;
     location?: string | null;
-    startsAt: string;
+    startsAt?: string | null;
     endsAt?: string | null;
-    capacity: number;
+    capacity?: number | null;
     createdBy: string;
   }
 ): Promise<EventEntity> {
@@ -45,9 +45,9 @@ export async function createEvent(
       title: payload.title,
       description: payload.description ?? null,
       location: payload.location ?? null,
-      starts_at: payload.startsAt,
+      starts_at: payload.startsAt ?? null,
       ends_at: payload.endsAt ?? null,
-      capacity: payload.capacity,
+      capacity: payload.capacity ?? null,
       status: "draft",
       created_by: payload.createdBy
     })

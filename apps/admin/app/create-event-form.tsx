@@ -22,7 +22,7 @@ export function CreateEventForm({
   const [title, setTitle] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
-  const [capacity, setCapacity] = useState("20");
+  const [capacity, setCapacity] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [questions, setQuestions] = useState<NewQuestionInput[]>([]);
@@ -59,21 +59,26 @@ export function CreateEventForm({
     const normalizedEndsAt = endsAt;
     const startsAtIso = datetimeLocalToIso(normalizedStartsAt);
     const endsAtIso = datetimeLocalToIso(normalizedEndsAt);
-    const numericCapacity = Number(capacity);
+    const normalizedCapacity = capacity.trim();
+    const numericCapacity = normalizedCapacity ? Number(normalizedCapacity) : null;
 
-    if (!normalizedTitle || !startsAtIso || !Number.isInteger(numericCapacity) || numericCapacity <= 0) {
-      setMessage(
-        ru
-          ? "Нужны корректные title, startsAt и capacity."
-          : "Valid title, startsAt, and capacity are required."
-      );
+    if (!normalizedTitle) {
+      setMessage(ru ? "Укажите название мероприятия." : "Event title is required.");
+      return;
+    }
+    if (normalizedStartsAt && !startsAtIso) {
+      setMessage(ru ? "Укажите корректные дату и время начала." : "Valid start date and time are required.");
+      return;
+    }
+    if (normalizedCapacity && (!Number.isInteger(numericCapacity) || (numericCapacity ?? 0) <= 0)) {
+      setMessage(ru ? "Вместимость должна быть положительным целым числом." : "Capacity must be a positive integer.");
       return;
     }
     if (normalizedEndsAt && !endsAtIso) {
       setMessage(ru ? "Нужен корректный endsAt." : "Valid endsAt is required.");
       return;
     }
-    if (endsAtIso && new Date(endsAtIso).getTime() <= new Date(startsAtIso).getTime()) {
+    if (startsAtIso && endsAtIso && new Date(endsAtIso).getTime() <= new Date(startsAtIso).getTime()) {
       setMessage(ru ? "Дата окончания должна быть позже начала." : "End date must be later than start date.");
       return;
     }
@@ -122,7 +127,7 @@ export function CreateEventForm({
       setTitle("");
       setStartsAt("");
       setEndsAt("");
-      setCapacity("20");
+      setCapacity("");
       setDescription("");
       setLocation("");
       setQuestions([]);
@@ -162,7 +167,7 @@ export function CreateEventForm({
           value={startsAt}
           onChange={(e) => setStartsAt(e.target.value)}
         />
-        <small>{ru ? "Дата и время начала мероприятия" : "Event start date and time"}</small>
+        <small>{ru ? "Дата и время начала мероприятия (необязательно)" : "Event start date and time (optional)"}</small>
         <input
           type="datetime-local"
           placeholder="endsAt"
@@ -171,11 +176,11 @@ export function CreateEventForm({
         />
         <small>{ru ? "Дата и время окончания (необязательно)" : "Event end date and time (optional)"}</small>
         <input
-          placeholder={ru ? "Вместимость" : "Capacity"}
+          placeholder={ru ? "Вместимость (необязательно)" : "Capacity (optional)"}
           value={capacity}
           onChange={(e) => setCapacity(e.target.value)}
         />
-        <small>{ru ? "Количество доступных мест (целое число)" : "Number of available seats (integer)"}</small>
+        <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
         <input
           placeholder={ru ? "Локация (опционально)" : "Location (optional)"}
           value={location}

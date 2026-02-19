@@ -4,9 +4,9 @@ export interface EventEntity {
   id: string;
   title: string;
   description: string | null;
-  startsAt: string;
+  startsAt: string | null;
   endsAt: string | null;
-  capacity: number;
+  capacity: number | null;
   status: "draft" | "published" | "closed";
 }
 

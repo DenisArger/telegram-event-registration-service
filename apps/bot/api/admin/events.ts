@@ -70,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const title = String(req.body?.title ?? "").trim();
     const startsAtRaw = String(req.body?.startsAt ?? "").trim();
     const endsAtRaw = String(req.body?.endsAt ?? "").trim();
-    const capacity = Number(req.body?.capacity);
+    const capacityRaw = String(req.body?.capacity ?? "").trim();
     const description = String(req.body?.description ?? "").trim() || null;
     const location = String(req.body?.location ?? "").trim() || null;
 
@@ -82,13 +82,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       res.status(400).json({ message: "title is required" });
       return;
     }
-    if (!startsAtRaw) {
-      res.status(400).json({ message: "startsAt is required" });
-      return;
-    }
-
-    const startsAt = new Date(startsAtRaw);
-    if (Number.isNaN(startsAt.getTime())) {
+    const startsAt = startsAtRaw ? new Date(startsAtRaw) : null;
+    if (startsAtRaw && (!startsAt || Number.isNaN(startsAt.getTime()))) {
       res.status(400).json({ message: "startsAt must be a valid date" });
       return;
     }
@@ -97,12 +92,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       res.status(400).json({ message: "endsAt must be a valid date" });
       return;
     }
-    if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
+    if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
       res.status(400).json({ message: "endsAt must be greater than startsAt" });
       return;
     }
 
-    if (!Number.isInteger(capacity) || capacity <= 0) {
+    const capacity = capacityRaw ? Number(capacityRaw) : null;
+    if (capacityRaw && (!Number.isInteger(capacity) || (capacity ?? 0) <= 0)) {
       res.status(400).json({ message: "capacity must be a positive integer" });
       return;
     }
@@ -114,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           title,
           description,
           location,
-          starts_at: startsAt.toISOString(),
+          starts_at: startsAt ? startsAt.toISOString() : null,
           ends_at: endsAt ? endsAt.toISOString() : null,
           capacity
         })
@@ -156,7 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const title = String(req.body?.title ?? "").trim();
   const startsAtRaw = String(req.body?.startsAt ?? "").trim();
   const endsAtRaw = String(req.body?.endsAt ?? "").trim();
-  const capacity = Number(req.body?.capacity);
+  const capacityRaw = String(req.body?.capacity ?? "").trim();
   const description = String(req.body?.description ?? "").trim() || null;
   const location = String(req.body?.location ?? "").trim() || null;
   const rawQuestions = Array.isArray(req.body?.questions) ? req.body.questions : [];
@@ -166,13 +162,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  if (!startsAtRaw) {
-    res.status(400).json({ message: "startsAt is required" });
-    return;
-  }
-
-  const startsAt = new Date(startsAtRaw);
-  if (Number.isNaN(startsAt.getTime())) {
+  const startsAt = startsAtRaw ? new Date(startsAtRaw) : null;
+  if (startsAtRaw && (!startsAt || Number.isNaN(startsAt.getTime()))) {
     res.status(400).json({ message: "startsAt must be a valid date" });
     return;
   }
@@ -181,12 +172,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(400).json({ message: "endsAt must be a valid date" });
     return;
   }
-  if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
+  if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
     res.status(400).json({ message: "endsAt must be greater than startsAt" });
     return;
   }
 
-  if (!Number.isInteger(capacity) || capacity <= 0) {
+  const capacity = capacityRaw ? Number(capacityRaw) : null;
+  if (capacityRaw && (!Number.isInteger(capacity) || (capacity ?? 0) <= 0)) {
     res.status(400).json({ message: "capacity must be a positive integer" });
     return;
   }
@@ -210,7 +202,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   try {
     const event = await createEvent(db, {
       title,
-      startsAt: startsAt.toISOString(),
+      startsAt: startsAt ? startsAt.toISOString() : null,
       endsAt: endsAt ? endsAt.toISOString() : null,
       capacity,
       description,

@@ -29,8 +29,14 @@ export default async function EventDetailsPage({
       <section className="card">
         <h1>{event.title}</h1>
         <p>
-          {event.status} — {new Date(event.startsAt).toLocaleString()}
-          {event.endsAt ? ` → ${new Date(event.endsAt).toLocaleString()}` : ""}
+          {event.status}
+          {event.startsAt ? ` — ${new Date(event.startsAt).toLocaleString()}` : ""}
+          {event.endsAt
+            ? event.startsAt
+              ? ` → ${new Date(event.endsAt).toLocaleString()}`
+              : ` — ${new Date(event.endsAt).toLocaleString()}`
+            : ""}
+          {typeof event.capacity === "number" && event.capacity > 0 ? ` — cap: ${event.capacity}` : ""}
         </p>
       </section>
       <EventEditor event={event} />
