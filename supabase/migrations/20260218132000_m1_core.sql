@@ -84,11 +84,13 @@ alter table checkins enable row level security;
 alter table notifications enable row level security;
 alter table audit_logs enable row level security;
 
-create policy if not exists users_select_authenticated on users
+drop policy if exists users_select_authenticated on users;
+create policy users_select_authenticated on users
 for select to authenticated
 using (true);
 
-create policy if not exists events_select_authenticated on events
+drop policy if exists events_select_authenticated on events;
+create policy events_select_authenticated on events
 for select to authenticated
 using (true);
 
