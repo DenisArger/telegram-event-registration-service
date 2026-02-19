@@ -216,6 +216,23 @@ describe("bot runtime", () => {
     expect(filledCtx.reply).toHaveBeenCalled();
   });
 
+  it("shows only cancel button when user is already registered", async () => {
+    const command = state.commands.get("events");
+    mocks.listPublishedEvents.mockResolvedValueOnce([
+      { id: "e1", title: "Event", description: null, startsAt: "2026", endsAt: null, capacity: 10, status: "published" }
+    ]);
+    mocks.getExistingRegistrationStatus.mockResolvedValueOnce({ status: "already_registered" });
+
+    const ctx = baseCtx();
+    await command?.(ctx);
+
+    const secondArg = (ctx.reply as any).mock.calls[0]?.[1];
+    const rows = secondArg?.rows ?? [];
+    const callbackData = rows.flat().map((btn: any) => btn.data);
+    expect(callbackData).toContain("cancel:e1");
+    expect(callbackData).not.toContain("reg:e1");
+  });
+
   it("handles /events errors", async () => {
     const command = state.commands.get("events");
     mocks.listPublishedEvents.mockRejectedValueOnce(new Error("boom"));
@@ -279,6 +296,7 @@ describe("bot runtime", () => {
   it("handles register and cancel callbacks", async () => {
     const regAction = state.actions.find((item) => String(item.pattern) === String(/^reg:(.+)$/));
     const cancelAction = state.actions.find((item) => String(item.pattern) === String(/^cancel:(.+)$/));
+    const cancelConfirmAction = state.actions.find((item) => String(item.pattern) === String(/^cancel_confirm:(.+)$/));
 
     const regCtx = baseCtx({ match: ["reg:e1", "e1"] });
     await regAction?.handler(regCtx);
@@ -287,7 +305,11 @@ describe("bot runtime", () => {
 
     const cancelCtx = baseCtx({ match: ["cancel:e1", "e1"] });
     await cancelAction?.handler(cancelCtx);
-    expect(cancelCtx.answerCbQuery).toHaveBeenCalledWith("Your registration has been cancelled.", {
+    expect(cancelCtx.reply).toHaveBeenCalled();
+
+    const cancelConfirmCtx = baseCtx({ match: ["cancel_confirm:e1", "e1"] });
+    await cancelConfirmAction?.handler(cancelConfirmCtx);
+    expect(cancelConfirmCtx.answerCbQuery).toHaveBeenCalledWith("Your registration has been cancelled.", {
       show_alert: true
     });
   });
@@ -311,6 +333,7 @@ describe("bot runtime", () => {
   it("handles register/cancel callback edge cases", async () => {
     const regAction = state.actions.find((item) => String(item.pattern) === String(/^reg:(.+)$/));
     const cancelAction = state.actions.find((item) => String(item.pattern) === String(/^cancel:(.+)$/));
+    const cancelConfirmAction = state.actions.find((item) => String(item.pattern) === String(/^cancel_confirm:(.+)$/));
 
     const regNoFrom = baseCtx({ from: undefined, match: ["reg:e1", "e1"] });
     await regAction?.handler(regNoFrom);
@@ -324,18 +347,22 @@ describe("bot runtime", () => {
     });
 
     mocks.cancelRegistration.mockResolvedValueOnce({ status: "not_registered" });
-    const cancelNotReg = baseCtx({ match: ["cancel:e1", "e1"] });
-    await cancelAction?.handler(cancelNotReg);
+    const cancelNotReg = baseCtx({ match: ["cancel_confirm:e1", "e1"] });
+    await cancelConfirmAction?.handler(cancelNotReg);
     expect(cancelNotReg.answerCbQuery).toHaveBeenCalledWith("You were not registered for this event.", {
       show_alert: true
     });
 
     mocks.cancelRegistration.mockRejectedValueOnce(new Error("boom"));
-    const cancelErr = baseCtx({ match: ["cancel:e1", "e1"] });
-    await cancelAction?.handler(cancelErr);
+    const cancelErr = baseCtx({ match: ["cancel_confirm:e1", "e1"] });
+    await cancelConfirmAction?.handler(cancelErr);
     expect(cancelErr.answerCbQuery).toHaveBeenCalledWith("Cancellation failed. Try again later.", {
       show_alert: true
     });
+
+    const cancelPrompt = baseCtx({ match: ["cancel:e1", "e1"] });
+    await cancelAction?.handler(cancelPrompt);
+    expect(cancelPrompt.reply).toHaveBeenCalled();
   });
 
   it("starts questionnaire flow when event has questions", async () => {

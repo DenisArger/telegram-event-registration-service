@@ -54,13 +54,37 @@ bot.command("events", async (ctx) => {
       return;
     }
 
+    const from = ctx.from;
+    if (!from) {
+      await ctx.reply(t(locale, "user_info_unavailable"));
+      return;
+    }
+
+    const user = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+
+    const existingStatuses = await Promise.all(
+      events.map(async (event) => ({
+        eventId: event.id,
+        status: await getExistingRegistrationStatus(db, event.id, user.id)
+      }))
+    );
+    const statusByEventId = new Map(
+      existingStatuses.map((item) => [item.eventId, item.status?.status ?? null])
+    );
+
     for (const event of events) {
       const message = buildEventMessageHtml(event, locale);
+      const existingStatus = statusByEventId.get(event.id);
+      const isAlreadyRegistered =
+        existingStatus === "already_registered" || existingStatus === "already_waitlisted";
       const keyboard = Markup.inlineKeyboard([
-        [
-          Markup.button.callback(t(locale, "register_btn"), `reg:${event.id}`),
-          Markup.button.callback(t(locale, "cancel_btn"), `cancel:${event.id}`)
-        ]
+        isAlreadyRegistered
+          ? [Markup.button.callback(t(locale, "cancel_btn"), `cancel:${event.id}`)]
+          : [Markup.button.callback(t(locale, "register_btn"), `reg:${event.id}`)]
       ]);
 
       await ctx.reply(
@@ -198,6 +222,31 @@ bot.action(/^cancel:(.+)$/, async (ctx) => {
   const locale = getLocaleFromCtx(ctx);
   try {
     const eventId = ctx.match[1];
+    if (!eventId) {
+      await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery();
+    await ctx.reply(
+      t(locale, "cancel_confirm_prompt"),
+      Markup.inlineKeyboard([
+        [
+          Markup.button.callback(t(locale, "cancel_confirm_btn"), `cancel_confirm:${eventId}`),
+          Markup.button.callback(t(locale, "cancel_keep_btn"), `cancel_keep:${eventId}`)
+        ]
+      ])
+    );
+  } catch (error) {
+    logError("cancel_action_failed", { error });
+    await ctx.answerCbQuery(t(locale, "cancellation_failed"), { show_alert: true });
+  }
+});
+
+bot.action(/^cancel_confirm:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    const eventId = ctx.match[1];
     const from = ctx.from;
 
     if (!from || !eventId) {
@@ -221,6 +270,16 @@ bot.action(/^cancel:(.+)$/, async (ctx) => {
   } catch (error) {
     logError("cancel_action_failed", { error });
     await ctx.answerCbQuery(t(locale, "cancellation_failed"), { show_alert: true });
+  }
+});
+
+bot.action(/^cancel_keep:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    await ctx.answerCbQuery(t(locale, "cancel_kept"), { show_alert: false });
+  } catch (error) {
+    logError("cancel_keep_action_failed", { error });
+    await ctx.answerCbQuery(t(locale, "unexpected_error"), { show_alert: true });
   }
 });
 
@@ -290,6 +349,31 @@ bot.action(/^qcancel:(.+)$/, async (ctx) => {
   const locale = getLocaleFromCtx(ctx);
   try {
     const eventId = String(ctx.match[1] ?? "");
+    if (!eventId) {
+      await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery();
+    await ctx.reply(
+      t(locale, "question_cancel_confirm_prompt"),
+      Markup.inlineKeyboard([
+        [
+          Markup.button.callback(t(locale, "cancel_confirm_btn"), `qcancel_confirm:${eventId}`),
+          Markup.button.callback(t(locale, "cancel_keep_btn"), `qcancel_keep:${eventId}`)
+        ]
+      ])
+    );
+  } catch (error) {
+    logError("question_cancel_failed", { error });
+    await ctx.answerCbQuery(t(locale, "question_collect_failed"), { show_alert: true });
+  }
+});
+
+bot.action(/^qcancel_confirm:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    const eventId = String(ctx.match[1] ?? "");
     const from = ctx.from;
     if (!from || !eventId) {
       await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
@@ -306,6 +390,16 @@ bot.action(/^qcancel:(.+)$/, async (ctx) => {
   } catch (error) {
     logError("question_cancel_failed", { error });
     await ctx.answerCbQuery(t(locale, "question_collect_failed"), { show_alert: true });
+  }
+});
+
+bot.action(/^qcancel_keep:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
+  try {
+    await ctx.answerCbQuery(t(locale, "cancel_kept"), { show_alert: false });
+  } catch (error) {
+    logError("question_cancel_keep_failed", { error });
+    await ctx.answerCbQuery(t(locale, "unexpected_error"), { show_alert: true });
   }
 });
 
