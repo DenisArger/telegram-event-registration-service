@@ -22,21 +22,21 @@ vi.mock("@event/shared", async () => {
 const U1 = "11111111-1111-4111-8111-111111111111";
 const U2 = "22222222-2222-4222-8222-222222222222";
 
-describe("PUT /api/admin/attendees/order", () => {
+describe("PUT /api/admin/attendees", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setRequiredEnv();
   });
 
   it("validates method and auth", async () => {
-    const { default: handler } = await import("../../../api/admin/attendees/order");
+    const { default: handler } = await import("../../../api/admin/attendees");
 
     const resOptions = createRes();
     await handler({ method: "OPTIONS", headers: {}, query: {} } as any, resOptions as any);
     expect(resOptions.statusCode).toBe(204);
 
     const resMethod = createRes();
-    await handler({ method: "GET", headers: {}, query: {} } as any, resMethod as any);
+    await handler({ method: "POST", headers: {}, query: {} } as any, resMethod as any);
     expect(resMethod.statusCode).toBe(405);
 
     const resAuth = createRes();
@@ -45,7 +45,7 @@ describe("PUT /api/admin/attendees/order", () => {
   });
 
   it("returns 400 for invalid payload", async () => {
-    const { default: handler } = await import("../../../api/admin/attendees/order");
+    const { default: handler } = await import("../../../api/admin/attendees");
 
     const resEventId = createRes();
     await handler(
@@ -94,7 +94,7 @@ describe("PUT /api/admin/attendees/order", () => {
 
   it("returns 400 when ordered users do not match attendees", async () => {
     mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }, { userId: U2 }]);
-    const { default: handler } = await import("../../../api/admin/attendees/order");
+    const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
 
     await handler(
@@ -114,7 +114,7 @@ describe("PUT /api/admin/attendees/order", () => {
     mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }, { userId: U2 }]);
     mocks.saveEventAttendeeOrder.mockResolvedValueOnce(undefined);
 
-    const { default: handler } = await import("../../../api/admin/attendees/order");
+    const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
 
     await handler(
@@ -135,7 +135,7 @@ describe("PUT /api/admin/attendees/order", () => {
     mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
     mocks.saveEventAttendeeOrder.mockRejectedValueOnce(new Error("boom"));
 
-    const { default: handler } = await import("../../../api/admin/attendees/order");
+    const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
 
     await handler(

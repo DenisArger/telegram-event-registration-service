@@ -66,10 +66,10 @@ describe("AttendeesTable", () => {
     fireEvent.drop(screen.getByTestId(`attendee-row-${attendees[1].userId}`));
 
     await vi.runAllTimersAsync();
-    expect(fetch).toHaveBeenCalledWith(
-      "https://api.example/api/admin/attendees/order",
-      expect.objectContaining({ method: "PUT" })
-    );
+      expect(fetch).toHaveBeenCalledWith(
+        "https://api.example/api/admin/attendees",
+        expect.objectContaining({ method: "PUT" })
+      );
 
     const body = JSON.parse((fetch as any).mock.calls[0][1].body);
     expect(body.orderedUserIds).toEqual([attendees[1].userId, attendees[0].userId]);

@@ -77,7 +77,7 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
     setMessage(ui("attendees_order_saving", locale));
 
     try {
-      const response = await fetch(`${base}/api/admin/attendees/order`, {
+      const response = await fetch(`${base}/api/admin/attendees`, {
         method: "PUT",
         headers: {
           "content-type": "application/json",
