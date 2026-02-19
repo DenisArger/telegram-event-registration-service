@@ -51,7 +51,10 @@ const dict = {
     quick_waitlist: "Review waitlist",
     quick_stats: "Check statistics",
     quick_checkin: "Manual check-in",
-    quick_actions: "Run actions"
+    quick_actions: "Run actions",
+    open_create_event: "Create event",
+    create_event_modal_title: "Create event",
+    close_modal: "Close"
   },
   ru: {
     title: "Админка регистрации на мероприятия",
@@ -99,7 +102,10 @@ const dict = {
     quick_waitlist: "Проверить лист ожидания",
     quick_stats: "Открыть статистику",
     quick_checkin: "Сделать чекин",
-    quick_actions: "Операционные действия"
+    quick_actions: "Операционные действия",
+    open_create_event: "Создать событие",
+    create_event_modal_title: "Создать событие",
+    close_modal: "Закрыть"
   }
 } as const;
 

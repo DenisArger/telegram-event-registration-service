@@ -8,7 +8,13 @@ interface NewQuestionInput {
   required: boolean;
 }
 
-export function CreateEventForm() {
+export function CreateEventForm({
+  showTitle = true,
+  onCreated
+}: {
+  showTitle?: boolean;
+  onCreated?: () => void;
+}) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -106,6 +112,7 @@ export function CreateEventForm() {
       setQuestions([]);
       setMessage(ru ? "Событие создано в статусе draft." : "Event created in draft status.");
       router.refresh();
+      onCreated?.();
     } catch {
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
@@ -115,7 +122,7 @@ export function CreateEventForm() {
 
   return (
     <div>
-      <p>{ru ? "Создать мероприятие" : "Create event"}</p>
+      {showTitle ? <p>{ru ? "Создать мероприятие" : "Create event"}</p> : null}
       <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
         <input
           placeholder="title"
