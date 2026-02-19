@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
-    "@event/shared": "0.1.0"
+    "@event/shared": "file:../shared"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
