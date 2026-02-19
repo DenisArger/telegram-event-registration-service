@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "yarn --cwd ../../packages/shared build && yarn --cwd ../../packages/db build",
     "dev": "echo 'Use vercel dev from this app root'",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
