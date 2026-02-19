@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 export function ExportButton({ eventId }: { eventId: string }) {
+  const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -10,7 +11,7 @@ export function ExportButton({ eventId }: { eventId: string }) {
     const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
     const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
     if (!base || !email) {
-      setMessage("Missing NEXT_PUBLIC admin env.");
+      setMessage(ru ? "Не заданы NEXT_PUBLIC переменные для админки." : "Missing NEXT_PUBLIC admin env.");
       return;
     }
 
@@ -26,7 +27,7 @@ export function ExportButton({ eventId }: { eventId: string }) {
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        setMessage(err?.message ?? "Export failed.");
+        setMessage(err?.message ?? (ru ? "Не удалось экспортировать CSV." : "Export failed."));
         return;
       }
 
@@ -39,9 +40,9 @@ export function ExportButton({ eventId }: { eventId: string }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setMessage("CSV downloaded.");
+      setMessage(ru ? "CSV скачан." : "CSV downloaded.");
     } catch {
-      setMessage("Network error.");
+      setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,7 @@ export function ExportButton({ eventId }: { eventId: string }) {
   return (
     <div>
       <button onClick={onExport} disabled={loading}>
-        {loading ? "Exporting..." : "Export CSV"}
+        {loading ? (ru ? "Экспорт..." : "Exporting...") : "Export CSV"}
       </button>
       {message ? <p>{message}</p> : null}
     </div>

@@ -2,6 +2,7 @@ import React from "react";
 import { CheckInForm } from "./checkin-form";
 import { ExportButton } from "./export-button";
 import { PromoteButton } from "./promote-button";
+import { getUiLocale, ui } from "./i18n";
 
 async function getHealth(): Promise<string> {
   const url = process.env.NEXT_PUBLIC_BOT_HEALTH_URL;
@@ -127,6 +128,7 @@ async function getStats(eventId: string): Promise<EventStats | null> {
 }
 
 export default async function HomePage() {
+  const locale = getUiLocale();
   const health = await getHealth();
   const events = await getAdminEvents();
   const firstEvent = events[0] ?? null;
@@ -136,18 +138,18 @@ export default async function HomePage() {
 
   return (
     <main>
-      <h1>Event Registration Admin</h1>
-      <p>Initial scaffold for internal events operations.</p>
+      <h1>{ui("title", locale)}</h1>
+      <p>{ui("subtitle", locale)}</p>
 
       <section className="card">
-        <h2>System Status</h2>
-        <p>Bot API health: {health}</p>
+        <h2>{ui("system_status", locale)}</h2>
+        <p>{ui("bot_health", locale)}: {health}</p>
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Events</h2>
+        <h2>{ui("events", locale)}</h2>
         {events.length === 0 ? (
-          <p>No events available or admin API is not configured.</p>
+          <p>{ui("no_events", locale)}</p>
         ) : (
           <ul>
             {events.map((event) => (
@@ -161,18 +163,18 @@ export default async function HomePage() {
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Attendees {firstEvent ? `for "${firstEvent.title}"` : ""}</h2>
+        <h2>{ui("attendees", locale)} {firstEvent ? `${ui("event_for", locale)} "${firstEvent.title}"` : ""}</h2>
         {!firstEvent ? (
-          <p>Selecting attendees requires at least one event.</p>
+          <p>{ui("attendees_need_event", locale)}</p>
         ) : attendees.length === 0 ? (
-          <p>No attendees yet.</p>
+          <p>{ui("no_attendees", locale)}</p>
         ) : (
           <ul>
             {attendees.map((attendee) => (
               <li key={attendee.userId}>
                 {attendee.fullName}
                 {attendee.username ? ` (@${attendee.username})` : ""} — {attendee.status}
-                {attendee.checkedIn ? " — checked in ✅" : ""}
+                {attendee.checkedIn ? ` — ${ui("checked_in_mark", locale)}` : ""}
               </li>
             ))}
           </ul>
@@ -180,25 +182,25 @@ export default async function HomePage() {
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Stats {firstEvent ? `for "${firstEvent.title}"` : ""}</h2>
+        <h2>{ui("stats", locale)} {firstEvent ? `${ui("event_for", locale)} "${firstEvent.title}"` : ""}</h2>
         {!stats ? (
-          <p>Stats are unavailable.</p>
+          <p>{ui("stats_unavailable", locale)}</p>
         ) : (
           <ul>
-            <li>Registered: {stats.registeredCount}</li>
-            <li>Checked in: {stats.checkedInCount}</li>
-            <li>Waitlist: {stats.waitlistCount}</li>
-            <li>No-show rate: {stats.noShowRate}%</li>
+            <li>{ui("registered", locale)}: {stats.registeredCount}</li>
+            <li>{ui("checked_in", locale)}: {stats.checkedInCount}</li>
+            <li>{ui("waitlist", locale)}: {stats.waitlistCount}</li>
+            <li>{ui("no_show_rate", locale)}: {stats.noShowRate}%</li>
           </ul>
         )}
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Waitlist {firstEvent ? `for "${firstEvent.title}"` : ""}</h2>
+        <h2>{ui("waitlist", locale)} {firstEvent ? `${ui("event_for", locale)} "${firstEvent.title}"` : ""}</h2>
         {!firstEvent ? (
-          <p>No event selected.</p>
+          <p>{ui("no_event_selected", locale)}</p>
         ) : waitlist.length === 0 ? (
-          <p>Waitlist is empty.</p>
+          <p>{ui("waitlist_empty", locale)}</p>
         ) : (
           <ul>
             {waitlist.map((entry) => (
@@ -218,7 +220,7 @@ export default async function HomePage() {
       </section>
 
       <section className="card" style={{ marginTop: 16 }}>
-        <h2>Check-in</h2>
+        <h2>{ui("checkin", locale)}</h2>
         <CheckInForm />
       </section>
     </main>

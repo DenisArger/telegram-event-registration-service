@@ -13,6 +13,7 @@ import {
 import { loadEnv, logError, logInfo } from "@event/shared";
 import { handleStart } from "./handlers/start.js";
 import { buildEventMessage, registrationStatusToText } from "./messages.js";
+import { getLocaleFromCtx, t } from "./i18n.js";
 import {
   canManageEvents,
   parseCreateEventCommand,
@@ -28,46 +29,49 @@ bot.start(async (ctx) => {
   try {
     await handleStart(ctx);
   } catch (error) {
+    const locale = getLocaleFromCtx(ctx);
     logError("start_command_failed", { error });
-    await ctx.reply("Unexpected error. Please try again.");
+    await ctx.reply(t(locale, "unexpected_error"));
   }
 });
 
 bot.command("events", async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
   try {
     const events = await listPublishedEvents(db);
 
     if (events.length === 0) {
-      await ctx.reply("No published events right now.");
+      await ctx.reply(t(locale, "no_events"));
       return;
     }
 
     for (const event of events) {
-      const message = buildEventMessage(event);
+      const message = buildEventMessage(event, locale);
 
       await ctx.reply(
         message,
         Markup.inlineKeyboard([
           [
-            Markup.button.callback("Register", `reg:${event.id}`),
-            Markup.button.callback("Cancel", `cancel:${event.id}`)
+            Markup.button.callback(t(locale, "register_btn"), `reg:${event.id}`),
+            Markup.button.callback(t(locale, "cancel_btn"), `cancel:${event.id}`)
           ]
         ])
       );
     }
   } catch (error) {
     logError("events_command_failed", { error });
-    await ctx.reply("Could not load events now. Try again later.");
+    await ctx.reply(t(locale, "events_load_failed"));
   }
 });
 
 bot.command("create_event", async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
   try {
     const from = ctx.from;
     const text = "text" in (ctx.message ?? {}) ? ctx.message.text : "";
 
     if (!from) {
-      await ctx.reply("User info not available.");
+      await ctx.reply(t(locale, "user_info_unavailable"));
       return;
     }
 
@@ -78,7 +82,7 @@ bot.command("create_event", async (ctx) => {
     });
 
     if (!canManageEvents(user.role)) {
-      await ctx.reply("Access denied. Organizer or admin role required.");
+      await ctx.reply(t(locale, "access_denied"));
       return;
     }
 
@@ -92,11 +96,11 @@ bot.command("create_event", async (ctx) => {
     });
 
     await ctx.reply(
-      `Draft event created:\n${buildEventMessage(event)}`,
+      t(locale, "draft_created", { eventMessage: buildEventMessage(event, locale) }),
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("Publish", `pub:${event.id}`),
-          Markup.button.callback("Close", `cls:${event.id}`)
+          Markup.button.callback(t(locale, "publish_btn"), `pub:${event.id}`),
+          Markup.button.callback(t(locale, "close_btn"), `cls:${event.id}`)
         ]
       ])
     );
@@ -111,12 +115,12 @@ bot.command("create_event", async (ctx) => {
       message === "starts_at_invalid"
     ) {
       await ctx.reply(
-        "Usage:\n/create_event Title | 2026-03-01T10:00:00Z | 30 | Optional description"
+        t(locale, "create_event_usage")
       );
       return;
     }
     logError("create_event_command_failed", { error });
-    await ctx.reply("Could not create event now.");
+    await ctx.reply(t(locale, "create_event_failed"));
   }
 });
 
@@ -129,12 +133,13 @@ bot.command("close_event", async (ctx) => {
 });
 
 bot.action(/^reg:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
   try {
     const eventId = ctx.match[1];
     const from = ctx.from;
 
     if (!from || !eventId) {
-      await ctx.answerCbQuery("User info not available.");
+      await ctx.answerCbQuery(t(locale, "user_info_unavailable"));
       return;
     }
 
@@ -145,20 +150,21 @@ bot.action(/^reg:(.+)$/, async (ctx) => {
     });
 
     const result = await registerForEvent(db, eventId, user.id);
-    await ctx.answerCbQuery(registrationStatusToText(result), { show_alert: true });
+    await ctx.answerCbQuery(registrationStatusToText(result, locale), { show_alert: true });
   } catch (error) {
     logError("register_action_failed", { error });
-    await ctx.answerCbQuery("Registration failed. Try again later.", { show_alert: true });
+    await ctx.answerCbQuery(t(locale, "registration_failed"), { show_alert: true });
   }
 });
 
 bot.action(/^cancel:(.+)$/, async (ctx) => {
+  const locale = getLocaleFromCtx(ctx);
   try {
     const eventId = ctx.match[1];
     const from = ctx.from;
 
     if (!from || !eventId) {
-      await ctx.answerCbQuery("User info not available.");
+      await ctx.answerCbQuery(t(locale, "user_info_unavailable"));
       return;
     }
 
@@ -171,13 +177,13 @@ bot.action(/^cancel:(.+)$/, async (ctx) => {
     const result = await cancelRegistration(db, eventId, user.id);
     const text =
       result.status === "cancelled"
-        ? "Your registration has been cancelled."
-        : "You were not registered for this event.";
+        ? t(locale, "registration_cancelled")
+        : t(locale, "not_registered");
 
     await ctx.answerCbQuery(text, { show_alert: true });
   } catch (error) {
     logError("cancel_action_failed", { error });
-    await ctx.answerCbQuery("Cancellation failed. Try again later.", { show_alert: true });
+    await ctx.answerCbQuery(t(locale, "cancellation_failed"), { show_alert: true });
   }
 });
 
@@ -193,13 +199,18 @@ async function handleOrganizerLifecycleCommand(
   ctx: any,
   target: "published" | "closed"
 ): Promise<void> {
+  const locale = getLocaleFromCtx(ctx);
   try {
     const from = ctx.from;
     const text = "text" in (ctx.message ?? {}) ? ctx.message.text : "";
     const eventId = text.replace(/^\/(publish_event|close_event)\s+/i, "").trim();
 
     if (!from || !eventId) {
-      await ctx.reply(`Usage: /${target === "published" ? "publish_event" : "close_event"} <event_id>`);
+      await ctx.reply(
+        t(locale, "lifecycle_usage", {
+          command: target === "published" ? "publish_event" : "close_event"
+        })
+      );
       return;
     }
 
@@ -210,31 +221,31 @@ async function handleOrganizerLifecycleCommand(
     });
 
     if (!canManageEvents(user.role)) {
-      await ctx.reply("Access denied. Organizer or admin role required.");
+      await ctx.reply(t(locale, "access_denied"));
       return;
     }
 
     const current = await getEventById(db, eventId);
     if (!current) {
-      await ctx.reply("Event not found.");
+      await ctx.reply(t(locale, "event_not_found"));
       return;
     }
 
     if (!validateLifecycleTransition(current.status, target)) {
-      await ctx.reply(`Invalid transition: ${current.status} -> ${target}`);
+      await ctx.reply(t(locale, "invalid_transition", { fromStatus: current.status, toStatus: target }));
       return;
     }
 
     const updated = target === "published" ? await publishEvent(db, eventId) : await closeEvent(db, eventId);
     if (!updated) {
-      await ctx.reply("Event state was not updated.");
+      await ctx.reply(t(locale, "event_not_updated"));
       return;
     }
 
-    await ctx.reply(`Event updated to ${updated.status}: ${updated.title}`);
+    await ctx.reply(t(locale, "event_updated", { status: updated.status, title: updated.title }));
   } catch (error) {
     logError("organizer_lifecycle_command_failed", { error });
-    await ctx.reply("Could not update event now.");
+    await ctx.reply(t(locale, "event_update_failed"));
   }
 }
 
@@ -242,12 +253,13 @@ async function handleOrganizerLifecycleAction(
   ctx: any,
   target: "published" | "closed"
 ): Promise<void> {
+  const locale = getLocaleFromCtx(ctx);
   try {
     const from = ctx.from;
     const eventId = ctx.match[1];
 
     if (!from || !eventId) {
-      await ctx.answerCbQuery("Invalid action.", { show_alert: true });
+      await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
       return;
     }
 
@@ -258,26 +270,28 @@ async function handleOrganizerLifecycleAction(
     });
 
     if (!canManageEvents(user.role)) {
-      await ctx.answerCbQuery("Organizer/admin role required.", { show_alert: true });
+      await ctx.answerCbQuery(t(locale, "organizer_required"), { show_alert: true });
       return;
     }
 
     const current = await getEventById(db, eventId);
     if (!current || !validateLifecycleTransition(current.status, target)) {
-      await ctx.answerCbQuery("Invalid event state transition.", { show_alert: true });
+      await ctx.answerCbQuery(t(locale, "invalid_state_transition"), { show_alert: true });
       return;
     }
 
     const updated = target === "published" ? await publishEvent(db, eventId) : await closeEvent(db, eventId);
     if (!updated) {
-      await ctx.answerCbQuery("Event update failed.", { show_alert: true });
+      await ctx.answerCbQuery(t(locale, "action_event_update_failed"), { show_alert: true });
       return;
     }
 
-    await ctx.answerCbQuery(`Event is now ${updated.status}.`, { show_alert: true });
+    await ctx.answerCbQuery(t(locale, "action_event_updated", { status: updated.status }), {
+      show_alert: true
+    });
   } catch (error) {
     logError("organizer_lifecycle_action_failed", { error });
-    await ctx.answerCbQuery("Could not update event.", { show_alert: true });
+    await ctx.answerCbQuery(t(locale, "action_update_failed"), { show_alert: true });
   }
 }
 

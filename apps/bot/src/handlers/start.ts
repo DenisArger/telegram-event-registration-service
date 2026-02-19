@@ -1,7 +1,7 @@
 import type { Context } from "telegraf";
+import { getLocaleFromCtx, t } from "../i18n.js";
 
 export async function handleStart(ctx: Context): Promise<void> {
-  await ctx.reply(
-    "Welcome to Event Registration Bot. Use /events to see available events."
-  );
+  const locale = getLocaleFromCtx(ctx);
+  await ctx.reply(t(locale, "start_welcome"));
 }

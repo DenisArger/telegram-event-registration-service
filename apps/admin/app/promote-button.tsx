@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 export function PromoteButton({ eventId }: { eventId: string }) {
+  const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -10,7 +11,7 @@ export function PromoteButton({ eventId }: { eventId: string }) {
     const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
     const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
     if (!base || !email) {
-      setMessage("Missing NEXT_PUBLIC admin env.");
+      setMessage(ru ? "Не заданы NEXT_PUBLIC переменные для админки." : "Missing NEXT_PUBLIC admin env.");
       return;
     }
 
@@ -28,18 +29,18 @@ export function PromoteButton({ eventId }: { eventId: string }) {
 
       const data = await response.json();
       if (!response.ok) {
-        setMessage(data?.message ?? "Promotion failed.");
+        setMessage(data?.message ?? (ru ? "Не удалось продвинуть участника." : "Promotion failed."));
         return;
       }
 
       if (data?.status === "empty_waitlist") {
-        setMessage("Waitlist is empty.");
+        setMessage(ru ? "Лист ожидания пуст." : "Waitlist is empty.");
         return;
       }
 
-      setMessage(`Promoted user: ${data?.user_id ?? "unknown"}`);
+      setMessage(ru ? `Продвинут пользователь: ${data?.user_id ?? "unknown"}` : `Promoted user: ${data?.user_id ?? "unknown"}`);
     } catch {
-      setMessage("Network error.");
+      setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
       setLoading(false);
     }
@@ -48,7 +49,7 @@ export function PromoteButton({ eventId }: { eventId: string }) {
   return (
     <div>
       <button onClick={promote} disabled={loading}>
-        {loading ? "Promoting..." : "Promote next from waitlist"}
+        {loading ? (ru ? "Выполняется..." : "Promoting...") : (ru ? "Продвинуть из листа ожидания" : "Promote next from waitlist")}
       </button>
       {message ? <p>{message}</p> : null}
     </div>
