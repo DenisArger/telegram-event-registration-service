@@ -1,6 +1,8 @@
 export interface EventItem {
   id: string;
   title: string;
+  description?: string | null;
+  location?: string | null;
   startsAt: string;
   status: "draft" | "published" | "closed";
   capacity: number;
@@ -72,6 +74,26 @@ export async function getAdminEvents(): Promise<EventItem[]> {
     return data.events ?? [];
   } catch {
     return [];
+  }
+}
+
+export async function getAdminEventById(eventId: string): Promise<EventItem | null> {
+  const cfg = getAdminConfig();
+  if (!cfg) return null;
+
+  try {
+    const response = await fetch(`${cfg.base}/api/admin/event?eventId=${encodeURIComponent(eventId)}`, {
+      cache: "no-store",
+      headers: {
+        "x-admin-email": cfg.email
+      }
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) return null;
+    const data = (await response.json()) as { event?: EventItem };
+    return data.event ?? null;
+  } catch {
+    return null;
   }
 }
 
