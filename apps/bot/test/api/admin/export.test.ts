@@ -4,12 +4,19 @@ import { createRes, setRequiredEnv } from "../testUtils";
 const mocks = vi.hoisted(() => ({
   db: {},
   listEventAttendees: vi.fn(),
+  listEventWaitlist: vi.fn(),
+  buildEventExportCsv: vi.fn(),
   logError: vi.fn()
 }));
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
-  listEventAttendees: mocks.listEventAttendees
+  listEventAttendees: mocks.listEventAttendees,
+  listEventWaitlist: mocks.listEventWaitlist
+}));
+
+vi.mock("../../../src/csv", () => ({
+  buildEventExportCsv: mocks.buildEventExportCsv
 }));
 
 vi.mock("@event/shared", async () => {
@@ -17,14 +24,14 @@ vi.mock("@event/shared", async () => {
   return { ...actual, logError: mocks.logError };
 });
 
-describe("GET /api/admin/attendees", () => {
+describe("GET /api/admin/export", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setRequiredEnv();
   });
 
   it("validates method, auth and eventId", async () => {
-    const { default: handler } = await import("./attendees");
+    const { default: handler } = await import("../../../api/admin/export");
 
     const resMethod = createRes();
     await handler({ method: "POST", headers: {}, query: {} } as any, resMethod as any);
@@ -42,9 +49,12 @@ describe("GET /api/admin/attendees", () => {
     expect(resEvent.statusCode).toBe(400);
   });
 
-  it("returns attendees", async () => {
+  it("returns csv with download headers", async () => {
     mocks.listEventAttendees.mockResolvedValueOnce([{ userId: "u1" }]);
-    const { default: handler } = await import("./attendees");
+    mocks.listEventWaitlist.mockResolvedValueOnce([{ userId: "u2" }]);
+    mocks.buildEventExportCsv.mockReturnValueOnce("csv-content");
+
+    const { default: handler } = await import("../../../api/admin/export");
     const res = createRes();
 
     await handler(
@@ -57,12 +67,14 @@ describe("GET /api/admin/attendees", () => {
     );
 
     expect(res.statusCode).toBe(200);
-    expect(res.payload).toEqual({ attendees: [{ userId: "u1" }] });
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.headers["content-disposition"]).toContain("event-e1.csv");
+    expect(res.payload).toBe("csv-content");
   });
 
-  it("returns 500 on failure", async () => {
+  it("returns 500 when export fails", async () => {
     mocks.listEventAttendees.mockRejectedValueOnce(new Error("boom"));
-    const { default: handler } = await import("./attendees");
+    const { default: handler } = await import("../../../api/admin/export");
     const res = createRes();
 
     await handler(

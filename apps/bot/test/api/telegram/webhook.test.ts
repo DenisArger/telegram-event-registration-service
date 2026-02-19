@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   logError: vi.fn()
 }));
 
-vi.mock("../../src/runtime", () => ({
+vi.mock("../../../src/runtime", () => ({
   bot: {
     handleUpdate: mocks.handleUpdate
   }
@@ -27,7 +27,7 @@ describe("POST /api/telegram/webhook", () => {
   });
 
   it("rejects invalid method", async () => {
-    const { default: handler } = await import("./webhook");
+    const { default: handler } = await import("../../../api/telegram/webhook");
     const res = createRes();
 
     await handler({ method: "GET", headers: {} } as any, res as any);
@@ -35,7 +35,7 @@ describe("POST /api/telegram/webhook", () => {
   });
 
   it("rejects invalid secret", async () => {
-    const { default: handler } = await import("./webhook");
+    const { default: handler } = await import("../../../api/telegram/webhook");
     const res = createRes();
 
     await handler(
@@ -50,7 +50,7 @@ describe("POST /api/telegram/webhook", () => {
   });
 
   it("processes update", async () => {
-    const { default: handler } = await import("./webhook");
+    const { default: handler } = await import("../../../api/telegram/webhook");
     const res = createRes();
 
     await handler(
@@ -68,7 +68,7 @@ describe("POST /api/telegram/webhook", () => {
 
   it("returns 500 when bot fails", async () => {
     mocks.handleUpdate.mockRejectedValueOnce(new Error("boom"));
-    const { default: handler } = await import("./webhook");
+    const { default: handler } = await import("../../../api/telegram/webhook");
     const res = createRes();
 
     await handler(

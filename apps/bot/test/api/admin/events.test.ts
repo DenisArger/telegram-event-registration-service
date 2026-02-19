@@ -27,7 +27,7 @@ describe("GET /api/admin/events", () => {
   });
 
   it("returns 405 for non-GET", async () => {
-    const { default: handler } = await import("./events");
+    const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
     await handler({ method: "POST", headers: {} } as any, res as any);
@@ -36,7 +36,7 @@ describe("GET /api/admin/events", () => {
   });
 
   it("returns 401 for non-admin request", async () => {
-    const { default: handler } = await import("./events");
+    const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
     await handler({ method: "GET", headers: {} } as any, res as any);
@@ -46,7 +46,7 @@ describe("GET /api/admin/events", () => {
 
   it("returns events for admin request", async () => {
     mocks.listAllEvents.mockResolvedValueOnce([{ id: "e1" }]);
-    const { default: handler } = await import("./events");
+    const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
     await handler(
@@ -60,7 +60,7 @@ describe("GET /api/admin/events", () => {
 
   it("returns 500 when db fails", async () => {
     mocks.listAllEvents.mockRejectedValueOnce(new Error("boom"));
-    const { default: handler } = await import("./events");
+    const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
     await handler(

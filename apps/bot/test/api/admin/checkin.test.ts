@@ -24,7 +24,7 @@ describe("POST /api/admin/checkin", () => {
   });
 
   it("validates method, auth and required params", async () => {
-    const { default: handler } = await import("./checkin");
+    const { default: handler } = await import("../../../api/admin/checkin");
 
     const resMethod = createRes();
     await handler({ method: "GET", headers: {}, body: {} } as any, resMethod as any);
@@ -48,7 +48,7 @@ describe("POST /api/admin/checkin", () => {
 
   it("returns checkin result and defaults method to manual", async () => {
     mocks.markCheckIn.mockResolvedValueOnce({ status: "checked_in" });
-    const { default: handler } = await import("./checkin");
+    const { default: handler } = await import("../../../api/admin/checkin");
     const res = createRes();
 
     await handler(
@@ -70,7 +70,7 @@ describe("POST /api/admin/checkin", () => {
 
   it("maps registration_not_active to 400", async () => {
     mocks.markCheckIn.mockRejectedValueOnce(new Error("registration_not_active"));
-    const { default: handler } = await import("./checkin");
+    const { default: handler } = await import("../../../api/admin/checkin");
     const res = createRes();
 
     await handler(
@@ -87,7 +87,7 @@ describe("POST /api/admin/checkin", () => {
 
   it("returns 500 on unexpected failure", async () => {
     mocks.markCheckIn.mockRejectedValueOnce(new Error("boom"));
-    const { default: handler } = await import("./checkin");
+    const { default: handler } = await import("../../../api/admin/checkin");
     const res = createRes();
 
     await handler(

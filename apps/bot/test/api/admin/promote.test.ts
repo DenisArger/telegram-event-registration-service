@@ -3,13 +3,13 @@ import { createRes, setRequiredEnv } from "../testUtils";
 
 const mocks = vi.hoisted(() => ({
   db: {},
-  listEventWaitlist: vi.fn(),
+  promoteNextFromWaitlist: vi.fn(),
   logError: vi.fn()
 }));
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
-  listEventWaitlist: mocks.listEventWaitlist
+  promoteNextFromWaitlist: mocks.promoteNextFromWaitlist
 }));
 
 vi.mock("@event/shared", async () => {
@@ -17,59 +17,59 @@ vi.mock("@event/shared", async () => {
   return { ...actual, logError: mocks.logError };
 });
 
-describe("GET /api/admin/waitlist", () => {
+describe("POST /api/admin/promote", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setRequiredEnv();
   });
 
   it("validates method, auth and eventId", async () => {
-    const { default: handler } = await import("./waitlist");
+    const { default: handler } = await import("../../../api/admin/promote");
 
     const resMethod = createRes();
-    await handler({ method: "POST", headers: {}, query: {} } as any, resMethod as any);
+    await handler({ method: "GET", headers: {}, body: {} } as any, resMethod as any);
     expect(resMethod.statusCode).toBe(405);
 
     const resAuth = createRes();
-    await handler({ method: "GET", headers: {}, query: {} } as any, resAuth as any);
+    await handler({ method: "POST", headers: {}, body: {} } as any, resAuth as any);
     expect(resAuth.statusCode).toBe(401);
 
     const resEvent = createRes();
     await handler(
-      { method: "GET", headers: { "x-admin-email": "admin@example.com" }, query: {} } as any,
+      { method: "POST", headers: { "x-admin-email": "admin@example.com" }, body: {} } as any,
       resEvent as any
     );
     expect(resEvent.statusCode).toBe(400);
   });
 
-  it("returns waitlist", async () => {
-    mocks.listEventWaitlist.mockResolvedValueOnce([{ userId: "u1", position: 1 }]);
-    const { default: handler } = await import("./waitlist");
+  it("returns promote result", async () => {
+    mocks.promoteNextFromWaitlist.mockResolvedValueOnce({ status: "promoted", user_id: "u1" });
+    const { default: handler } = await import("../../../api/admin/promote");
     const res = createRes();
 
     await handler(
       {
-        method: "GET",
+        method: "POST",
         headers: { "x-admin-email": "admin@example.com" },
-        query: { eventId: "e1" }
+        body: { eventId: "e1" }
       } as any,
       res as any
     );
 
     expect(res.statusCode).toBe(200);
-    expect(res.payload).toEqual({ waitlist: [{ userId: "u1", position: 1 }] });
+    expect(res.payload).toEqual({ status: "promoted", user_id: "u1" });
   });
 
   it("returns 500 on failure", async () => {
-    mocks.listEventWaitlist.mockRejectedValueOnce(new Error("boom"));
-    const { default: handler } = await import("./waitlist");
+    mocks.promoteNextFromWaitlist.mockRejectedValueOnce(new Error("boom"));
+    const { default: handler } = await import("../../../api/admin/promote");
     const res = createRes();
 
     await handler(
       {
-        method: "GET",
+        method: "POST",
         headers: { "x-admin-email": "admin@example.com" },
-        query: { eventId: "e1" }
+        body: { eventId: "e1" }
       } as any,
       res as any
     );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import handler from "./health";
+import handler from "../../api/health";
 import { createRes } from "./testUtils";
 
 describe("GET /api/health", () => {

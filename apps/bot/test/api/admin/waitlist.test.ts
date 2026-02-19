@@ -3,13 +3,13 @@ import { createRes, setRequiredEnv } from "../testUtils";
 
 const mocks = vi.hoisted(() => ({
   db: {},
-  getEventStats: vi.fn(),
+  listEventWaitlist: vi.fn(),
   logError: vi.fn()
 }));
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
-  getEventStats: mocks.getEventStats
+  listEventWaitlist: mocks.listEventWaitlist
 }));
 
 vi.mock("@event/shared", async () => {
@@ -17,14 +17,14 @@ vi.mock("@event/shared", async () => {
   return { ...actual, logError: mocks.logError };
 });
 
-describe("GET /api/admin/stats", () => {
+describe("GET /api/admin/waitlist", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setRequiredEnv();
   });
 
   it("validates method, auth and eventId", async () => {
-    const { default: handler } = await import("./stats");
+    const { default: handler } = await import("../../../api/admin/waitlist");
 
     const resMethod = createRes();
     await handler({ method: "POST", headers: {}, query: {} } as any, resMethod as any);
@@ -42,9 +42,9 @@ describe("GET /api/admin/stats", () => {
     expect(resEvent.statusCode).toBe(400);
   });
 
-  it("returns stats", async () => {
-    mocks.getEventStats.mockResolvedValueOnce({ registeredCount: 1 });
-    const { default: handler } = await import("./stats");
+  it("returns waitlist", async () => {
+    mocks.listEventWaitlist.mockResolvedValueOnce([{ userId: "u1", position: 1 }]);
+    const { default: handler } = await import("../../../api/admin/waitlist");
     const res = createRes();
 
     await handler(
@@ -57,12 +57,12 @@ describe("GET /api/admin/stats", () => {
     );
 
     expect(res.statusCode).toBe(200);
-    expect(res.payload).toEqual({ stats: { registeredCount: 1 } });
+    expect(res.payload).toEqual({ waitlist: [{ userId: "u1", position: 1 }] });
   });
 
   it("returns 500 on failure", async () => {
-    mocks.getEventStats.mockRejectedValueOnce(new Error("boom"));
-    const { default: handler } = await import("./stats");
+    mocks.listEventWaitlist.mockRejectedValueOnce(new Error("boom"));
+    const { default: handler } = await import("../../../api/admin/waitlist");
     const res = createRes();
 
     await handler(
