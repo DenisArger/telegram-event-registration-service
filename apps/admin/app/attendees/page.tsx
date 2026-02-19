@@ -7,11 +7,12 @@ import { getUiLocale, ui } from "../i18n";
 export default async function AttendeesPage({
   searchParams
 }: {
-  searchParams?: { eventId?: string | string[] };
+  searchParams?: Promise<{ eventId?: string | string[] }>;
 }) {
   const locale = getUiLocale();
   const events = await getAdminEvents();
-  const selectedEventId = resolveSelectedEventId(searchParams, events);
+  const resolvedSearchParams = await searchParams;
+  const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
   const selectedEvent = events.find((event) => event.id === selectedEventId) ?? null;
   const attendees = selectedEventId ? await getAttendees(selectedEventId) : [];
 
