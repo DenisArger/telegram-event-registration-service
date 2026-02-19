@@ -82,7 +82,7 @@ export async function getAdminEventById(eventId: string): Promise<EventItem | nu
   if (!cfg) return null;
 
   try {
-    const response = await fetch(`${cfg.base}/api/admin/event?eventId=${encodeURIComponent(eventId)}`, {
+    const response = await fetch(`${cfg.base}/api/admin/events?eventId=${encodeURIComponent(eventId)}`, {
       cache: "no-store",
       headers: {
         "x-admin-email": cfg.email

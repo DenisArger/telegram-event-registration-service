@@ -55,7 +55,7 @@ export function EventEditor({ event }: { event: EditableEvent }) {
     setLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`${base}/api/admin/event`, {
+      const response = await fetch(`${base}/api/admin/events`, {
         method: "PUT",
         headers: {
           "content-type": "application/json",

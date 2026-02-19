@@ -1,13 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createRes, setRequiredEnv } from "../testUtils";
 
-const mocks = vi.hoisted(() => ({
-  db: {},
-  listAllEvents: vi.fn(),
-  createEvent: vi.fn(),
-  upsertEventQuestions: vi.fn(),
-  logError: vi.fn()
-}));
+const mocks = vi.hoisted(() => {
+  const query: any = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn(),
+    update: vi.fn().mockReturnThis()
+  };
+
+  return {
+    query,
+    db: {
+      from: vi.fn((table: string) => {
+        if (table === "events") return query;
+        return {};
+      })
+    },
+    listAllEvents: vi.fn(),
+    createEvent: vi.fn(),
+    upsertEventQuestions: vi.fn(),
+    logError: vi.fn()
+  };
+});
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
@@ -24,7 +39,7 @@ vi.mock("@event/shared", async () => {
   };
 });
 
-describe("GET /api/admin/events", () => {
+describe("/api/admin/events", () => {
   const creatorId = "00000000-0000-0000-0000-000000000001";
 
   beforeEach(() => {
@@ -37,7 +52,7 @@ describe("GET /api/admin/events", () => {
     const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
-    await handler({ method: "PUT", headers: {} } as any, res as any);
+    await handler({ method: "DELETE", headers: {} } as any, res as any);
 
     expect(res.statusCode).toBe(405);
   });
@@ -51,13 +66,13 @@ describe("GET /api/admin/events", () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it("returns events for admin request", async () => {
+  it("returns events list for admin request", async () => {
     mocks.listAllEvents.mockResolvedValueOnce([{ id: "e1" }]);
     const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
     await handler(
-      { method: "GET", headers: { "x-admin-email": "admin@example.com" } } as any,
+      { method: "GET", headers: { "x-admin-email": "admin@example.com" }, query: {} } as any,
       res as any
     );
 
@@ -65,18 +80,69 @@ describe("GET /api/admin/events", () => {
     expect(res.payload).toEqual({ events: [{ id: "e1" }] });
   });
 
-  it("returns 500 when db fails", async () => {
-    mocks.listAllEvents.mockRejectedValueOnce(new Error("boom"));
+  it("returns event details when eventId is provided", async () => {
+    mocks.query.maybeSingle.mockResolvedValueOnce({
+      data: {
+        id: "e1",
+        title: "Team",
+        description: null,
+        location: null,
+        starts_at: "2026-03-01T10:00:00Z",
+        capacity: 20,
+        status: "published"
+      },
+      error: null
+    });
     const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
     await handler(
-      { method: "GET", headers: { "x-admin-email": "admin@example.com" } } as any,
+      {
+        method: "GET",
+        headers: { "x-admin-email": "admin@example.com" },
+        query: { eventId: "e1" }
+      } as any,
       res as any
     );
 
-    expect(res.statusCode).toBe(500);
-    expect(mocks.logError).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+    expect(res.payload?.event?.id).toBe("e1");
+  });
+
+  it("updates event with PUT", async () => {
+    mocks.query.maybeSingle.mockResolvedValueOnce({
+      data: {
+        id: "e1",
+        title: "Team Updated",
+        description: "desc",
+        location: "HQ",
+        starts_at: "2026-03-02T10:00:00Z",
+        capacity: 25,
+        status: "draft"
+      },
+      error: null
+    });
+    const { default: handler } = await import("../../../api/admin/events");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          eventId: "e1",
+          title: "Team Updated",
+          startsAt: "2026-03-02T10:00:00Z",
+          capacity: 25,
+          description: "desc",
+          location: "HQ"
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload?.event?.title).toBe("Team Updated");
   });
 
   it("returns 500 when creator env is missing for POST", async () => {
