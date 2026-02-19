@@ -51,11 +51,11 @@ export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"):
   const capacity = formatCapacity(event.capacity);
 
   return [
-    `📅 ${event.title}`,
+    event.title,
     startsAt ? `🕒 ${startsAt}` : null,
     endsAt ? `🏁 ${endsAt}` : null,
     capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null,
-    event.description ? `📝 ${event.description}` : null
+    event.description ? event.description : null
   ]
     .filter(Boolean)
     .join("\n");
@@ -69,11 +69,11 @@ export function buildEventMessageHtml(event: EventEntity, locale: BotLocale = "e
   const descriptionHtml = event.description ? markdownToTelegramHtml(event.description) : null;
 
   return [
-    `📅 ${titleHtml}`,
+    titleHtml,
     startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
     endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
     capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
-    descriptionHtml ? `📝 ${descriptionHtml}` : null
+    descriptionHtml ? descriptionHtml : null
   ]
     .filter(Boolean)
     .join("\n");
