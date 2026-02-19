@@ -82,7 +82,7 @@ const translations: Record<BotLocale, Messages> = {
     registration_cancelled: "Ваша регистрация отменена.",
     cancel_confirm_prompt: "Отменить регистрацию на это мероприятие?",
     cancel_confirm_btn: "Да, отменить",
-    cancel_keep_btn: "Оставить регистрацию",
+    cancel_keep_btn: "Продолжить регистрацию",
     cancel_kept: "Регистрация сохранена.",
     not_registered: "Вы не были зарегистрированы на это мероприятие.",
     cancellation_failed: "Не удалось отменить регистрацию. Попробуйте позже.",

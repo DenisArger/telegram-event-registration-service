@@ -133,3 +133,110 @@ body {
   gap: 12px;
   margin-bottom: 12px;
 }
+
+.attendees-view-switch {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.attendees-view-switch a {
+  text-decoration: none;
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+.attendees-view-switch a.active {
+  color: #0f172a;
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.attendees-table-wrap {
+  overflow-x: auto;
+}
+
+.attendees-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 840px;
+}
+
+.attendees-table th,
+.attendees-table td {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.attendees-table tbody tr {
+  cursor: pointer;
+}
+
+.attendees-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.attendees-row-dragging {
+  opacity: 0.6;
+}
+
+.drag-handle {
+  cursor: grab;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  padding: 2px 6px;
+}
+
+.attendees-order-message {
+  margin: 0 0 8px;
+}
+
+.attendees-order-message.ok {
+  color: #166534;
+}
+
+.attendees-order-message.error {
+  color: #991b1b;
+}
+
+.attendee-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 30;
+}
+
+.attendee-drawer {
+  width: min(480px, 100vw);
+  height: 100vh;
+  overflow-y: auto;
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.attendee-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendee-drawer-meta p {
+  margin: 6px 0;
+}
+
+@media (max-width: 768px) {
+  .attendee-drawer {
+    width: 100vw;
+    border-left: none;
+  }
+}

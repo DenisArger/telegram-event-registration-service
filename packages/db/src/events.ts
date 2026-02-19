@@ -194,6 +194,17 @@ export async function listEventAttendees(
 
   if (error) throw error;
 
+  const { data: attendeeOrder, error: attendeeOrderError } = await db
+    .from("event_attendee_order")
+    .select("user_id,display_order")
+    .eq("event_id", eventId);
+
+  if (attendeeOrderError) throw attendeeOrderError;
+  const orderByUserId = new Map<string, number>();
+  for (const row of attendeeOrder ?? []) {
+    orderByUserId.set(String((row as any).user_id), Number((row as any).display_order));
+  }
+
   const { data: checkins, error: checkinsError } = await db
     .from("checkins")
     .select("user_id")
@@ -237,17 +248,40 @@ export async function listEventAttendees(
     answersByUser.set(key, list);
   }
 
-  return (data ?? []).map((row: any) => ({
-    userId: row.user_id,
-    fullName: row.users.full_name,
-    username: row.users.username,
-    telegramId: row.users.telegram_id,
-    status: row.status,
-    paymentStatus: row.payment_status,
-    registeredAt: row.created_at,
-    checkedIn: checkedInIds.has(String(row.user_id)),
-    answers: answersByUser.get(String(row.user_id)) ?? []
-  }));
+  return (data ?? [])
+    .map((row: any) => ({
+      userId: row.user_id,
+      fullName: row.users.full_name,
+      username: row.users.username,
+      telegramId: row.users.telegram_id,
+      displayOrder: orderByUserId.get(String(row.user_id)) ?? null,
+      status: row.status,
+      paymentStatus: row.payment_status,
+      registeredAt: row.created_at,
+      checkedIn: checkedInIds.has(String(row.user_id)),
+      answers: answersByUser.get(String(row.user_id)) ?? []
+    }))
+    .sort((left, right) => {
+      if (left.displayOrder !== null && right.displayOrder !== null) {
+        return left.displayOrder - right.displayOrder;
+      }
+      if (left.displayOrder !== null) return -1;
+      if (right.displayOrder !== null) return 1;
+      return new Date(left.registeredAt).getTime() - new Date(right.registeredAt).getTime();
+    });
+}
+
+export async function saveEventAttendeeOrder(
+  db: SupabaseClient,
+  eventId: string,
+  orderedUserIds: string[]
+): Promise<void> {
+  const { error } = await db.rpc("upsert_event_attendee_order", {
+    p_event_id: eventId,
+    p_user_ids: orderedUserIds
+  });
+
+  if (error) throw error;
 }
 
 export async function listEventWaitlist(

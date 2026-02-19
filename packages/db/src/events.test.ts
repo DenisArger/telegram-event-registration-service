@@ -9,6 +9,7 @@ import {
   listEventQuestions,
   listEventWaitlist,
   listPublishedEvents,
+  saveEventAttendeeOrder,
   promoteNextFromWaitlist,
   publishEvent,
   upsertEventQuestions
@@ -112,15 +113,22 @@ describe("events data layer", () => {
     expect(result[0].title).toBe("All");
   });
 
-  it("listEventAttendees maps nested user/checkin", async () => {
+  it("listEventAttendees maps attendees and applies custom order", async () => {
     const order = vi.fn(async () => ({
       data: [
         {
-          user_id: "u1",
+          user_id: "u2",
           status: "registered",
           payment_status: "mock_paid",
-          created_at: "2026",
-          users: { full_name: "John", username: "john", telegram_id: 1 }
+          created_at: "2026-02-18T11:00:00Z",
+          users: { full_name: "John", username: "john", telegram_id: 2 }
+        },
+        {
+          user_id: "u1",
+          status: "cancelled",
+          payment_status: "mock_paid",
+          created_at: "2026-02-18T10:00:00Z",
+          users: { full_name: "Jane", username: "jane", telegram_id: 1 }
         }
       ],
       error: null
@@ -128,7 +136,7 @@ describe("events data layer", () => {
     const registrationsQuery = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
     const checkinsQuery = {
       select: vi.fn().mockReturnThis(),
-      eq: vi.fn(async () => ({ data: [{ user_id: "u1" }], error: null }))
+      eq: vi.fn(async () => ({ data: [{ user_id: "u2" }], error: null }))
     };
     const answersQuery = {
       select: vi.fn().mockReturnThis(),
@@ -136,7 +144,7 @@ describe("events data layer", () => {
       order: vi.fn(async () => ({
         data: [
           {
-            user_id: "u1",
+            user_id: "u2",
             question_id: "q1",
             question_version: 1,
             answer_text: "Networking",
@@ -148,21 +156,31 @@ describe("events data layer", () => {
         error: null
       }))
     };
+    const attendeeOrderQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({
+        data: [{ user_id: "u2", display_order: 1 }, { user_id: "u1", display_order: 2 }],
+        error: null
+      }))
+    };
     const db = {
       from: vi.fn((table: string) => {
         if (table === "registrations") return registrationsQuery;
         if (table === "checkins") return checkinsQuery;
         if (table === "registration_question_answers") return answersQuery;
+        if (table === "event_attendee_order") return attendeeOrderQuery;
         throw new Error(`Unexpected table: ${table}`);
       })
     } as any;
 
     const result = await listEventAttendees(db, "e1");
+    expect(result.map((item) => item.userId)).toEqual(["u2", "u1"]);
     expect(result[0]).toEqual(
       expect.objectContaining({
         fullName: "John",
         checkedIn: true,
-        userId: "u1",
+        userId: "u2",
+        displayOrder: 1,
         answers: [
           {
             questionId: "q1",
@@ -175,6 +193,7 @@ describe("events data layer", () => {
         ]
       })
     );
+    expect(result[1]).toEqual(expect.objectContaining({ displayOrder: 2, status: "cancelled" }));
   });
 
   it("listEventWaitlist maps nested user", async () => {
@@ -243,6 +262,18 @@ describe("events data layer", () => {
 
     expect(rpc).toHaveBeenCalledWith("promote_next_waitlist", { p_event_id: "e1" });
     expect(result.status).toBe("promoted");
+  });
+
+  it("saveEventAttendeeOrder calls rpc", async () => {
+    const rpc = vi.fn(async () => ({ data: null, error: null }));
+    const db = { rpc } as any;
+
+    await saveEventAttendeeOrder(db, "e1", ["u1", "u2"]);
+
+    expect(rpc).toHaveBeenCalledWith("upsert_event_attendee_order", {
+      p_event_id: "e1",
+      p_user_ids: ["u1", "u2"]
+    });
   });
 
   it("listEventQuestions and upsertEventQuestions call rpc", async () => {
