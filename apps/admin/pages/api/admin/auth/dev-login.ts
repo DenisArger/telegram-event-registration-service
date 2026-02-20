@@ -1,6 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createServiceClientLoose, getUserByTelegramId } from "@event/db";
 import { clearSession, writeSession } from "../../../../lib/admin-session";
+
+interface AdminUser {
+  id: string;
+  role: "participant" | "organizer" | "admin";
+  telegram_id: number;
+}
 
 function applyCors(req: NextApiRequest, res: NextApiResponse): boolean {
   const origin = String(req.headers.origin ?? "").trim();
@@ -38,8 +43,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const db = createServiceClientLoose(process.env);
-    const user = await getUserByTelegramId(db, telegramId);
+    const supabaseUrl = String(process.env.SUPABASE_URL ?? "").trim();
+    const serviceKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY ?? "").trim();
+    if (!supabaseUrl || !serviceKey) {
+      res.status(500).json({ message: "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required" });
+      return;
+    }
+
+    const usersUrl = new URL(`${supabaseUrl}/rest/v1/users`);
+    usersUrl.searchParams.set("select", "id,role,telegram_id");
+    usersUrl.searchParams.set("telegram_id", `eq.${telegramId}`);
+    usersUrl.searchParams.set("limit", "1");
+
+    const response = await fetch(usersUrl.toString(), {
+      method: "GET",
+      headers: {
+        apikey: serviceKey,
+        authorization: `Bearer ${serviceKey}`
+      }
+    });
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      res.status(500).json({ message: `Failed to load user from Supabase: ${response.status} ${body}` });
+      return;
+    }
+
+    const rows = (await response.json()) as AdminUser[];
+    const user = rows[0];
     if (!user) {
       res.status(403).json({ message: "admin_user_not_found" });
       return;
@@ -51,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     writeSession(res, {
       userId: user.id,
-      telegramId: user.telegramId,
+      telegramId: Number(user.telegram_id),
       role: user.role
     });
     res.status(200).json({ ok: true, role: user.role, userId: user.id });
