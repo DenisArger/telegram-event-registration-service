@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { getAdminEvents } from "../_lib/admin-api";
 
 vi.mock("../_lib/admin-api", () => ({
   getAdminEvents: vi.fn(async () => [
@@ -15,5 +16,29 @@ describe("EventsPage", () => {
     expect(html).toContain("Team");
     expect(html).toContain("Sync");
     expect(html).toContain("/events/e1");
+  });
+
+  it("renders no events message when list is empty", async () => {
+    vi.mocked(getAdminEvents).mockResolvedValueOnce([]);
+    const html = renderToStaticMarkup(await EventsPage());
+    expect(html).toContain("No events available or admin API is not configured.");
+  });
+
+  it("renders endsAt and capacity without startsAt", async () => {
+    vi.mocked(getAdminEvents).mockResolvedValueOnce([
+      {
+        id: "e2",
+        title: "Afterparty",
+        description: null,
+        startsAt: null,
+        endsAt: "2026-03-01T11:00:00Z",
+        status: "draft",
+        capacity: 0
+      }
+    ] as any);
+
+    const html = renderToStaticMarkup(await EventsPage());
+    expect(html).toContain("Afterparty");
+    expect(html).not.toContain("cap:");
   });
 });

@@ -15,6 +15,8 @@ interface QuestionColumn {
   prompt: string;
 }
 
+const COLOR_PRESETS = ["#FFE5E5", "#FFF1CC", "#E9FAD8", "#DDF4FF", "#EFE6FF", "#FCE7F3"];
+
 function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return items;
   const next = [...items];
@@ -22,6 +24,14 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
   if (!moved) return items;
   next.splice(toIndex, 0, moved);
   return next;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const safeHex = hex.replace("#", "");
+  const r = Number.parseInt(safeHex.slice(0, 2), 16);
+  const g = Number.parseInt(safeHex.slice(2, 4), 16);
+  const b = Number.parseInt(safeHex.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
@@ -33,6 +43,7 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"ok" | "error" | "info" | null>(null);
   const saveTimerRef = useRef<number | null>(null);
+  const colorTimerByUserRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     setRows(attendees);
@@ -44,6 +55,10 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
       if (saveTimerRef.current !== null) {
         window.clearTimeout(saveTimerRef.current);
       }
+      for (const timerId of colorTimerByUserRef.current.values()) {
+        window.clearTimeout(timerId);
+      }
+      colorTimerByUserRef.current.clear();
     };
   }, []);
 
@@ -113,6 +128,74 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
     }, 500);
   }
 
+  async function persistRowColor(
+    userId: string,
+    rowColor: string | null,
+    nextRows: AttendeeItem[],
+    previousRows: AttendeeItem[]
+  ) {
+    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
+    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
+
+    if (!base || !email) {
+      setMessageType("error");
+      setMessage("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL.");
+      setRows(previousRows);
+      return;
+    }
+
+    setMessageType("info");
+    setMessage(ui("attendees_color_saving", locale));
+
+    try {
+      const response = await fetch(`${base}/api/admin/attendees`, {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-email": email
+        },
+        body: JSON.stringify({
+          eventId,
+          colorUpdate: {
+            userId,
+            rowColor
+          }
+        })
+      });
+
+      if (!response.ok) throw new Error("save_failed");
+      setLastPersistedRows(nextRows);
+      setMessageType("ok");
+      setMessage(ui("attendees_color_saved", locale));
+    } catch {
+      setRows(previousRows);
+      setLastPersistedRows(previousRows);
+      setMessageType("error");
+      setMessage(ui("attendees_color_save_failed", locale));
+    }
+  }
+
+  function schedulePersistRowColor(userId: string, rowColor: string | null, nextRows: AttendeeItem[], previousRows: AttendeeItem[]) {
+    const previousTimerId = colorTimerByUserRef.current.get(userId);
+    if (previousTimerId !== undefined) {
+      window.clearTimeout(previousTimerId);
+    }
+
+    const timerId = window.setTimeout(() => {
+      void persistRowColor(userId, rowColor, nextRows, previousRows);
+      colorTimerByUserRef.current.delete(userId);
+    }, 350);
+
+    colorTimerByUserRef.current.set(userId, timerId);
+  }
+
+  function handleRowColorChange(userId: string, rowColor: string | null) {
+    const previousRows = rows;
+    const nextRows = rows.map((item) => (item.userId === userId ? { ...item, rowColor } : item));
+    setRows(nextRows);
+    schedulePersistRowColor(userId, rowColor, nextRows, previousRows);
+  }
+
   function handleDrop(targetUserId: string) {
     if (!draggingUserId || draggingUserId === targetUserId) return;
 
@@ -134,6 +217,7 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
           <thead>
             <tr>
               <th>{ui("attendees_column_drag", locale)}</th>
+              <th>{ui("attendees_color", locale)}</th>
               <th>{ui("attendees_column_name", locale)}</th>
               <th>{ui("attendees_column_username", locale)}</th>
               <th>{ui("attendees_column_status", locale)}</th>
@@ -154,6 +238,7 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
                   onDrop={() => handleDrop(attendee.userId)}
                   data-testid={`attendee-row-${attendee.userId}`}
                   className={draggingUserId === attendee.userId ? "attendees-row-dragging" : undefined}
+                  style={attendee.rowColor ? { backgroundColor: hexToRgba(attendee.rowColor, 0.3) } : undefined}
                 >
                   <td>
                     <button
@@ -171,6 +256,35 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
                     >
                       ⋮⋮
                     </button>
+                  </td>
+                  <td>
+                    <div className="row-color-controls" onClick={(event) => event.stopPropagation()}>
+                      <div className="row-color-presets">
+                        {COLOR_PRESETS.map((color) => (
+                          <button
+                            key={`${attendee.userId}-${color}`}
+                            type="button"
+                            className="row-color-preset"
+                            style={{ backgroundColor: color }}
+                            onClick={() => handleRowColorChange(attendee.userId, color)}
+                            aria-label={`${ui("attendees_color", locale)} ${color}`}
+                          />
+                        ))}
+                      </div>
+                      <input
+                        type="color"
+                        value={attendee.rowColor ?? "#DDF4FF"}
+                        onChange={(event) => handleRowColorChange(attendee.userId, event.target.value.toUpperCase())}
+                        aria-label={ui("attendees_color_custom", locale)}
+                      />
+                      <button
+                        type="button"
+                        className="row-color-clear"
+                        onClick={() => handleRowColorChange(attendee.userId, null)}
+                      >
+                        {ui("attendees_color_clear", locale)}
+                      </button>
+                    </div>
                   </td>
                   <td>{attendee.fullName}</td>
                   <td>{attendee.username ? `@${attendee.username}` : "-"}</td>

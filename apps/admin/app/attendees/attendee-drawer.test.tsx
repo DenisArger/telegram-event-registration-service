@@ -10,6 +10,7 @@ const attendee = {
   fullName: "John",
   username: "john",
   displayOrder: 1,
+  rowColor: null,
   status: "registered" as const,
   registeredAt: "2026-02-19T10:00:00Z",
   checkedIn: true,

@@ -63,6 +63,42 @@ describe("/api/admin/event-questions", () => {
     expect(res.payload).toEqual({ questions: [{ id: "q1" }] });
   });
 
+  it("returns 400 for GET without eventId", async () => {
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "GET",
+        headers: { "x-admin-email": "admin@example.com" },
+        query: {}
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toEqual({ message: "eventId is required" });
+  });
+
+  it("returns 500 when get questions fails", async () => {
+    mocks.listEventQuestions.mockRejectedValueOnce(new Error("db fail"));
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "GET",
+        headers: { "x-admin-email": "admin@example.com" },
+        query: { eventId: "e1" }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toEqual({ message: "Failed to load event questions" });
+    expect(mocks.logError).toHaveBeenCalledWith("admin_event_questions_get_failed", expect.any(Object));
+  });
+
   it("updates questions", async () => {
     mocks.upsertEventQuestions.mockResolvedValueOnce([{ id: "q1", prompt: "P" }]);
     const { default: handler } = await import("../../../api/admin/event-questions");
@@ -86,5 +122,105 @@ describe("/api/admin/event-questions", () => {
       [{ id: "q1", prompt: "P", isRequired: true, position: 1 }]
     );
     expect(res.statusCode).toBe(200);
+  });
+
+  it("returns 400 for PUT without eventId", async () => {
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { questions: [] }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toEqual({ message: "eventId is required" });
+  });
+
+  it("returns 400 for invalid questions payload", async () => {
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          eventId: "e1",
+          questions: [{ prompt: "  " }]
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toEqual({ message: "question prompt length must be 1..500" });
+  });
+
+  it("returns 400 when questions is not an array", async () => {
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          eventId: "e1",
+          questions: "not-array"
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toEqual({ message: "questions must be an array" });
+  });
+
+  it("returns 400 when questions count is above limit", async () => {
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+    const questions = Array.from({ length: 11 }, (_, index) => ({ prompt: `Q${index + 1}` }));
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          eventId: "e1",
+          questions
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toEqual({ message: "questions count must be <= 10" });
+  });
+
+  it("returns 500 when update questions fails", async () => {
+    mocks.upsertEventQuestions.mockRejectedValueOnce(new Error("update fail"));
+    const { default: handler } = await import("../../../api/admin/event-questions");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          eventId: "e1",
+          questions: [{ prompt: "Question", required: false }]
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(res.payload).toEqual({ message: "Failed to update event questions" });
+    expect(mocks.logError).toHaveBeenCalledWith("admin_event_questions_put_failed", expect.any(Object));
   });
 });

@@ -193,6 +193,45 @@ body {
   padding: 2px 6px;
 }
 
+.row-color-controls {
+  display: grid;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.row-color-presets {
+  display: grid;
+  grid-template-columns: repeat(6, 16px);
+  gap: 4px;
+}
+
+.row-color-preset {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #94a3b8;
+  border-radius: 3px;
+  padding: 0;
+}
+
+.row-color-controls input[type="color"] {
+  width: 36px;
+  height: 24px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  background: #fff;
+  padding: 0;
+}
+
+.row-color-clear {
+  font-size: 12px;
+  line-height: 1.2;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px 6px;
+  width: fit-content;
+}
+
 .attendees-order-message {
   margin: 0 0 8px;
 }

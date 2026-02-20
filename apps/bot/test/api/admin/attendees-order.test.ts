@@ -5,13 +5,15 @@ const mocks = vi.hoisted(() => ({
   db: {},
   listEventAttendees: vi.fn(),
   saveEventAttendeeOrder: vi.fn(),
+  saveEventAttendeeRowColor: vi.fn(),
   logError: vi.fn()
 }));
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
   listEventAttendees: mocks.listEventAttendees,
-  saveEventAttendeeOrder: mocks.saveEventAttendeeOrder
+  saveEventAttendeeOrder: mocks.saveEventAttendeeOrder,
+  saveEventAttendeeRowColor: mocks.saveEventAttendeeRowColor
 }));
 
 vi.mock("@event/shared", async () => {
@@ -143,6 +145,79 @@ describe("PUT /api/admin/attendees", () => {
         method: "PUT",
         headers: { "x-admin-email": "admin@example.com" },
         body: { eventId: "e1", orderedUserIds: [U1] }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(mocks.logError).toHaveBeenCalled();
+  });
+
+  it("returns 400 for invalid color payload", async () => {
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    const { default: handler } = await import("../../../api/admin/attendees");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: "e1", colorUpdate: { userId: U1, rowColor: "red" } }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("returns 400 when color user is not attendee", async () => {
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    const { default: handler } = await import("../../../api/admin/attendees");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: "e1", colorUpdate: { userId: U2, rowColor: "#AABBCC" } }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(mocks.saveEventAttendeeRowColor).not.toHaveBeenCalled();
+  });
+
+  it("saves attendee row color", async () => {
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    mocks.saveEventAttendeeRowColor.mockResolvedValueOnce(undefined);
+    const { default: handler } = await import("../../../api/admin/attendees");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: "e1", colorUpdate: { userId: U1, rowColor: "#AABBCC" } }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(mocks.saveEventAttendeeRowColor).toHaveBeenCalledWith(mocks.db, "e1", U1, "#AABBCC");
+  });
+
+  it("returns 500 on color save failure", async () => {
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    mocks.saveEventAttendeeRowColor.mockRejectedValueOnce(new Error("boom"));
+    const { default: handler } = await import("../../../api/admin/attendees");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: "e1", colorUpdate: { userId: U1, rowColor: "#AABBCC" } }
       } as any,
       res as any
     );

@@ -7,6 +7,18 @@ export default defineConfig({
       "apps/**/*.test.tsx",
       "packages/**/*.test.ts",
       "packages/**/*.test.tsx"
-    ]
+    ],
+    coverage: {
+      exclude: [
+        "**/dist/**",
+        "**/.next/**",
+        "coverage/**",
+        "api/**",
+        "vitest.config.ts",
+        "**/next-env.d.ts",
+        "**/next.config.mjs",
+        "packages/shared/src/contracts.ts"
+      ]
+    }
   }
 });

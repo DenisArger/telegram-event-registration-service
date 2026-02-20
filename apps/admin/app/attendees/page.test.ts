@@ -15,6 +15,7 @@ vi.mock("../_lib/admin-api", () => ({
       fullName: "John",
       username: "john",
       displayOrder: 1,
+      rowColor: null,
       status: "registered",
       registeredAt: "2026-02-19T10:00:00Z",
       checkedIn: true,

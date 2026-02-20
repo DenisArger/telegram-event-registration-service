@@ -51,6 +51,7 @@ export interface EventAttendeeEntity {
   username: string | null;
   telegramId: number | null;
   displayOrder: number | null;
+  rowColor: string | null;
   status: "registered" | "cancelled";
   paymentStatus: "mock_pending" | "mock_paid";
   registeredAt: string;

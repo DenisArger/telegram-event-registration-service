@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { getAdminEventById } from "../../_lib/admin-api";
 
 vi.mock("../../_lib/admin-api", () => ({
   getAdminEventById: vi.fn(async () => ({
@@ -24,5 +25,12 @@ describe("EventDetailsPage", () => {
     const html = renderToStaticMarkup(await EventDetailsPage({ params: Promise.resolve({ eventId: "e1" }) } as any));
     expect(html).toContain("Team");
     expect(html).toContain("event-editor");
+  });
+
+  it("renders fallback when event is missing", async () => {
+    vi.mocked(getAdminEventById).mockResolvedValueOnce(null);
+    const html = renderToStaticMarkup(await EventDetailsPage({ params: Promise.resolve({ eventId: "missing" }) } as any));
+    expect(html).toContain("No event selected.");
+    expect(html).toContain("/events");
   });
 });

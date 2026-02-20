@@ -476,4 +476,206 @@ describe("bot runtime", () => {
       show_alert: true
     });
   });
+
+  it("covers qskip branches", async () => {
+    const qskipAction = state.actions.find((item) => String(item.pattern) === String(/^qskip:(.+):([0-9]+)$/));
+    const qskipNoFrom = baseCtx({ from: undefined, match: ["qskip:e1:1", "e1", "1"] });
+    await qskipAction?.handler(qskipNoFrom);
+    expect(qskipNoFrom.answerCbQuery).toHaveBeenCalledWith("Invalid action.", { show_alert: true });
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce(null);
+    const noSessionCtx = baseCtx({ match: ["qskip:e1:1", "e1", "1"] });
+    await qskipAction?.handler(noSessionCtx);
+    expect(noSessionCtx.answerCbQuery).toHaveBeenCalledWith("Questionnaire session expired. Please tap Register again.", {
+      show_alert: true
+    });
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: true
+    });
+    const expiredCtx = baseCtx({ match: ["qskip:e1:1", "e1", "1"] });
+    await qskipAction?.handler(expiredCtx);
+    expect(mocks.cancelQuestionSession).toHaveBeenCalled();
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([]);
+    const missingQuestionCtx = baseCtx({ match: ["qskip:e1:1", "e1", "1"] });
+    await qskipAction?.handler(missingQuestionCtx);
+    expect(mocks.cancelQuestionSession).toHaveBeenCalled();
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "Required?", isRequired: true, position: 1, isActive: true }
+    ]);
+    const requiredCtx = baseCtx({ match: ["qskip:e1:1", "e1", "1"] });
+    await qskipAction?.handler(requiredCtx);
+    expect(requiredCtx.answerCbQuery).toHaveBeenCalledWith("Answer is required.", { show_alert: true });
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "Optional?", isRequired: false, position: 1, isActive: true },
+      { id: "q2", eventId: "e1", version: 1, prompt: "Next", isRequired: true, position: 2, isActive: true }
+    ]);
+    const optionalCtx = baseCtx({ match: ["qskip:e1:1", "e1", "1"] });
+    await qskipAction?.handler(optionalCtx);
+    expect(mocks.advanceQuestionSession).toHaveBeenCalled();
+    expect(optionalCtx.reply).toHaveBeenCalled();
+    expect(optionalCtx.answerCbQuery).toHaveBeenCalledWith();
+  });
+
+  it("covers qcancel and qcancel_confirm branches", async () => {
+    const qcancelAction = state.actions.find((item) => String(item.pattern) === String(/^qcancel:(.+)$/));
+    const qcancelConfirmAction = state.actions.find((item) => String(item.pattern) === String(/^qcancel_confirm:(.+)$/));
+    const qcancelKeepAction = state.actions.find((item) => String(item.pattern) === String(/^qcancel_keep:(.+)$/));
+
+    const invalidQcancelCtx = baseCtx({ match: ["qcancel:", ""] });
+    await qcancelAction?.handler(invalidQcancelCtx);
+    expect(invalidQcancelCtx.answerCbQuery).toHaveBeenCalledWith("Invalid action.", { show_alert: true });
+
+    const promptQcancelCtx = baseCtx({ match: ["qcancel:e1", "e1"] });
+    await qcancelAction?.handler(promptQcancelCtx);
+    expect(promptQcancelCtx.reply).toHaveBeenCalled();
+
+    const invalidConfirmCtx = baseCtx({ from: undefined, match: ["qcancel_confirm:e1", "e1"] });
+    await qcancelConfirmAction?.handler(invalidConfirmCtx);
+    expect(invalidConfirmCtx.answerCbQuery).toHaveBeenCalledWith("Invalid action.", { show_alert: true });
+
+    const confirmCtx = baseCtx({ match: ["qcancel_confirm:e1", "e1"] });
+    await qcancelConfirmAction?.handler(confirmCtx);
+    expect(mocks.cancelQuestionSession).toHaveBeenCalled();
+    expect(confirmCtx.answerCbQuery).toHaveBeenCalledWith("Questionnaire cancelled.", { show_alert: true });
+
+    const keepCtx = baseCtx({ match: ["qcancel_keep:e1", "e1"] });
+    await qcancelKeepAction?.handler(keepCtx);
+    expect(keepCtx.answerCbQuery).toHaveBeenCalledWith("Registration kept.", { show_alert: false });
+
+    const keepErrAnswerCbQuery = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("boom"))
+      .mockResolvedValueOnce(undefined);
+    const keepErrCtx = baseCtx({ match: ["qcancel_keep:e1", "e1"], answerCbQuery: keepErrAnswerCbQuery });
+    await qcancelKeepAction?.handler(keepErrCtx);
+    expect(keepErrCtx.answerCbQuery).toHaveBeenCalledWith("Unexpected error. Please try again.", { show_alert: true });
+  });
+
+  it("covers text handler branches", async () => {
+    const handler = state.textHandler;
+
+    const slashCtx = baseCtx({ message: { text: "/events" }, reply: vi.fn(async () => undefined) });
+    await handler?.(slashCtx);
+    expect(slashCtx.reply).not.toHaveBeenCalled();
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce(null);
+    const noSessionCtx = baseCtx({ message: { text: "hello" } });
+    await handler?.(noSessionCtx);
+    expect(noSessionCtx.reply).not.toHaveBeenCalled();
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: true
+    });
+    const expiredCtx = baseCtx({ message: { text: "hello" } });
+    await handler?.(expiredCtx);
+    expect(expiredCtx.reply).toHaveBeenCalledWith("Questionnaire session expired. Please tap Register again.");
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([]);
+    const missingQuestionCtx = baseCtx({ message: { text: "hello" } });
+    await handler?.(missingQuestionCtx);
+    expect(missingQuestionCtx.reply).toHaveBeenCalledWith("Questionnaire session expired. Please tap Register again.");
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "Q", isRequired: true, position: 1, isActive: true }
+    ]);
+    const longAnswerCtx = baseCtx({ message: { text: "a".repeat(501) } });
+    await handler?.(longAnswerCtx);
+    expect(longAnswerCtx.reply).toHaveBeenCalledWith("Answer is too long (max 500 chars).");
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "Q", isRequired: true, position: 1, isActive: true }
+    ]);
+    const requiredCtx = baseCtx({ message: { text: "   " } });
+    await handler?.(requiredCtx);
+    expect(requiredCtx.reply).toHaveBeenCalledWith("Answer is required.");
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "Q1", isRequired: true, position: 1, isActive: true },
+      { id: "q2", eventId: "e1", version: 1, prompt: "Q2", isRequired: true, position: 2, isActive: true }
+    ]);
+    const nextQuestionCtx = baseCtx({ message: { text: "first answer" } });
+    await handler?.(nextQuestionCtx);
+    expect(mocks.advanceQuestionSession).toHaveBeenCalled();
+
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 1,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "Q1", isRequired: true, position: 1, isActive: true }
+    ]);
+    const finalizeCtx = baseCtx({ message: { text: "final answer" } });
+    await handler?.(finalizeCtx);
+    expect(mocks.saveAnswersAndRegister).toHaveBeenCalled();
+    expect(mocks.completeQuestionSession).toHaveBeenCalled();
+
+    mocks.upsertTelegramUser.mockRejectedValueOnce(new Error("boom"));
+    const errCtx = baseCtx({ message: { text: "hello" } });
+    await handler?.(errCtx);
+    expect(errCtx.reply).toHaveBeenCalledWith("Could not save your answers.");
+  });
 });

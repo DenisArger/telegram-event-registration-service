@@ -196,13 +196,16 @@ export async function listEventAttendees(
 
   const { data: attendeeOrder, error: attendeeOrderError } = await db
     .from("event_attendee_order")
-    .select("user_id,display_order")
+    .select("user_id,display_order,row_color")
     .eq("event_id", eventId);
 
   if (attendeeOrderError) throw attendeeOrderError;
-  const orderByUserId = new Map<string, number>();
+  const attendeeMetaByUserId = new Map<string, { displayOrder: number; rowColor: string | null }>();
   for (const row of attendeeOrder ?? []) {
-    orderByUserId.set(String((row as any).user_id), Number((row as any).display_order));
+    attendeeMetaByUserId.set(String((row as any).user_id), {
+      displayOrder: Number((row as any).display_order),
+      rowColor: (row as any).row_color ?? null
+    });
   }
 
   const { data: checkins, error: checkinsError } = await db
@@ -254,7 +257,8 @@ export async function listEventAttendees(
       fullName: row.users.full_name,
       username: row.users.username,
       telegramId: row.users.telegram_id,
-      displayOrder: orderByUserId.get(String(row.user_id)) ?? null,
+      displayOrder: attendeeMetaByUserId.get(String(row.user_id))?.displayOrder ?? null,
+      rowColor: attendeeMetaByUserId.get(String(row.user_id))?.rowColor ?? null,
       status: row.status,
       paymentStatus: row.payment_status,
       registeredAt: row.created_at,
@@ -279,6 +283,21 @@ export async function saveEventAttendeeOrder(
   const { error } = await db.rpc("upsert_event_attendee_order", {
     p_event_id: eventId,
     p_user_ids: orderedUserIds
+  });
+
+  if (error) throw error;
+}
+
+export async function saveEventAttendeeRowColor(
+  db: SupabaseClient,
+  eventId: string,
+  userId: string,
+  rowColor: string | null
+): Promise<void> {
+  const { error } = await db.rpc("upsert_event_attendee_row_color", {
+    p_event_id: eventId,
+    p_user_id: userId,
+    p_row_color: rowColor
   });
 
   if (error) throw error;

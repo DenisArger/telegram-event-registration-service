@@ -10,6 +10,7 @@ import {
   listEventWaitlist,
   listPublishedEvents,
   saveEventAttendeeOrder,
+  saveEventAttendeeRowColor,
   promoteNextFromWaitlist,
   publishEvent,
   upsertEventQuestions
@@ -67,6 +68,34 @@ describe("events data layer", () => {
     const db = { from: vi.fn(() => query) } as any;
 
     await expect(getEventById(db, "missing")).resolves.toBeNull();
+  });
+
+  it("getEventById maps event when found", async () => {
+    const maybeSingle = vi.fn(async () => ({
+      data: {
+        id: "e1",
+        title: "Team Event",
+        description: "Desc",
+        starts_at: "2026-03-01T10:00:00Z",
+        ends_at: "2026-03-01T12:00:00Z",
+        capacity: 30,
+        registration_success_message: "Welcome!",
+        status: "published"
+      },
+      error: null
+    }));
+    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    const db = { from: vi.fn(() => query) } as any;
+
+    const result = await getEventById(db, "e1");
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: "e1",
+        title: "Team Event",
+        registrationSuccessMessage: "Welcome!",
+        status: "published"
+      })
+    );
   });
 
   it("publishEvent and closeEvent update lifecycle", async () => {
@@ -159,7 +188,10 @@ describe("events data layer", () => {
     const attendeeOrderQuery = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn(async () => ({
-        data: [{ user_id: "u2", display_order: 1 }, { user_id: "u1", display_order: 2 }],
+        data: [
+          { user_id: "u2", display_order: 1, row_color: "#AABBCC" },
+          { user_id: "u1", display_order: 2, row_color: null }
+        ],
         error: null
       }))
     };
@@ -181,6 +213,7 @@ describe("events data layer", () => {
         checkedIn: true,
         userId: "u2",
         displayOrder: 1,
+        rowColor: "#AABBCC",
         answers: [
           {
             questionId: "q1",
@@ -193,7 +226,106 @@ describe("events data layer", () => {
         ]
       })
     );
-    expect(result[1]).toEqual(expect.objectContaining({ displayOrder: 2, status: "cancelled" }));
+    expect(result[1]).toEqual(expect.objectContaining({ displayOrder: 2, rowColor: null, status: "cancelled" }));
+  });
+
+  it("listEventAttendees sorts ordered attendees before unordered ones", async () => {
+    const registrationsQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({
+        data: [
+          {
+            user_id: "u1",
+            status: "registered",
+            payment_status: "mock_paid",
+            created_at: "2026-02-18T10:00:00Z",
+            users: { full_name: "A", username: "a", telegram_id: 1 }
+          },
+          {
+            user_id: "u2",
+            status: "registered",
+            payment_status: "mock_paid",
+            created_at: "2026-02-18T09:00:00Z",
+            users: { full_name: "B", username: "b", telegram_id: 2 }
+          }
+        ],
+        error: null
+      }))
+    };
+    const attendeeOrderQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({
+        data: [{ user_id: "u2", display_order: 1, row_color: null }],
+        error: null
+      }))
+    };
+    const checkinsQuery = { select: vi.fn().mockReturnThis(), eq: vi.fn(async () => ({ data: [], error: null })) };
+    const answersQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const db = {
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        if (table === "event_attendee_order") return attendeeOrderQuery;
+        if (table === "checkins") return checkinsQuery;
+        if (table === "registration_question_answers") return answersQuery;
+        throw new Error(`Unexpected table: ${table}`);
+      })
+    } as any;
+
+    const result = await listEventAttendees(db, "e1");
+    expect(result.map((item) => item.userId)).toEqual(["u2", "u1"]);
+  });
+
+  it("listEventAttendees falls back to registeredAt when both attendees are unordered", async () => {
+    const registrationsQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({
+        data: [
+          {
+            user_id: "u-late",
+            status: "registered",
+            payment_status: "mock_paid",
+            created_at: "2026-02-18T11:00:00Z",
+            users: { full_name: "Late", username: "late", telegram_id: 11 }
+          },
+          {
+            user_id: "u-early",
+            status: "registered",
+            payment_status: "mock_paid",
+            created_at: "2026-02-18T10:00:00Z",
+            users: { full_name: "Early", username: "early", telegram_id: 10 }
+          }
+        ],
+        error: null
+      }))
+    };
+    const attendeeOrderQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const checkinsQuery = { select: vi.fn().mockReturnThis(), eq: vi.fn(async () => ({ data: [], error: null })) };
+    const answersQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const db = {
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        if (table === "event_attendee_order") return attendeeOrderQuery;
+        if (table === "checkins") return checkinsQuery;
+        if (table === "registration_question_answers") return answersQuery;
+        throw new Error(`Unexpected table: ${table}`);
+      })
+    } as any;
+
+    const result = await listEventAttendees(db, "e1");
+    expect(result.map((item) => item.userId)).toEqual(["u-early", "u-late"]);
   });
 
   it("listEventWaitlist maps nested user", async () => {
@@ -276,6 +408,19 @@ describe("events data layer", () => {
     });
   });
 
+  it("saveEventAttendeeRowColor calls rpc", async () => {
+    const rpc = vi.fn(async () => ({ data: null, error: null }));
+    const db = { rpc } as any;
+
+    await saveEventAttendeeRowColor(db, "e1", "u1", "#AABBCC");
+
+    expect(rpc).toHaveBeenCalledWith("upsert_event_attendee_row_color", {
+      p_event_id: "e1",
+      p_user_id: "u1",
+      p_row_color: "#AABBCC"
+    });
+  });
+
   it("listEventQuestions and upsertEventQuestions call rpc", async () => {
     const rpc = vi
       .fn()
@@ -327,5 +472,136 @@ describe("events data layer", () => {
     const db = { from: vi.fn(() => query) } as any;
 
     await expect(listPublishedEvents(db)).rejects.toThrow("boom");
+  });
+
+  it("throws when attendee order/checkins/answers queries fail", async () => {
+    const registrationsQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const attendeeOrderQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: null, error: new Error("order failed") }))
+    };
+    const checkinsQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const answersQuery = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const dbOrderFail = {
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        if (table === "event_attendee_order") return attendeeOrderQuery;
+        if (table === "checkins") return checkinsQuery;
+        if (table === "registration_question_answers") return answersQuery;
+        throw new Error(`Unexpected table: ${table}`);
+      })
+    } as any;
+
+    await expect(listEventAttendees(dbOrderFail, "e1")).rejects.toThrow("order failed");
+
+    const attendeeOrderOk = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const checkinsFail = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: null, error: new Error("checkins failed") }))
+    };
+    const dbCheckinsFail = {
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        if (table === "event_attendee_order") return attendeeOrderOk;
+        if (table === "checkins") return checkinsFail;
+        if (table === "registration_question_answers") return answersQuery;
+        throw new Error(`Unexpected table: ${table}`);
+      })
+    } as any;
+
+    await expect(listEventAttendees(dbCheckinsFail, "e1")).rejects.toThrow("checkins failed");
+
+    const checkinsOk = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn(async () => ({ data: [], error: null }))
+    };
+    const answersFail = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({ data: null, error: new Error("answers failed") }))
+    };
+    const dbAnswersFail = {
+      from: vi.fn((table: string) => {
+        if (table === "registrations") return registrationsQuery;
+        if (table === "event_attendee_order") return attendeeOrderOk;
+        if (table === "checkins") return checkinsOk;
+        if (table === "registration_question_answers") return answersFail;
+        throw new Error(`Unexpected table: ${table}`);
+      })
+    } as any;
+
+    await expect(listEventAttendees(dbAnswersFail, "e1")).rejects.toThrow("answers failed");
+  });
+
+  it("throws when attendee order/color RPC fails", async () => {
+    const dbOrder = { rpc: vi.fn(async () => ({ data: null, error: new Error("rpc order failed") })) } as any;
+    await expect(saveEventAttendeeOrder(dbOrder, "e1", ["u1"])).rejects.toThrow("rpc order failed");
+
+    const dbColor = { rpc: vi.fn(async () => ({ data: null, error: new Error("rpc color failed") })) } as any;
+    await expect(saveEventAttendeeRowColor(dbColor, "e1", "u1", "#AABBCC")).rejects.toThrow("rpc color failed");
+  });
+
+  it("returns empty questions list when rpc returns null data", async () => {
+    const rpc = vi
+      .fn()
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: null, error: null });
+    const db = { rpc } as any;
+
+    await expect(listEventQuestions(db, "e1")).resolves.toEqual([]);
+    await expect(upsertEventQuestions(db, "e1", [])).resolves.toEqual([]);
+  });
+
+  it("throws when waitlist query fails", async () => {
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn(async () => ({ data: null, error: new Error("waitlist failed") }))
+    };
+    const db = { from: vi.fn(() => query) } as any;
+
+    await expect(listEventWaitlist(db, "e1")).rejects.toThrow("waitlist failed");
+  });
+
+  it("throws when stats queries fail", async () => {
+    const regFail: any = { select: vi.fn().mockReturnThis(), eq: vi.fn() };
+    regFail.eq.mockReturnValueOnce(regFail).mockResolvedValueOnce({ count: 0, error: new Error("reg failed") });
+    const checkOk: any = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ count: 0, error: null }) };
+    const waitOk: any = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ count: 0, error: null }) };
+    const dbRegFail = {
+      from: vi.fn((table: string) => (table === "registrations" ? regFail : table === "checkins" ? checkOk : waitOk))
+    } as any;
+    await expect(getEventStats(dbRegFail, "e1")).rejects.toThrow("reg failed");
+
+    const regOk: any = { select: vi.fn().mockReturnThis(), eq: vi.fn() };
+    regOk.eq.mockReturnValueOnce(regOk).mockResolvedValueOnce({ count: 1, error: null });
+    const checkFail: any = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ count: 0, error: new Error("check failed") }) };
+    const dbCheckFail = {
+      from: vi.fn((table: string) => (table === "registrations" ? regOk : table === "checkins" ? checkFail : waitOk))
+    } as any;
+    await expect(getEventStats(dbCheckFail, "e1")).rejects.toThrow("check failed");
+
+    const regOk2: any = { select: vi.fn().mockReturnThis(), eq: vi.fn() };
+    regOk2.eq.mockReturnValueOnce(regOk2).mockResolvedValueOnce({ count: 1, error: null });
+    const checkOk2: any = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ count: 0, error: null }) };
+    const waitFail: any = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ count: 0, error: new Error("wait failed") }) };
+    const dbWaitFail = {
+      from: vi.fn((table: string) => (table === "registrations" ? regOk2 : table === "checkins" ? checkOk2 : waitFail))
+    } as any;
+    await expect(getEventStats(dbWaitFail, "e1")).rejects.toThrow("wait failed");
   });
 });
