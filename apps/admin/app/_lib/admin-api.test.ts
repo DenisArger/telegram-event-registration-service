@@ -13,7 +13,6 @@ describe("admin-api", () => {
     vi.restoreAllMocks();
     delete process.env.NEXT_PUBLIC_BOT_HEALTH_URL;
     delete process.env.ADMIN_API_BASE_URL;
-    delete process.env.ADMIN_REQUEST_EMAIL;
   });
 
   it("getHealth returns unknown when env is missing", async () => {
@@ -37,7 +36,6 @@ describe("admin-api", () => {
     await expect(getAdminEvents()).resolves.toEqual([]);
 
     process.env.ADMIN_API_BASE_URL = "https://api.example";
-    process.env.ADMIN_REQUEST_EMAIL = "admin@example.com";
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false }));
 
     await expect(getAdminEvents()).resolves.toEqual([]);
@@ -45,7 +43,6 @@ describe("admin-api", () => {
 
   it("getAdminEvents returns events on success", async () => {
     process.env.ADMIN_API_BASE_URL = "https://api.example";
-    process.env.ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",
@@ -61,7 +58,6 @@ describe("admin-api", () => {
 
   it("getAdminEventById handles 404 and success", async () => {
     process.env.ADMIN_API_BASE_URL = "https://api.example";
-    process.env.ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ status: 404, ok: false }));
     await expect(getAdminEventById("e1")).resolves.toBeNull();
@@ -79,7 +75,6 @@ describe("admin-api", () => {
 
   it("getAttendees/getWaitlist/getStats map successful payloads", async () => {
     process.env.ADMIN_API_BASE_URL = "https://api.example";
-    process.env.ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",

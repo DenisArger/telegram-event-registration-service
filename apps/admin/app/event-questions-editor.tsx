@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
 interface QuestionItem {
   id?: string;
@@ -11,8 +12,7 @@ interface QuestionItem {
 
 export function EventQuestionsEditor({ eventId }: { eventId: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
-  const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-  const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
+  const base = getClientAdminApiBase();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -22,14 +22,12 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
   useEffect(() => {
     let mounted = true;
     async function load() {
-      if (!base || !email) return;
+      if (!base) return;
       setLoading(true);
       setMessage(null);
       try {
         const response = await fetch(`${base}/api/admin/event-questions?eventId=${encodeURIComponent(eventId)}`, {
-          headers: {
-            "x-admin-email": email
-          }
+          credentials: "include"
         });
         const data = await response.json();
         if (!response.ok) {
@@ -58,7 +56,7 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
     return () => {
       mounted = false;
     };
-  }, [base, email, eventId, ru]);
+  }, [base, eventId, ru]);
 
   function syncPositions(next: QuestionItem[]) {
     return next.map((item, index) => ({ ...item, position: index + 1 }));
@@ -78,12 +76,8 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
   }
 
   async function save() {
-    if (!base || !email) {
-      setMessage(
-        ru
-          ? "Не заданы NEXT_PUBLIC_ADMIN_API_BASE_URL или NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-          : "Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-      );
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
       return;
     }
 
@@ -98,9 +92,9 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
       const response = await fetch(`${base}/api/admin/event-questions`, {
         method: "PUT",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           eventId,
           questions: questions.map((item) => ({

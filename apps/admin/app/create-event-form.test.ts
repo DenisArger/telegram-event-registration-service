@@ -18,7 +18,6 @@ describe("CreateEventForm", () => {
     cleanup();
     vi.restoreAllMocks();
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    delete process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
     refresh.mockClear();
   });
 
@@ -27,12 +26,11 @@ describe("CreateEventForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));
 
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL.");
+    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
   });
 
   it("validates required fields", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
     render(React.createElement(CreateEventForm));
 
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));
@@ -42,7 +40,6 @@ describe("CreateEventForm", () => {
 
   it("creates event and refreshes page", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     const fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ event: { id: "e1" } }) });
     vi.stubGlobal("fetch", fetch);
@@ -61,7 +58,6 @@ describe("CreateEventForm", () => {
 
   it("calls onCreated callback on successful create", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
     const onCreated = vi.fn();
 
     const fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ event: { id: "e1" } }) });
@@ -79,7 +75,6 @@ describe("CreateEventForm", () => {
 
   it("handles api and network errors", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     const fetch = vi
       .fn()

@@ -10,19 +10,17 @@ describe("PromoteButton", () => {
     cleanup();
     vi.restoreAllMocks();
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    delete process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
   });
 
   it("shows missing env message", async () => {
     render(React.createElement(PromoteButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Promote next from waitlist" }));
-    await screen.findByText("Missing NEXT_PUBLIC admin env.");
+    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
   });
 
   it("shows waitlist empty state", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",
@@ -40,7 +38,6 @@ describe("PromoteButton", () => {
 
   it("shows promoted user", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",
@@ -58,7 +55,6 @@ describe("PromoteButton", () => {
 
   it("handles api and network failures", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",

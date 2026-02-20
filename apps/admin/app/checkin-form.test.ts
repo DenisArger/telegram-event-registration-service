@@ -10,7 +10,6 @@ describe("CheckInForm", () => {
     cleanup();
     vi.restoreAllMocks();
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    delete process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
   });
 
   it("shows missing env message", async () => {
@@ -18,12 +17,11 @@ describe("CheckInForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
 
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL.");
+    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
   });
 
   it("validates required fields", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
     render(React.createElement(CheckInForm));
 
     fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
@@ -33,7 +31,6 @@ describe("CheckInForm", () => {
 
   it("handles successful and already-checked-in responses", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     const fetch = vi
       .fn()
@@ -55,7 +52,6 @@ describe("CheckInForm", () => {
 
   it("allows editing prefilled eventId", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     const fetch = vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({ status: "checked_in" }) });
     vi.stubGlobal("fetch", fetch);
@@ -73,7 +69,6 @@ describe("CheckInForm", () => {
 
   it("handles api and network errors", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     const fetch = vi
       .fn()

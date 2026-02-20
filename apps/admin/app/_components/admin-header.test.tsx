@@ -12,7 +12,15 @@ vi.mock("next/link", () => ({
 
 const usePathname = vi.fn(() => "/attendees");
 vi.mock("next/navigation", () => ({
-  usePathname: () => usePathname()
+  usePathname: () => usePathname(),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn()
+  })
+}));
+
+vi.mock("./logout-button", () => ({
+  LogoutButton: () => React.createElement("button", null, "Log out")
 }));
 
 describe("AdminHeader", () => {

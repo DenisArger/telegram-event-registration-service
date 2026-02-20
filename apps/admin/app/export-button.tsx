@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
 export function ExportButton({ eventId }: { eventId: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -8,10 +9,9 @@ export function ExportButton({ eventId }: { eventId: string }) {
   const [message, setMessage] = useState<string | null>(null);
 
   async function onExport() {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
-    if (!base || !email) {
-      setMessage(ru ? "Не заданы NEXT_PUBLIC переменные для админки." : "Missing NEXT_PUBLIC admin env.");
+    const base = getClientAdminApiBase();
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
       return;
     }
 
@@ -20,9 +20,7 @@ export function ExportButton({ eventId }: { eventId: string }) {
     try {
       const response = await fetch(`${base}/api/admin/export?eventId=${encodeURIComponent(eventId)}`, {
         method: "GET",
-        headers: {
-          "x-admin-email": email
-        }
+        credentials: "include"
       });
 
       if (!response.ok) {

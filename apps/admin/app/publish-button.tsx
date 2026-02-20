@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
 export function PublishButton({ eventId }: { eventId: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -10,10 +11,9 @@ export function PublishButton({ eventId }: { eventId: string }) {
   const [message, setMessage] = useState<string | null>(null);
 
   async function publish() {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
-    if (!base || !email) {
-      setMessage(ru ? "Не заданы NEXT_PUBLIC переменные для админки." : "Missing NEXT_PUBLIC admin env.");
+    const base = getClientAdminApiBase();
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
       return;
     }
 
@@ -23,9 +23,9 @@ export function PublishButton({ eventId }: { eventId: string }) {
       const response = await fetch(`${base}/api/admin/publish`, {
         method: "POST",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({ eventId })
       });
 

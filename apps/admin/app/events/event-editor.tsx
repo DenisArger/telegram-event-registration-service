@@ -7,6 +7,7 @@ import { EventQuestionsEditor } from "../event-questions-editor";
 import { PublishButton } from "../publish-button";
 import { MarkdownPreview } from "../_components/markdown-preview";
 import { datetimeLocalToIso, isoToDatetimeLocal } from "../_lib/datetime";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
 
 interface EditableEvent {
   id: string;
@@ -34,14 +35,9 @@ export function EventEditor({ event }: { event: EditableEvent }) {
   const [message, setMessage] = useState<string | null>(null);
 
   async function save() {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
-    if (!base || !email) {
-      setMessage(
-        ru
-          ? "Не заданы NEXT_PUBLIC_ADMIN_API_BASE_URL или NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-          : "Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-      );
+    const base = getClientAdminApiBase();
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
       return;
     }
 
@@ -80,9 +76,9 @@ export function EventEditor({ event }: { event: EditableEvent }) {
       const response = await fetch(`${base}/api/admin/events`, {
         method: "PUT",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           eventId: event.id,
           title: normalizedTitle,

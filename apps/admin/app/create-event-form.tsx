@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MarkdownPreview } from "./_components/markdown-preview";
 import { datetimeLocalToIso } from "./_lib/datetime";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
 interface NewQuestionInput {
   prompt: string;
@@ -44,14 +45,9 @@ export function CreateEventForm({
   }
 
   async function submit() {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
-    if (!base || !email) {
-      setMessage(
-        ru
-          ? "Не заданы NEXT_PUBLIC_ADMIN_API_BASE_URL или NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-          : "Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-      );
+    const base = getClientAdminApiBase();
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
       return;
     }
 
@@ -105,9 +101,9 @@ export function CreateEventForm({
       const response = await fetch(`${base}/api/admin/events`, {
         method: "POST",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           title: normalizedTitle,
           startsAt: startsAtIso,

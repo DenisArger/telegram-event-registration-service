@@ -18,7 +18,6 @@ describe("CloseButton", () => {
     cleanup();
     vi.restoreAllMocks();
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    delete process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
     refresh.mockClear();
   });
 
@@ -26,12 +25,11 @@ describe("CloseButton", () => {
     render(React.createElement(CloseButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
-    await screen.findByText("Missing NEXT_PUBLIC admin env.");
+    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
   });
 
   it("closes event and refreshes page", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -49,7 +47,6 @@ describe("CloseButton", () => {
 
   it("handles api and network failures", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
     vi.stubGlobal(
       "fetch",
       vi

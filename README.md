@@ -85,12 +85,14 @@ Endpoints in `apps/bot/api/admin`:
 
 Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
 Creating events from admin API also requires `ADMIN_DEFAULT_CREATOR_ID` (UUID from `users.id`), used as `events.created_by`.
+Primary auth: Telegram Login + signed `HttpOnly` cookie session.
+Fallback (migration only): set `ADMIN_AUTH_ALLOW_EMAIL_FALLBACK=true` to also allow `x-admin-email`.
 
 Admin web (`apps/admin`) reads:
 - `ADMIN_API_BASE_URL`
-- `ADMIN_REQUEST_EMAIL`
 - `NEXT_PUBLIC_ADMIN_API_BASE_URL`
-- `NEXT_PUBLIC_ADMIN_REQUEST_EMAIL`
+- `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`
+- `NEXT_PUBLIC_LOCALE`
 
 ## Deploy target
 

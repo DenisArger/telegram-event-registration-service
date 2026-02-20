@@ -6,6 +6,12 @@ export interface TelegramUserRecord {
   role: UserRole;
 }
 
+export interface UserByTelegramRecord {
+  id: string;
+  role: UserRole;
+  telegramId: number;
+}
+
 export async function upsertTelegramUser(
   db: SupabaseClient,
   payload: {
@@ -32,5 +38,25 @@ export async function upsertTelegramUser(
   return {
     id: data.id as string,
     role: data.role as UserRole
+  };
+}
+
+export async function getUserByTelegramId(
+  db: SupabaseClient,
+  telegramId: number
+): Promise<UserByTelegramRecord | null> {
+  const { data, error } = await db
+    .from("users")
+    .select("id,role,telegram_id")
+    .eq("telegram_id", telegramId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id as string,
+    role: data.role as UserRole,
+    telegramId: Number(data.telegram_id)
   };
 }

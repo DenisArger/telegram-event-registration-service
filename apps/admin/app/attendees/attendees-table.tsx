@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { AttendeeItem } from "../_lib/admin-api";
 import { getUiLocale, ui } from "../i18n";
 import { AttendeeDrawer } from "./attendee-drawer";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
 
 interface AttendeesTableProps {
   eventId: string;
@@ -78,12 +79,11 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
   const selectedAttendee = rows.find((row) => row.userId === selectedUserId) ?? null;
 
   async function persistOrder(nextRows: AttendeeItem[]) {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
+    const base = getClientAdminApiBase();
 
-    if (!base || !email) {
+    if (!base) {
       setMessageType("error");
-      setMessage("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL.");
+      setMessage(missingClientApiBaseMessage(locale === "ru"));
       setRows(lastPersistedRows);
       return;
     }
@@ -95,9 +95,9 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
       const response = await fetch(`${base}/api/admin/attendees`, {
         method: "PUT",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           eventId,
           orderedUserIds: nextRows.map((item) => item.userId)
@@ -134,12 +134,11 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
     nextRows: AttendeeItem[],
     previousRows: AttendeeItem[]
   ) {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
+    const base = getClientAdminApiBase();
 
-    if (!base || !email) {
+    if (!base) {
       setMessageType("error");
-      setMessage("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL.");
+      setMessage(missingClientApiBaseMessage(locale === "ru"));
       setRows(previousRows);
       return;
     }
@@ -151,9 +150,9 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
       const response = await fetch(`${base}/api/admin/attendees`, {
         method: "PUT",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           eventId,
           colorUpdate: {

@@ -45,7 +45,6 @@ describe("AttendeesTable", () => {
     vi.restoreAllMocks();
     vi.useRealTimers();
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    delete process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
   });
 
   it("reorders rows and persists order", async () => {
@@ -57,7 +56,6 @@ describe("AttendeesTable", () => {
 
     vi.useFakeTimers();
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",
@@ -94,7 +92,6 @@ describe("AttendeesTable", () => {
     }
 
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",
@@ -128,7 +125,6 @@ describe("AttendeesTable", () => {
     }
 
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
     vi.useFakeTimers();
 
     vi.stubGlobal(
@@ -160,7 +156,6 @@ describe("AttendeesTable", () => {
     }
 
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL = "admin@example.com";
 
     vi.stubGlobal(
       "fetch",

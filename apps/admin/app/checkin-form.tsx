@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
 export function CheckInForm({ initialEventId = "" }: { initialEventId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -10,14 +11,9 @@ export function CheckInForm({ initialEventId = "" }: { initialEventId?: string }
   const [loading, setLoading] = useState(false);
 
   async function submit() {
-    const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-    const email = process.env.NEXT_PUBLIC_ADMIN_REQUEST_EMAIL;
-    if (!base || !email) {
-      setMessage(
-        ru
-          ? "Не заданы NEXT_PUBLIC_ADMIN_API_BASE_URL или NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-          : "Missing NEXT_PUBLIC_ADMIN_API_BASE_URL or NEXT_PUBLIC_ADMIN_REQUEST_EMAIL."
-      );
+    const base = getClientAdminApiBase();
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
       return;
     }
     if (!eventId || !userId) {
@@ -32,9 +28,9 @@ export function CheckInForm({ initialEventId = "" }: { initialEventId?: string }
       const response = await fetch(`${base}/api/admin/checkin`, {
         method: "POST",
         headers: {
-          "content-type": "application/json",
-          "x-admin-email": email
+          "content-type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({
           eventId,
           userId,

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getUiLocale, ui } from "../i18n";
+import { LogoutButton } from "./logout-button";
 
 const links = [
   { href: "/", labelKey: "nav_dashboard" },
@@ -18,6 +19,7 @@ const links = [
 export function AdminHeader() {
   const pathname = usePathname();
   const locale = getUiLocale();
+  if (pathname === "/login") return null;
 
   return (
     <header className="admin-header">
@@ -37,6 +39,7 @@ export function AdminHeader() {
             );
           })}
         </nav>
+        <LogoutButton />
       </div>
     </header>
   );

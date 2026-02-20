@@ -45,11 +45,20 @@ export interface EventStats {
   noShowRate: number;
 }
 
-function getAdminConfig(): { base: string; email: string } | null {
+function getAdminConfig(): { base: string } | null {
   const base = process.env.ADMIN_API_BASE_URL;
-  const email = process.env.ADMIN_REQUEST_EMAIL;
-  if (!base || !email) return null;
-  return { base, email };
+  if (!base) return null;
+  return { base };
+}
+
+async function getServerCookieHeader(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const serialized = cookieStore.toString();
+    return serialized || null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getHealth(): Promise<string> {
@@ -68,13 +77,12 @@ export async function getHealth(): Promise<string> {
 export async function getAdminEvents(): Promise<EventItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];
+  const cookieHeader = await getServerCookieHeader();
 
   try {
     const response = await fetch(`${cfg.base}/api/admin/events`, {
       cache: "no-store",
-      headers: {
-        "x-admin-email": cfg.email
-      }
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
     if (!response.ok) return [];
     const data = (await response.json()) as { events?: EventItem[] };
@@ -87,13 +95,12 @@ export async function getAdminEvents(): Promise<EventItem[]> {
 export async function getAdminEventById(eventId: string): Promise<EventItem | null> {
   const cfg = getAdminConfig();
   if (!cfg) return null;
+  const cookieHeader = await getServerCookieHeader();
 
   try {
     const response = await fetch(`${cfg.base}/api/admin/events?eventId=${encodeURIComponent(eventId)}`, {
       cache: "no-store",
-      headers: {
-        "x-admin-email": cfg.email
-      }
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
     if (response.status === 404) return null;
     if (!response.ok) return null;
@@ -107,13 +114,12 @@ export async function getAdminEventById(eventId: string): Promise<EventItem | nu
 export async function getAttendees(eventId: string): Promise<AttendeeItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];
+  const cookieHeader = await getServerCookieHeader();
 
   try {
     const response = await fetch(`${cfg.base}/api/admin/attendees?eventId=${encodeURIComponent(eventId)}`, {
       cache: "no-store",
-      headers: {
-        "x-admin-email": cfg.email
-      }
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
     if (!response.ok) return [];
     const data = (await response.json()) as { attendees?: AttendeeItem[] };
@@ -126,13 +132,12 @@ export async function getAttendees(eventId: string): Promise<AttendeeItem[]> {
 export async function getWaitlist(eventId: string): Promise<WaitlistItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];
+  const cookieHeader = await getServerCookieHeader();
 
   try {
     const response = await fetch(`${cfg.base}/api/admin/waitlist?eventId=${encodeURIComponent(eventId)}`, {
       cache: "no-store",
-      headers: {
-        "x-admin-email": cfg.email
-      }
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
     if (!response.ok) return [];
     const data = (await response.json()) as { waitlist?: WaitlistItem[] };
@@ -145,13 +150,12 @@ export async function getWaitlist(eventId: string): Promise<WaitlistItem[]> {
 export async function getStats(eventId: string): Promise<EventStats | null> {
   const cfg = getAdminConfig();
   if (!cfg) return null;
+  const cookieHeader = await getServerCookieHeader();
 
   try {
     const response = await fetch(`${cfg.base}/api/admin/stats?eventId=${encodeURIComponent(eventId)}`, {
       cache: "no-store",
-      headers: {
-        "x-admin-email": cfg.email
-      }
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
     if (!response.ok) return null;
     const data = (await response.json()) as { stats?: EventStats };
@@ -160,3 +164,26 @@ export async function getStats(eventId: string): Promise<EventStats | null> {
     return null;
   }
 }
+
+export async function getAuthMe(): Promise<{
+  authenticated: boolean;
+  role?: "admin" | "organizer" | "participant";
+  userId?: string;
+  telegramId?: number;
+} | null> {
+  const cfg = getAdminConfig();
+  if (!cfg) return null;
+  const cookieHeader = await getServerCookieHeader();
+
+  try {
+    const response = await fetch(`${cfg.base}/api/admin/auth/me`, {
+      cache: "no-store",
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
+    });
+    if (!response.ok) return { authenticated: false };
+    return (await response.json()) as any;
+  } catch {
+    return null;
+  }
+}
+import { cookies } from "next/headers";

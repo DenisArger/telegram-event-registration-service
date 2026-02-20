@@ -7,6 +7,9 @@ export function setRequiredEnv() {
   process.env.SUPABASE_ANON_KEY = "anon";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "service";
   process.env.ADMIN_EMAIL_ALLOWLIST = "admin@example.com";
+  process.env.ADMIN_AUTH_ALLOW_EMAIL_FALLBACK = "true";
+  process.env.ADMIN_SESSION_SECRET = "session-secret";
+  process.env.ADMIN_SESSION_TTL_SECONDS = "28800";
 }
 
 export function createRes() {
