@@ -14,5 +14,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const mod = await import("../../../apps/bot/api/admin/auth/logout.js");
     return mod.default(req, res);
   }
+  if (action === "dev-login") {
+    const mod = await import("../../../apps/bot/api/admin/auth/dev-login.js");
+    return mod.default(req, res);
+  }
   res.status(404).json({ message: "Not found" });
 }

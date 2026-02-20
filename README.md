@@ -86,6 +86,9 @@ Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
 Creating events from admin API also requires `ADMIN_DEFAULT_CREATOR_ID` (UUID from `users.id`), used as `events.created_by`.
 Primary auth: Telegram Login + signed `HttpOnly` cookie session.
 Fallback (migration only): set `ADMIN_AUTH_ALLOW_EMAIL_FALLBACK=true` to also allow `x-admin-email`.
+Optional dev-only bypass: set `ADMIN_UNSAFE_LOGIN_ENABLED=true` and
+`NEXT_PUBLIC_ADMIN_UNSAFE_LOGIN_ENABLED=true` to enable login by `telegram_id`
+on `/login` (still requires `users.role in ('organizer','admin')`).
 
 Admin web (`apps/admin`) reads:
 - `ADMIN_API_BASE_URL`
