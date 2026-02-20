@@ -78,7 +78,6 @@ Endpoints in `apps/bot/api/admin`:
 - `GET /api/admin/waitlist?eventId=<uuid>`
 - `GET /api/admin/stats?eventId=<uuid>`
 - `GET /api/admin/export?eventId=<uuid>`
-- `POST /api/admin/checkin`
 - `POST /api/admin/publish`
 - `POST /api/admin/close`
 - `POST /api/admin/promote`

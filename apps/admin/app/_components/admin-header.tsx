@@ -12,7 +12,6 @@ const links = [
   { href: "/attendees", labelKey: "nav_attendees" },
   { href: "/waitlist", labelKey: "nav_waitlist" },
   { href: "/stats", labelKey: "nav_stats" },
-  { href: "/checkin", labelKey: "nav_checkin" },
   { href: "/actions", labelKey: "nav_actions" }
 ] as const;
 

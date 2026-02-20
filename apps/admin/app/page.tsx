@@ -8,7 +8,6 @@ const quickLinks = [
   { href: "/attendees", titleKey: "attendees", subtitleKey: "quick_attendees" },
   { href: "/waitlist", titleKey: "waitlist", subtitleKey: "quick_waitlist" },
   { href: "/stats", titleKey: "stats", subtitleKey: "quick_stats" },
-  { href: "/checkin", titleKey: "checkin", subtitleKey: "quick_checkin" },
   { href: "/actions", titleKey: "actions", subtitleKey: "quick_actions" }
 ] as const;
 
