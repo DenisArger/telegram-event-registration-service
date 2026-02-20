@@ -44,6 +44,13 @@ function parsePositiveInt(input: string | undefined, fallbackValue: number): num
   return Math.floor(num);
 }
 
+function getCookieSameSite(envSource: Record<string, string | undefined>): "Lax" | "Strict" | "None" {
+  const raw = String(envSource.ADMIN_SESSION_COOKIE_SAMESITE ?? "Lax").trim().toLowerCase();
+  if (raw === "none") return "None";
+  if (raw === "strict") return "Strict";
+  return "Lax";
+}
+
 export function createSessionToken(payload: AdminPrincipal, secret: string): string {
   const body = toBase64Url(JSON.stringify(payload));
   const signature = toBase64Url(crypto.createHmac("sha256", secret).update(body).digest());
@@ -113,12 +120,13 @@ export function setAdminSession(
   };
 
   const token = createSessionToken(principal, getSessionSecret(envSource));
-  const isSecure = envSource.NODE_ENV === "production";
+  const sameSite = getCookieSameSite(envSource);
+  const isSecure = sameSite === "None" || envSource.NODE_ENV === "production";
   const cookie = [
     `${ADMIN_SESSION_COOKIE}=${token}`,
     "Path=/",
     "HttpOnly",
-    "SameSite=Lax",
+    `SameSite=${sameSite}`,
     `Max-Age=${ttl}`,
     isSecure ? "Secure" : ""
   ].filter(Boolean).join("; ");
@@ -127,12 +135,13 @@ export function setAdminSession(
 }
 
 export function clearAdminSession(res: VercelResponse, envSource: Record<string, string | undefined>): void {
-  const isSecure = envSource.NODE_ENV === "production";
+  const sameSite = getCookieSameSite(envSource);
+  const isSecure = sameSite === "None" || envSource.NODE_ENV === "production";
   const cookie = [
     `${ADMIN_SESSION_COOKIE}=`,
     "Path=/",
     "HttpOnly",
-    "SameSite=Lax",
+    `SameSite=${sameSite}`,
     "Max-Age=0",
     isSecure ? "Secure" : ""
   ].filter(Boolean).join("; ");

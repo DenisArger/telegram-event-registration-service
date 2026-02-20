@@ -89,6 +89,10 @@ Fallback (migration only): set `ADMIN_AUTH_ALLOW_EMAIL_FALLBACK=true` to also al
 Optional dev-only bypass: set `ADMIN_UNSAFE_LOGIN_ENABLED=true` and
 `NEXT_PUBLIC_ADMIN_UNSAFE_LOGIN_ENABLED=true` to enable login by `telegram_id`
 on `/login` (still requires `users.role in ('organizer','admin')`).
+If admin and API are on different domains, set:
+- `ADMIN_SESSION_COOKIE_SAMESITE=None`
+- `ADMIN_CORS_ALLOWED_ORIGINS=https://<admin-domain>`
+and keep HTTPS enabled (cookie with `SameSite=None` requires `Secure`).
 
 Admin web (`apps/admin`) reads:
 - `ADMIN_API_BASE_URL`
