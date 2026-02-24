@@ -78,6 +78,8 @@ export function getAiConfig(envSource: Record<string, string | undefined>): {
   baseUrl: string;
   deepseekApiKey: string;
   deepseekBaseUrl: string;
+  vedaiApiKey: string;
+  vedaiBaseUrl: string;
   yandexModelUri: string;
   yandexIamToken: string;
 } {
@@ -87,6 +89,8 @@ export function getAiConfig(envSource: Record<string, string | undefined>): {
   const baseUrl = String(envSource.OPENAI_BASE_URL ?? "https://api.openai.com/v1").trim();
   const deepseekApiKey = String(envSource.DEEPSEEK_API_KEY ?? "").trim();
   const deepseekBaseUrl = String(envSource.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com/v1").trim();
+  const vedaiApiKey = String(envSource.VEDAI_API_KEY ?? deepseekApiKey).trim();
+  const vedaiBaseUrl = String(envSource.VEDAI_BASE_URL ?? deepseekBaseUrl).trim();
   const yandexModelUri = String(envSource.YANDEX_MODEL_URI ?? "").trim();
   const yandexIamToken = String(envSource.YANDEX_IAM_TOKEN ?? "").trim();
   return {
@@ -96,6 +100,8 @@ export function getAiConfig(envSource: Record<string, string | undefined>): {
     baseUrl,
     deepseekApiKey,
     deepseekBaseUrl,
+    vedaiApiKey,
+    vedaiBaseUrl,
     yandexModelUri,
     yandexIamToken
   };
@@ -234,6 +240,45 @@ export async function generateAnnouncementWithAi(
       text,
       provider: config.provider,
       model: config.model || "deepseek-reasoner"
+    };
+  }
+
+  if (config.provider === "vedai") {
+    if (!config.vedaiApiKey) {
+      throw new Error("missing_vedai_api_key");
+    }
+
+    const prompt = buildAnnouncementPrompt(input);
+    const response = await fetch(`${config.vedaiBaseUrl.replace(/\/+$/, "")}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${config.vedaiApiKey}`
+      },
+      body: JSON.stringify({
+        model: config.model,
+        temperature: 0.4,
+        messages: [
+          { role: "system", content: "You are a backend assistant for event automation." },
+          { role: "user", content: prompt }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`ai_provider_http_${response.status}`);
+    }
+
+    const payload = await response.json() as any;
+    const text = String(payload?.choices?.[0]?.message?.content ?? "").trim();
+    if (!text) {
+      throw new Error("empty_ai_response");
+    }
+
+    return {
+      text,
+      provider: config.provider,
+      model: config.model
     };
   }
 

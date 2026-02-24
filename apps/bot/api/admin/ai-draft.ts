@@ -62,6 +62,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const message = error instanceof Error ? error.message : "unknown_error";
     if (
       message === "missing_ai_api_key" ||
+      message === "missing_deepseek_api_key" ||
+      message === "missing_vedai_api_key" ||
+      message === "missing_yandex_auth" ||
+      message === "missing_yandex_model_uri" ||
       message === "unsupported_ai_provider" ||
       message.startsWith("ai_provider_http_")
     ) {
