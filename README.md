@@ -81,6 +81,7 @@ Endpoints in `apps/bot/api/admin`:
 - `POST /api/admin/publish`
 - `POST /api/admin/close`
 - `POST /api/admin/promote`
+- `POST /api/admin/ai-draft` (AI-generated Telegram announcement draft)
 
 Auth for MVP: header `x-admin-email` must be present in `ADMIN_EMAIL_ALLOWLIST`.
 Creating events from admin API also requires `ADMIN_DEFAULT_CREATOR_ID` (UUID from `users.id`), used as `events.created_by`.
@@ -99,6 +100,18 @@ Admin web (`apps/admin`) reads:
 - `NEXT_PUBLIC_ADMIN_API_BASE_URL`
 - `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`
 - `NEXT_PUBLIC_LOCALE`
+
+AI draft endpoint (`/api/admin/ai-draft`) reads:
+- `AI_PROVIDER` (`openai`, `yandex` or `deepseek`)
+- `AI_MODEL` (default: `gpt-4o-mini`)
+- `OPENAI_API_KEY`
+- `OPENAI_BASE_URL` (default: `https://api.openai.com/v1`)
+- `DEEPSEEK_API_KEY`
+- `DEEPSEEK_BASE_URL` (default: `https://api.deepseek.com/v1`)
+- `YANDEX_API_KEY` (preferred for Yandex Cloud service account auth)
+- `YANDEX_IAM_TOKEN` (alternative to API key)
+- `YANDEX_MODEL_URI` (example: `gpt://<folder_id>/yandexgpt-lite/latest`)
+- `YANDEX_API_BASE_URL` (default: `https://llm.api.cloud.yandex.net/foundationModels/v1`)
 
 ## Deploy target
 
