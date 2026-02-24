@@ -13,9 +13,11 @@ interface NewQuestionInput {
 
 export function CreateEventForm({
   showTitle = true,
+  organizationId,
   onCreated
 }: {
   showTitle?: boolean;
+  organizationId?: string;
   onCreated?: () => void;
 }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -30,6 +32,7 @@ export function CreateEventForm({
   const [questions, setQuestions] = useState<NewQuestionInput[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const requireOrganization = process.env.NEXT_PUBLIC_ADMIN_REQUIRE_ORG_CONTEXT === "true";
 
   function updateQuestion(index: number, patch: Partial<NewQuestionInput>) {
     setQuestions((prev) => prev.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
@@ -59,6 +62,10 @@ export function CreateEventForm({
     const normalizedCapacity = capacity.trim();
     const numericCapacity = normalizedCapacity ? Number(normalizedCapacity) : null;
 
+    if (requireOrganization && !organizationId) {
+      setMessage(ru ? "Сначала выберите организацию." : "Select organization first.");
+      return;
+    }
     if (!normalizedTitle) {
       setMessage(ru ? "Укажите название мероприятия." : "Event title is required.");
       return;
@@ -105,6 +112,7 @@ export function CreateEventForm({
         },
         credentials: "include",
         body: JSON.stringify({
+          organizationId,
           title: normalizedTitle,
           startsAt: startsAtIso,
           endsAt: endsAtIso,

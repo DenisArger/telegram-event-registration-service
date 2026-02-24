@@ -1,3 +1,17 @@
 {
-  "version": 2
+  "version": 2,
+  "builds": [
+    { "src": "api/admin/[route].ts", "use": "@vercel/node" },
+    { "src": "api/admin/auth/[action].ts", "use": "@vercel/node" },
+    { "src": "api/health.ts", "use": "@vercel/node" },
+    { "src": "api/ready.ts", "use": "@vercel/node" },
+    { "src": "api/telegram/webhook.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/admin/auth/([^/]+)", "dest": "/api/admin/auth/[action].ts" },
+    { "src": "/api/admin/([^/]+)", "dest": "/api/admin/[route].ts" },
+    { "src": "/api/health", "dest": "/api/health.ts" },
+    { "src": "/api/ready", "dest": "/api/ready.ts" },
+    { "src": "/api/telegram/webhook", "dest": "/api/telegram/webhook.ts" }
+  ]
 }

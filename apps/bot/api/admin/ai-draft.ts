@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { logError } from "@event/shared";
-import { isAdminRequest } from "../../src/adminAuth.js";
+import { requireAdminSession, sendError } from "../../src/adminApi.js";
 import { generateAnnouncementWithAi } from "../../src/aiDraft.js";
 import { applyCors } from "../../src/cors.js";
 
@@ -12,10 +12,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  if (!isAdminRequest(req)) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  const ctx = requireAdminSession(req, res, process.env);
+  if (!ctx) return;
 
   const title = String(req.body?.title ?? "").trim();
   const startsAt = String(req.body?.startsAt ?? "").trim();
@@ -25,17 +23,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const tone = String(req.body?.tone ?? "").trim().toLowerCase();
 
   if (!title) {
-    res.status(400).json({ message: "title is required" });
+    sendError(res, 400, ctx.requestId, "invalid_payload", "title is required");
     return;
   }
 
   if (title.length > 300) {
-    res.status(400).json({ message: "title is too long" });
+    sendError(res, 400, ctx.requestId, "invalid_payload", "title is too long");
     return;
   }
 
   if (description.length > 4000) {
-    res.status(400).json({ message: "description is too long" });
+    sendError(res, 400, ctx.requestId, "invalid_payload", "description is too long");
     return;
   }
 
@@ -69,9 +67,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       message === "unsupported_ai_provider" ||
       message.startsWith("ai_provider_http_")
     ) {
-      res.status(502).json({ message });
+      sendError(res, 502, ctx.requestId, "ai_provider_error", message);
       return;
     }
-    res.status(500).json({ message: "Failed to generate AI draft" });
+    sendError(res, 500, ctx.requestId, "ai_draft_failed", "Failed to generate AI draft");
   }
 }

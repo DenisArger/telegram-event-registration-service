@@ -12,7 +12,7 @@
     "dev": "echo 'no dev runtime for @event/shared'",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo 'no lint configured for @event/shared'"
+    "lint": "eslint --config ../../eslint.workspace.config.cjs \"src/**/*.ts\""
   },
   "dependencies": {
     "zod": "^3.24.2"

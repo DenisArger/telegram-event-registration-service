@@ -1,20 +1,24 @@
 import React from "react";
 import { EventSelector } from "../_components/event-selector";
-import { getAdminEvents, getStats } from "../_lib/admin-api";
-import { resolveSelectedEventId } from "../_lib/event-selection";
+import { OrganizationSelector } from "../_components/organization-selector";
+import { getAdminEvents, getAuthMe, getStats } from "../_lib/admin-api";
+import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 
 export default async function StatsPage({
   searchParams
 }: {
-  searchParams?: Promise<{ eventId?: string | string[] }>;
+  searchParams?: Promise<{ eventId?: string | string[]; organizationId?: string | string[] }>;
 }) {
   const locale = getUiLocale();
-  const events = await getAdminEvents();
+  const me = await getAuthMe();
+  const organizations = me?.organizations ?? [];
   const resolvedSearchParams = await searchParams;
+  const selectedOrganizationId = resolveSelectedOrganizationId(resolvedSearchParams, organizations);
+  const events = await getAdminEvents(selectedOrganizationId ?? undefined);
   const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
   const selectedEvent = events.find((event) => event.id === selectedEventId) ?? null;
-  const stats = selectedEventId ? await getStats(selectedEventId) : null;
+  const stats = selectedEventId ? await getStats(selectedEventId, selectedOrganizationId ?? undefined) : null;
 
   return (
     <div className="section-grid">
@@ -24,7 +28,18 @@ export default async function StatsPage({
       </section>
 
       <section className="card">
-        <EventSelector events={events} selectedEventId={selectedEventId} basePath="/stats" />
+        <OrganizationSelector
+          organizations={organizations}
+          selectedOrganizationId={selectedOrganizationId}
+          basePath="/stats"
+          eventId={selectedEventId}
+        />
+        <EventSelector
+          events={events}
+          selectedEventId={selectedEventId}
+          basePath="/stats"
+          organizationId={selectedOrganizationId}
+        />
         <h2>{ui("stats", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
         {!stats ? (
           <p>{ui("stats_unavailable", locale)}</p>

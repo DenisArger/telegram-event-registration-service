@@ -1,6 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { createServiceClient, listUserOrganizations } from "@event/db";
 import { applyCors } from "../../../src/cors.js";
 import { getAdminPrincipal } from "../../../src/adminSession.js";
+import { logError } from "@event/shared";
+
+const db = createServiceClient(process.env);
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
@@ -16,10 +20,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  res.status(200).json({
-    authenticated: true,
-    role: principal.role,
-    userId: principal.userId,
-    telegramId: principal.telegramId
-  });
+  try {
+    const organizations = await listUserOrganizations(db, principal.userId);
+    res.status(200).json({
+      authenticated: true,
+      role: principal.role,
+      userId: principal.userId,
+      telegramId: principal.telegramId,
+      organizations
+    });
+  } catch (error) {
+    logError("admin_auth_me_failed", { error, userId: principal.userId });
+    res.status(200).json({
+      authenticated: true,
+      role: principal.role,
+      userId: principal.userId,
+      telegramId: principal.telegramId,
+      organizations: []
+    });
+  }
 }

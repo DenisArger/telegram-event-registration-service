@@ -1,5 +1,14 @@
+import { cookies } from "next/headers";
+
+export interface OrganizationItem {
+  id: string;
+  name: string;
+  role: "owner" | "admin";
+}
+
 export interface EventItem {
   id: string;
+  organizationId?: string | null;
   title: string;
   description?: string | null;
   location?: string | null;
@@ -45,10 +54,25 @@ export interface EventStats {
   noShowRate: number;
 }
 
+interface AuthMeResponse {
+  authenticated: boolean;
+  role?: "admin" | "organizer" | "participant";
+  userId?: string;
+  telegramId?: number;
+  organizations?: OrganizationItem[];
+}
+
 function getAdminConfig(): { base: string } | null {
   const base = process.env.ADMIN_API_BASE_URL;
   if (!base) return null;
   return { base };
+}
+
+function withOrganizationParam(url: URL, organizationId?: string): URL {
+  if (organizationId) {
+    url.searchParams.set("organizationId", organizationId);
+  }
+  return url;
 }
 
 async function getServerCookieHeader(): Promise<string | null> {
@@ -74,13 +98,14 @@ export async function getHealth(): Promise<string> {
   }
 }
 
-export async function getAdminEvents(): Promise<EventItem[]> {
+export async function getAdminEvents(organizationId?: string): Promise<EventItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];
   const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/events", cfg.base), organizationId);
 
   try {
-    const response = await fetch(`${cfg.base}/api/admin/events`, {
+    const response = await fetch(url.toString(), {
       cache: "no-store",
       headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
@@ -92,13 +117,15 @@ export async function getAdminEvents(): Promise<EventItem[]> {
   }
 }
 
-export async function getAdminEventById(eventId: string): Promise<EventItem | null> {
+export async function getAdminEventById(eventId: string, organizationId?: string): Promise<EventItem | null> {
   const cfg = getAdminConfig();
   if (!cfg) return null;
   const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/events", cfg.base), organizationId);
+  url.searchParams.set("eventId", eventId);
 
   try {
-    const response = await fetch(`${cfg.base}/api/admin/events?eventId=${encodeURIComponent(eventId)}`, {
+    const response = await fetch(url.toString(), {
       cache: "no-store",
       headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
@@ -111,13 +138,15 @@ export async function getAdminEventById(eventId: string): Promise<EventItem | nu
   }
 }
 
-export async function getAttendees(eventId: string): Promise<AttendeeItem[]> {
+export async function getAttendees(eventId: string, organizationId?: string): Promise<AttendeeItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];
   const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/attendees", cfg.base), organizationId);
+  url.searchParams.set("eventId", eventId);
 
   try {
-    const response = await fetch(`${cfg.base}/api/admin/attendees?eventId=${encodeURIComponent(eventId)}`, {
+    const response = await fetch(url.toString(), {
       cache: "no-store",
       headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
@@ -129,13 +158,15 @@ export async function getAttendees(eventId: string): Promise<AttendeeItem[]> {
   }
 }
 
-export async function getWaitlist(eventId: string): Promise<WaitlistItem[]> {
+export async function getWaitlist(eventId: string, organizationId?: string): Promise<WaitlistItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];
   const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/waitlist", cfg.base), organizationId);
+  url.searchParams.set("eventId", eventId);
 
   try {
-    const response = await fetch(`${cfg.base}/api/admin/waitlist?eventId=${encodeURIComponent(eventId)}`, {
+    const response = await fetch(url.toString(), {
       cache: "no-store",
       headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
@@ -147,13 +178,15 @@ export async function getWaitlist(eventId: string): Promise<WaitlistItem[]> {
   }
 }
 
-export async function getStats(eventId: string): Promise<EventStats | null> {
+export async function getStats(eventId: string, organizationId?: string): Promise<EventStats | null> {
   const cfg = getAdminConfig();
   if (!cfg) return null;
   const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/stats", cfg.base), organizationId);
+  url.searchParams.set("eventId", eventId);
 
   try {
-    const response = await fetch(`${cfg.base}/api/admin/stats?eventId=${encodeURIComponent(eventId)}`, {
+    const response = await fetch(url.toString(), {
       cache: "no-store",
       headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
@@ -165,12 +198,7 @@ export async function getStats(eventId: string): Promise<EventStats | null> {
   }
 }
 
-export async function getAuthMe(): Promise<{
-  authenticated: boolean;
-  role?: "admin" | "organizer" | "participant";
-  userId?: string;
-  telegramId?: number;
-} | null> {
+export async function getAuthMe(): Promise<AuthMeResponse | null> {
   const cfg = getAdminConfig();
   if (!cfg) return null;
   const cookieHeader = await getServerCookieHeader();
@@ -181,9 +209,8 @@ export async function getAuthMe(): Promise<{
       headers: cookieHeader ? { cookie: cookieHeader } : undefined
     });
     if (!response.ok) return { authenticated: false };
-    return (await response.json()) as any;
+    return (await response.json()) as AuthMeResponse;
   } catch {
     return null;
   }
 }
-import { cookies } from "next/headers";

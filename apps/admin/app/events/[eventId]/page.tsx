@@ -5,20 +5,27 @@ import { EventEditor } from "../event-editor";
 import { getUiLocale, ui } from "../../i18n";
 
 export default async function EventDetailsPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ eventId: string }>;
+  searchParams?: Promise<{ organizationId?: string | string[] }>;
 }) {
   const locale = getUiLocale();
   const { eventId } = await params;
-  const event = await getAdminEventById(eventId);
+  const resolvedSearchParams = await searchParams;
+  const rawOrgId = Array.isArray(resolvedSearchParams?.organizationId)
+    ? resolvedSearchParams?.organizationId[0]
+    : resolvedSearchParams?.organizationId;
+  const organizationId = rawOrgId ? String(rawOrgId) : "";
+  const event = await getAdminEventById(eventId, organizationId || undefined);
 
   if (!event) {
     return (
       <div className="section-grid">
         <section className="card">
           <p>{ui("no_event_selected", locale)}</p>
-          <Link href="/events">{ui("events", locale)}</Link>
+          <Link href={`/events?${new URLSearchParams(organizationId ? { organizationId } : {}).toString()}`}>{ui("events", locale)}</Link>
         </section>
       </div>
     );
@@ -39,7 +46,7 @@ export default async function EventDetailsPage({
           {typeof event.capacity === "number" && event.capacity > 0 ? ` — cap: ${event.capacity}` : ""}
         </p>
       </section>
-      <EventEditor event={event} />
+      <EventEditor event={event} organizationId={organizationId} />
     </div>
   );
 }

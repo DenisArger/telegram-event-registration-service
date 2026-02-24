@@ -12,7 +12,7 @@
     "dev": "echo 'no dev runtime for @event/db'",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo 'no lint configured for @event/db'"
+    "lint": "eslint --config ../../eslint.workspace.config.cjs \"src/**/*.ts\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

@@ -4,10 +4,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 vi.mock("../_components/event-selector", () => ({
   EventSelector: () => "selector"
 }));
+vi.mock("../_components/organization-selector", () => ({
+  OrganizationSelector: () => "org-selector"
+}));
 vi.mock("./attendees-table", () => ({
   AttendeesTable: () => "attendees-table"
 }));
 vi.mock("../_lib/admin-api", () => ({
+  getAuthMe: vi.fn(async () => ({
+    authenticated: true,
+    organizations: [{ id: "org1", name: "Org 1", role: "owner" }]
+  })),
   getAdminEvents: vi.fn(async () => [{ id: "e1", title: "Team", startsAt: "", status: "published", capacity: 20 }]),
   getAttendees: vi.fn(async () => [
     {
@@ -28,14 +35,19 @@ import AttendeesPage from "./page";
 
 describe("AttendeesPage", () => {
   it("renders table mode by default", async () => {
-    const html = renderToStaticMarkup(await AttendeesPage({ searchParams: { eventId: "e1" } } as any));
+    const html = renderToStaticMarkup(await AttendeesPage({
+      searchParams: Promise.resolve({ organizationId: "org1", eventId: "e1" })
+    } as any));
+    expect(html).toContain("org-selector");
     expect(html).toContain("selector");
     expect(html).toContain("attendees-table");
     expect(html).toContain("Table");
   });
 
   it("renders list mode with attendee answers", async () => {
-    const html = renderToStaticMarkup(await AttendeesPage({ searchParams: { eventId: "e1", view: "list" } } as any));
+    const html = renderToStaticMarkup(await AttendeesPage({
+      searchParams: Promise.resolve({ organizationId: "org1", eventId: "e1", view: "list" })
+    } as any));
     expect(html).toContain("List");
     expect(html).toContain("John");
     expect(html).toContain("Why?: Because");

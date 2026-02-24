@@ -8,5 +8,7 @@ describe("db index exports", () => {
     expect(typeof db.registerForEvent).toBe("function");
     expect(typeof db.upsertTelegramUser).toBe("function");
     expect(typeof db.markCheckIn).toBe("function");
+    expect(typeof db.createOrganization).toBe("function");
+    expect(typeof db.assertEventInOrg).toBe("function");
   });
 });

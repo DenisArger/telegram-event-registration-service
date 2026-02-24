@@ -14,6 +14,7 @@ describe("loadEnv", () => {
 
     expect(env.TELEGRAM_BOT_TOKEN).toBe("token");
     expect(env.SUPABASE_URL).toBe("https://example.supabase.co");
+    expect(env.ADMIN_REQUIRE_ORG_CONTEXT).toBe("false");
   });
 
   it("throws on missing required env", () => {

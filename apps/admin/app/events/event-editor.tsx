@@ -21,7 +21,7 @@ interface EditableEvent {
   status: "draft" | "published" | "closed";
 }
 
-export function EventEditor({ event }: { event: EditableEvent }) {
+export function EventEditor({ event, organizationId }: { event: EditableEvent; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [title, setTitle] = useState(event.title);
@@ -81,6 +81,7 @@ export function EventEditor({ event }: { event: EditableEvent }) {
         },
         credentials: "include",
         body: JSON.stringify({
+          ...(organizationId ? { organizationId } : {}),
           eventId: event.id,
           title: normalizedTitle,
           startsAt: startsAtIso,
@@ -214,15 +215,15 @@ export function EventEditor({ event }: { event: EditableEvent }) {
             <button onClick={save} disabled={loading}>
               {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
             </button>
-            {event.status === "draft" ? <PublishButton eventId={event.id} /> : null}
-            {event.status === "published" ? <CloseButton eventId={event.id} /> : null}
+            {event.status === "draft" ? <PublishButton eventId={event.id} organizationId={organizationId} /> : null}
+            {event.status === "published" ? <CloseButton eventId={event.id} organizationId={organizationId} /> : null}
           </div>
           {message ? <p>{message}</p> : null}
         </div>
       </section>
 
       <section className="card">
-        <EventQuestionsEditor eventId={event.id} />
+        <EventQuestionsEditor eventId={event.id} organizationId={organizationId} />
       </section>
     </div>
   );

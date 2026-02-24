@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
-export function ExportButton({ eventId }: { eventId: string }) {
+export function ExportButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -18,7 +18,11 @@ export function ExportButton({ eventId }: { eventId: string }) {
     setLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`${base}/api/admin/export?eventId=${encodeURIComponent(eventId)}`, {
+      const params = new URLSearchParams({ eventId });
+      if (organizationId) params.set("organizationId", organizationId);
+      const response = await fetch(
+        `${base}/api/admin/export?${params.toString()}`,
+        {
         method: "GET",
         credentials: "include"
       });

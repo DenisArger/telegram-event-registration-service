@@ -92,7 +92,7 @@ describe("EventEditor", () => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByDisplayValue("AI generated description")).toBeTruthy();
+    await screen.findByDisplayValue("AI generated description");
     await screen.findByText("AI draft inserted into description.");
   });
 

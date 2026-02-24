@@ -7,13 +7,14 @@
     "dev": "echo 'Use vercel dev from this app root'",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo 'no lint configured for @event/bot'"
+    "lint": "eslint --config ../../eslint.workspace.config.cjs \"src/**/*.{ts,tsx}\" \"api/**/*.{ts,tsx}\" \"test/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@event/db": "0.1.0",
     "@event/shared": "0.1.0",
     "@vercel/node": "^5.1.15",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.16.3",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

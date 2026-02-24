@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
-export function CheckInForm({ initialEventId = "" }: { initialEventId?: string }) {
+export function CheckInForm({
+  initialEventId = "",
+  organizationId = ""
+}: {
+  initialEventId?: string;
+  organizationId?: string;
+}) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const [eventId, setEventId] = useState(initialEventId);
   const [userId, setUserId] = useState("");
@@ -32,6 +38,7 @@ export function CheckInForm({ initialEventId = "" }: { initialEventId?: string }
         },
         credentials: "include",
         body: JSON.stringify({
+          ...(organizationId ? { organizationId } : {}),
           eventId,
           userId,
           method: "manual"

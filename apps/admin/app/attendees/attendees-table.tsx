@@ -8,6 +8,7 @@ import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admi
 
 interface AttendeesTableProps {
   eventId: string;
+  organizationId?: string;
   attendees: AttendeeItem[];
 }
 
@@ -35,7 +36,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
+export function AttendeesTable({ eventId, organizationId, attendees }: AttendeesTableProps) {
   const locale = getUiLocale();
   const [rows, setRows] = useState<AttendeeItem[]>(attendees);
   const [lastPersistedRows, setLastPersistedRows] = useState<AttendeeItem[]>(attendees);
@@ -52,14 +53,15 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
   }, [attendees]);
 
   useEffect(() => {
+    const colorTimers = colorTimerByUserRef.current;
     return () => {
       if (saveTimerRef.current !== null) {
         window.clearTimeout(saveTimerRef.current);
       }
-      for (const timerId of colorTimerByUserRef.current.values()) {
+      for (const timerId of colorTimers.values()) {
         window.clearTimeout(timerId);
       }
-      colorTimerByUserRef.current.clear();
+      colorTimers.clear();
     };
   }, []);
 
@@ -99,6 +101,7 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
         },
         credentials: "include",
         body: JSON.stringify({
+          ...(organizationId ? { organizationId } : {}),
           eventId,
           orderedUserIds: nextRows.map((item) => item.userId)
         })
@@ -154,6 +157,7 @@ export function AttendeesTable({ eventId, attendees }: AttendeesTableProps) {
         },
         credentials: "include",
         body: JSON.stringify({
+          ...(organizationId ? { organizationId } : {}),
           eventId,
           colorUpdate: {
             userId,

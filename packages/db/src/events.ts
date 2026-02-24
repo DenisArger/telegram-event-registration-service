@@ -7,17 +7,10 @@ import type {
   WaitlistEntryEntity
 } from "@event/shared";
 
-export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
-  const { data, error } = await db
-    .from("events")
-    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
-    .eq("status", "published")
-    .order("starts_at", { ascending: true });
-
-  if (error) throw error;
-
-  return (data ?? []).map((row) => ({
+function mapEventRow(row: any): EventEntity {
+  return {
     id: row.id,
+    ...(row.organization_id ? { organizationId: row.organization_id } : {}),
     title: row.title,
     description: row.description,
     startsAt: row.starts_at,
@@ -25,7 +18,19 @@ export async function listPublishedEvents(db: SupabaseClient): Promise<EventEnti
     capacity: row.capacity,
     registrationSuccessMessage: row.registration_success_message,
     status: row.status
-  }));
+  };
+}
+
+export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
+  const { data, error } = await db
+    .from("events")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .eq("status", "published")
+    .order("starts_at", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => mapEventRow(row));
 }
 
 export async function createEvent(
@@ -38,6 +43,7 @@ export async function createEvent(
     endsAt?: string | null;
     capacity?: number | null;
     registrationSuccessMessage?: string | null;
+    organizationId?: string | null;
     createdBy: string;
   }
 ): Promise<EventEntity> {
@@ -51,24 +57,16 @@ export async function createEvent(
       ends_at: payload.endsAt ?? null,
       capacity: payload.capacity ?? null,
       registration_success_message: payload.registrationSuccessMessage ?? null,
+      organization_id: payload.organizationId ?? null,
       status: "draft",
       created_by: payload.createdBy
     })
-    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .single();
 
   if (error) throw error;
 
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    startsAt: data.starts_at,
-    endsAt: data.ends_at,
-    capacity: data.capacity,
-    registrationSuccessMessage: data.registration_success_message,
-    status: data.status
-  };
+  return mapEventRow(data);
 }
 
 export async function getEventById(
@@ -77,23 +75,14 @@ export async function getEventById(
 ): Promise<EventEntity | null> {
   const { data, error } = await db
     .from("events")
-    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("id", eventId)
     .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
 
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    startsAt: data.starts_at,
-    endsAt: data.ends_at,
-    capacity: data.capacity,
-    registrationSuccessMessage: data.registration_success_message,
-    status: data.status
-  };
+  return mapEventRow(data);
 }
 
 export async function publishEvent(
@@ -105,22 +94,13 @@ export async function publishEvent(
     .update({ status: "published" })
     .eq("id", eventId)
     .eq("status", "draft")
-    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
 
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    startsAt: data.starts_at,
-    endsAt: data.ends_at,
-    capacity: data.capacity,
-    registrationSuccessMessage: data.registration_success_message,
-    status: data.status
-  };
+  return mapEventRow(data);
 }
 
 export async function closeEvent(
@@ -132,42 +112,28 @@ export async function closeEvent(
     .update({ status: "closed" })
     .eq("id", eventId)
     .eq("status", "published")
-    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
 
-  return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    startsAt: data.starts_at,
-    endsAt: data.ends_at,
-    capacity: data.capacity,
-    registrationSuccessMessage: data.registration_success_message,
-    status: data.status
-  };
+  return mapEventRow(data);
 }
 
-export async function listAllEvents(db: SupabaseClient): Promise<EventEntity[]> {
-  const { data, error } = await db
+export async function listAllEvents(db: SupabaseClient, organizationId?: string): Promise<EventEntity[]> {
+  const query = db
     .from("events")
-    .select("id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .order("starts_at", { ascending: false });
+
+  const { data, error } = organizationId
+    ? await query.eq("organization_id", organizationId)
+    : await query;
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    startsAt: row.starts_at,
-    endsAt: row.ends_at,
-    capacity: row.capacity,
-    registrationSuccessMessage: row.registration_success_message,
-    status: row.status
-  }));
+  return (data ?? []).map((row) => mapEventRow(row));
 }
 
 export async function listEventAttendees(

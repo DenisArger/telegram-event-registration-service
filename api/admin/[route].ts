@@ -22,6 +22,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const mod = await import("../../apps/bot/api/admin/close.js");
       return mod.default(req, res);
     }
+    if (route === "checkin") {
+      const mod = await import("../../apps/bot/api/admin/checkin.js");
+      return mod.default(req, res);
+    }
     if (route === "event-questions") {
       const mod = await import("../../apps/bot/api/admin/event-questions.js");
       return mod.default(req, res);
@@ -40,6 +44,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     }
     if (route === "publish") {
       const mod = await import("../../apps/bot/api/admin/publish.js");
+      return mod.default(req, res);
+    }
+    if (route === "organizations") {
+      const mod = await import("../../apps/bot/api/admin/organizations.js");
       return mod.default(req, res);
     }
     if (route === "stats") {

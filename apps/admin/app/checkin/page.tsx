@@ -1,18 +1,22 @@
 import React from "react";
 import { CheckInForm } from "../checkin-form";
 import { EventSelector } from "../_components/event-selector";
-import { getAdminEvents } from "../_lib/admin-api";
-import { resolveSelectedEventId } from "../_lib/event-selection";
+import { OrganizationSelector } from "../_components/organization-selector";
+import { getAdminEvents, getAuthMe } from "../_lib/admin-api";
+import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 
 export default async function CheckinPage({
   searchParams
 }: {
-  searchParams?: Promise<{ eventId?: string | string[] }>;
+  searchParams?: Promise<{ eventId?: string | string[]; organizationId?: string | string[] }>;
 }) {
   const locale = getUiLocale();
-  const events = await getAdminEvents();
+  const me = await getAuthMe();
+  const organizations = me?.organizations ?? [];
   const resolvedSearchParams = await searchParams;
+  const selectedOrganizationId = resolveSelectedOrganizationId(resolvedSearchParams, organizations);
+  const events = await getAdminEvents(selectedOrganizationId ?? undefined);
   const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
 
   return (
@@ -23,8 +27,19 @@ export default async function CheckinPage({
       </section>
 
       <section className="card">
-        <EventSelector events={events} selectedEventId={selectedEventId} basePath="/checkin" />
-        <CheckInForm initialEventId={selectedEventId ?? ""} />
+        <OrganizationSelector
+          organizations={organizations}
+          selectedOrganizationId={selectedOrganizationId}
+          basePath="/checkin"
+          eventId={selectedEventId}
+        />
+        <EventSelector
+          events={events}
+          selectedEventId={selectedEventId}
+          basePath="/checkin"
+          organizationId={selectedOrganizationId}
+        />
+        <CheckInForm initialEventId={selectedEventId ?? ""} organizationId={selectedOrganizationId ?? ""} />
       </section>
     </div>
   );

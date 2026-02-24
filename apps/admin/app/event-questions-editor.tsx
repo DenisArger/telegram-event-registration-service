@@ -10,7 +10,14 @@ interface QuestionItem {
   position: number;
 }
 
-export function EventQuestionsEditor({ eventId }: { eventId: string }) {
+interface EventQuestionApiItem {
+  id?: string;
+  prompt?: string | null;
+  isRequired?: boolean | null;
+  position?: number | null;
+}
+
+export function EventQuestionsEditor({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const base = getClientAdminApiBase();
 
@@ -26,7 +33,9 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
       setLoading(true);
       setMessage(null);
       try {
-        const response = await fetch(`${base}/api/admin/event-questions?eventId=${encodeURIComponent(eventId)}`, {
+        const params = new URLSearchParams({ eventId });
+        if (organizationId) params.set("organizationId", organizationId);
+        const response = await fetch(`${base}/api/admin/event-questions?${params.toString()}`, {
           credentials: "include"
         });
         const data = await response.json();
@@ -35,9 +44,9 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
           return;
         }
         if (mounted) {
-          const items = Array.isArray(data?.questions) ? data.questions : [];
+          const items: EventQuestionApiItem[] = Array.isArray(data?.questions) ? data.questions : [];
           setQuestions(
-            items.map((item: any, index: number) => ({
+            items.map((item, index: number) => ({
               id: item.id,
               prompt: String(item.prompt ?? ""),
               isRequired: Boolean(item.isRequired),
@@ -56,7 +65,7 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
     return () => {
       mounted = false;
     };
-  }, [base, eventId, ru]);
+  }, [base, eventId, organizationId, ru]);
 
   function syncPositions(next: QuestionItem[]) {
     return next.map((item, index) => ({ ...item, position: index + 1 }));
@@ -96,6 +105,7 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
         },
         credentials: "include",
         body: JSON.stringify({
+          ...(organizationId ? { organizationId } : {}),
           eventId,
           questions: questions.map((item) => ({
             id: item.id,
@@ -111,9 +121,9 @@ export function EventQuestionsEditor({ eventId }: { eventId: string }) {
         return;
       }
 
-      const items = Array.isArray(data?.questions) ? data.questions : [];
+      const items: EventQuestionApiItem[] = Array.isArray(data?.questions) ? data.questions : [];
       setQuestions(
-        items.map((item: any, index: number) => ({
+        items.map((item, index: number) => ({
           id: item.id,
           prompt: String(item.prompt ?? ""),
           isRequired: Boolean(item.isRequired),

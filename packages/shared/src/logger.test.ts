@@ -26,4 +26,17 @@ describe("logger", () => {
     expect(payload).toContain('"level":"error"');
     expect(payload).toContain('"message":"error_message"');
   });
+
+  it("redacts sensitive payload keys", () => {
+    logInfo("secure_log", {
+      token: "abc",
+      nested: { api_key: "123" },
+      safe: "value"
+    });
+
+    const payload = String(consoleLogSpy.mock.calls[0][0]);
+    expect(payload).toContain('"token":"[REDACTED]"');
+    expect(payload).toContain('"api_key":"[REDACTED]"');
+    expect(payload).toContain('"safe":"value"');
+  });
 });

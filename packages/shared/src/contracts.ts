@@ -1,7 +1,9 @@
 export type UserRole = "participant" | "organizer" | "admin";
+export type OrganizationMemberRole = "owner" | "admin";
 
 export interface EventEntity {
   id: string;
+  organizationId?: string | null;
   title: string;
   description: string | null;
   startsAt: string | null;
@@ -74,6 +76,20 @@ export interface EventStatsEntity {
   checkedInCount: number;
   waitlistCount: number;
   noShowRate: number;
+}
+
+export interface OrganizationEntity {
+  id: string;
+  name: string;
+  ownerUserId: string;
+  createdAt: string;
+}
+
+export interface OrganizationMembershipEntity {
+  organizationId: string;
+  userId: string;
+  role: OrganizationMemberRole;
+  createdAt: string;
 }
 
 export interface RegisterForEventResult {

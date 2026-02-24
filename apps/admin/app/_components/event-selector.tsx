@@ -9,9 +9,11 @@ interface EventSelectorProps {
   events: EventItem[];
   selectedEventId: string | null;
   basePath: string;
+  organizationId?: string | null;
+  view?: string | null;
 }
 
-export function EventSelector({ events, selectedEventId, basePath }: EventSelectorProps) {
+export function EventSelector({ events, selectedEventId, basePath, organizationId, view }: EventSelectorProps) {
   const router = useRouter();
   const locale = getUiLocale();
 
@@ -24,7 +26,13 @@ export function EventSelector({ events, selectedEventId, basePath }: EventSelect
       <span>{ui("select_event", locale)}:</span>
       <select
         value={selectedEventId ?? events[0]?.id ?? ""}
-        onChange={(e) => router.push(`${basePath}?eventId=${encodeURIComponent(e.target.value)}`)}
+        onChange={(e) => {
+          const params = new URLSearchParams();
+          params.set("eventId", e.target.value);
+          if (organizationId) params.set("organizationId", organizationId);
+          if (view) params.set("view", view);
+          router.push(`${basePath}?${params.toString()}`);
+        }}
       >
         {events.map((event) => (
           <option key={event.id} value={event.id}>

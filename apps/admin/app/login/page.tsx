@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 declare global {
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const unsafeLoginEnabled = process.env.NEXT_PUBLIC_ADMIN_UNSAFE_LOGIN_ENABLED === "true";
 
-  async function getErrorMessage(response: Response): Promise<string> {
+  const getErrorMessage = useCallback(async (response: Response): Promise<string> => {
     const fallback = ru ? "Ошибка входа." : "Login failed.";
     const bodyText = await response.text().catch(() => "");
     if (!bodyText) return `${fallback} (HTTP ${response.status})`;
@@ -34,7 +34,7 @@ export default function LoginPage() {
     const trimmed = bodyText.trim();
     if (!trimmed) return `${fallback} (HTTP ${response.status})`;
     return trimmed.slice(0, 200);
-  }
+  }, [ru]);
 
   useEffect(() => {
     if (!botUsername) {
@@ -76,7 +76,7 @@ export default function LoginPage() {
     script.setAttribute("data-request-access", "write");
     script.setAttribute("data-onauth", "onTelegramAdminAuth(user)");
     container.appendChild(script);
-  }, [botUsername, router, ru]);
+  }, [botUsername, getErrorMessage, router, ru]);
 
   async function submitUnsafeLogin() {
     const normalized = devTelegramId.trim();

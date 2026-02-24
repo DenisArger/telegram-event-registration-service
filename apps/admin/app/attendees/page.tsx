@@ -1,25 +1,37 @@
 import React from "react";
 import { EventSelector } from "../_components/event-selector";
-import { getAdminEvents, getAttendees } from "../_lib/admin-api";
-import { resolveSelectedEventId } from "../_lib/event-selection";
+import { OrganizationSelector } from "../_components/organization-selector";
+import { getAdminEvents, getAttendees, getAuthMe } from "../_lib/admin-api";
+import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 import { AttendeesTable } from "./attendees-table";
 
 export default async function AttendeesPage({
   searchParams
 }: {
-  searchParams?: Promise<{ eventId?: string | string[]; view?: string | string[] }>;
+  searchParams?: Promise<{ eventId?: string | string[]; view?: string | string[]; organizationId?: string | string[] }>;
 }) {
   const locale = getUiLocale();
-  const events = await getAdminEvents();
+  const me = await getAuthMe();
+  const organizations = me?.organizations ?? [];
   const resolvedSearchParams = await searchParams;
+  const selectedOrganizationId = resolveSelectedOrganizationId(resolvedSearchParams, organizations);
+  const events = await getAdminEvents(selectedOrganizationId ?? undefined);
   const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
   const rawView = Array.isArray(resolvedSearchParams?.view) ? resolvedSearchParams?.view[0] : resolvedSearchParams?.view;
   const viewMode = rawView === "list" ? "list" : "table";
   const selectedEvent = events.find((event) => event.id === selectedEventId) ?? null;
-  const attendees = selectedEventId ? await getAttendees(selectedEventId) : [];
-  const listHref = `/attendees?${new URLSearchParams({ ...(selectedEventId ? { eventId: selectedEventId } : {}), view: "list" }).toString()}`;
-  const tableHref = `/attendees?${new URLSearchParams({ ...(selectedEventId ? { eventId: selectedEventId } : {}), view: "table" }).toString()}`;
+  const attendees = selectedEventId ? await getAttendees(selectedEventId, selectedOrganizationId ?? undefined) : [];
+  const listHref = `/attendees?${new URLSearchParams({
+    ...(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}),
+    ...(selectedEventId ? { eventId: selectedEventId } : {}),
+    view: "list"
+  }).toString()}`;
+  const tableHref = `/attendees?${new URLSearchParams({
+    ...(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}),
+    ...(selectedEventId ? { eventId: selectedEventId } : {}),
+    view: "table"
+  }).toString()}`;
 
   return (
     <div className="section-grid">
@@ -29,7 +41,20 @@ export default async function AttendeesPage({
       </section>
 
       <section className="card">
-        <EventSelector events={events} selectedEventId={selectedEventId} basePath="/attendees" />
+        <OrganizationSelector
+          organizations={organizations}
+          selectedOrganizationId={selectedOrganizationId}
+          basePath="/attendees"
+          eventId={selectedEventId}
+          view={viewMode}
+        />
+        <EventSelector
+          events={events}
+          selectedEventId={selectedEventId}
+          basePath="/attendees"
+          organizationId={selectedOrganizationId}
+          view={viewMode}
+        />
         <div className="attendees-view-switch" role="tablist" aria-label="view-switch">
           <a href={listHref} className={viewMode === "list" ? "active" : ""}>{ui("attendees_view_list", locale)}</a>
           <a href={tableHref} className={viewMode === "table" ? "active" : ""}>{ui("attendees_view_table", locale)}</a>
@@ -59,7 +84,7 @@ export default async function AttendeesPage({
             ))}
           </ul>
         ) : (
-          <AttendeesTable eventId={selectedEventId ?? ""} attendees={attendees} />
+          <AttendeesTable eventId={selectedEventId ?? ""} attendees={attendees} organizationId={selectedOrganizationId ?? ""} />
         )}
       </section>
     </div>

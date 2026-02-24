@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createServiceClient, listEventAttendees, listEventWaitlist } from "@event/db";
 import { logError } from "@event/shared";
-import { isAdminRequest } from "../../src/adminAuth.js";
+import { requireAdminSession, sendError } from "../../src/adminApi.js";
 import { buildEventExportCsv } from "../../src/csv.js";
 import { applyCors } from "../../src/cors.js";
+import { readEventId, readOrganizationId, requireEventOrganizationAccess } from "../../src/adminOrgAccess.js";
 
 const db = createServiceClient(process.env);
 
@@ -15,16 +16,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  if (!isAdminRequest(req)) {
-    res.status(401).json({ message: "Unauthorized" });
+  const ctx = requireAdminSession(req, res, process.env);
+  if (!ctx) return;
+
+  const eventId = readEventId(req);
+  const organizationId = readOrganizationId(req);
+  if (!eventId) {
+    sendError(res, 400, ctx.requestId, "event_required", "eventId is required");
     return;
   }
 
-  const eventId = String(req.query.eventId ?? "").trim();
-  if (!eventId) {
-    res.status(400).json({ message: "eventId is required" });
-    return;
-  }
+  const hasAccess = await requireEventOrganizationAccess(req, res, db, ctx, organizationId, eventId);
+  if (!hasAccess) return;
 
   try {
     const [attendees, waitlist] = await Promise.all([
@@ -33,11 +36,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     ]);
 
     const csv = buildEventExportCsv(eventId, attendees, waitlist);
+    res.setHeader("x-request-id", ctx.requestId);
     res.setHeader("content-type", "text/csv; charset=utf-8");
     res.setHeader("content-disposition", `attachment; filename=\"event-${eventId}.csv\"`);
     res.status(200).send(csv);
   } catch (error) {
-    logError("admin_export_failed", { error, eventId });
-    res.status(500).json({ message: "Failed to export CSV" });
+    logError("admin_export_failed", { error, eventId, requestId: ctx.requestId });
+    sendError(res, 500, ctx.requestId, "export_failed", "Failed to export CSV");
   }
 }

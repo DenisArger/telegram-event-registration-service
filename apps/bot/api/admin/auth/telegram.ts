@@ -4,6 +4,7 @@ import { logError } from "@event/shared";
 import { applyCors } from "../../../src/cors.js";
 import { setAdminSession } from "../../../src/adminSession.js";
 import { verifyTelegramLoginPayload } from "../../../src/adminTelegramAuth.js";
+import { sendError } from "../../../src/adminApi.js";
 
 const db = createServiceClient(process.env);
 
@@ -17,24 +18,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   const secret = String(process.env.ADMIN_SESSION_SECRET ?? "").trim();
   if (!secret) {
-    res.status(500).json({ message: "ADMIN_SESSION_SECRET is not configured" });
+    sendError(res, 500, "n/a", "session_secret_missing", "ADMIN_SESSION_SECRET is not configured");
     return;
   }
 
   const verification = verifyTelegramLoginPayload(req.body, process.env);
   if (!verification.ok) {
-    res.status(401).json({ message: verification.error ?? "Unauthorized" });
+    sendError(res, 401, "n/a", "unauthorized", verification.error ?? "Unauthorized");
     return;
   }
 
   try {
     const user = await getUserByTelegramId(db, verification.payload!.id);
     if (!user) {
-      res.status(403).json({ message: "admin_user_not_found" });
+      sendError(res, 403, "n/a", "admin_user_not_found", "admin_user_not_found");
       return;
     }
     if (user.role !== "admin" && user.role !== "organizer") {
-      res.status(403).json({ message: "insufficient_role" });
+      sendError(res, 403, "n/a", "insufficient_role", "insufficient_role");
       return;
     }
 
@@ -51,6 +52,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
   } catch (error) {
     logError("admin_auth_telegram_failed", { error });
-    res.status(500).json({ message: "Failed to authorize admin" });
+    sendError(res, 500, "n/a", "admin_auth_failed", "Failed to authorize admin");
   }
 }

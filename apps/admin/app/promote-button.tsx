@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
-export function PromoteButton({ eventId }: { eventId: string }) {
+export function PromoteButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export function PromoteButton({ eventId }: { eventId: string }) {
           "content-type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ eventId })
+        body: JSON.stringify({ ...(organizationId ? { organizationId } : {}), eventId })
       });
 
       const data = await response.json();

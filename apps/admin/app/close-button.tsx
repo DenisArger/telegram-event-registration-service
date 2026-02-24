@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
-export function CloseButton({ eventId }: { eventId: string }) {
+export function CloseButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export function CloseButton({ eventId }: { eventId: string }) {
           "content-type": "application/json"
         },
         credentials: "include",
-        body: JSON.stringify({ eventId })
+        body: JSON.stringify({ ...(organizationId ? { organizationId } : {}), eventId })
       });
 
       const data = await response.json();
