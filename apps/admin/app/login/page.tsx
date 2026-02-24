@@ -18,6 +18,24 @@ export default function LoginPage() {
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const unsafeLoginEnabled = process.env.NEXT_PUBLIC_ADMIN_UNSAFE_LOGIN_ENABLED === "true";
 
+  async function getErrorMessage(response: Response): Promise<string> {
+    const fallback = ru ? "Ошибка входа." : "Login failed.";
+    const bodyText = await response.text().catch(() => "");
+    if (!bodyText) return `${fallback} (HTTP ${response.status})`;
+
+    try {
+      const parsed = JSON.parse(bodyText) as { message?: string; error?: string };
+      if (parsed?.message) return String(parsed.message);
+      if (parsed?.error) return String(parsed.error);
+    } catch {
+      // Non-JSON body from upstream proxy.
+    }
+
+    const trimmed = bodyText.trim();
+    if (!trimmed) return `${fallback} (HTTP ${response.status})`;
+    return trimmed.slice(0, 200);
+  }
+
   useEffect(() => {
     if (!botUsername) {
       setMessage(ru ? "Не задан NEXT_PUBLIC_TELEGRAM_BOT_USERNAME." : "Missing NEXT_PUBLIC_TELEGRAM_BOT_USERNAME.");
@@ -33,9 +51,8 @@ export default function LoginPage() {
           credentials: "include",
           body: JSON.stringify(user)
         });
-        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          setMessage(String(data?.message ?? (ru ? "Ошибка входа." : "Login failed.")));
+          setMessage(await getErrorMessage(response));
           return;
         }
         router.push("/");
@@ -77,9 +94,8 @@ export default function LoginPage() {
         credentials: "include",
         body: JSON.stringify({ telegramId: normalized })
       });
-      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setMessage(String(data?.message ?? (ru ? "Ошибка входа." : "Login failed.")));
+        setMessage(await getErrorMessage(response));
         return;
       }
       router.push("/");

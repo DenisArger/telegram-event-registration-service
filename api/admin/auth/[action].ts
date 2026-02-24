@@ -2,21 +2,26 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const action = String(req.query.action ?? "").trim().toLowerCase();
-  if (action === "telegram") {
-    const mod = await import("../../../apps/bot/api/admin/auth/telegram");
-    return mod.default(req, res);
+  try {
+    if (action === "telegram") {
+      const mod = await import("../../../apps/bot/api/admin/auth/telegram.js");
+      return mod.default(req, res);
+    }
+    if (action === "me") {
+      const mod = await import("../../../apps/bot/api/admin/auth/me.js");
+      return mod.default(req, res);
+    }
+    if (action === "logout") {
+      const mod = await import("../../../apps/bot/api/admin/auth/logout.js");
+      return mod.default(req, res);
+    }
+    if (action === "dev-login") {
+      const mod = await import("../../../apps/bot/api/admin/auth/dev-login.js");
+      return mod.default(req, res);
+    }
+    res.status(404).json({ message: "Not found" });
+  } catch (error) {
+    console.error("admin_auth_proxy_failed", { action, error });
+    res.status(500).json({ message: "admin_auth_proxy_failed", action });
   }
-  if (action === "me") {
-    const mod = await import("../../../apps/bot/api/admin/auth/me");
-    return mod.default(req, res);
-  }
-  if (action === "logout") {
-    const mod = await import("../../../apps/bot/api/admin/auth/logout");
-    return mod.default(req, res);
-  }
-  if (action === "dev-login") {
-    const mod = await import("../../../apps/bot/api/admin/auth/dev-login");
-    return mod.default(req, res);
-  }
-  res.status(404).json({ message: "Not found" });
 }
