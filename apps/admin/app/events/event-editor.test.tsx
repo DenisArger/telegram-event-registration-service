@@ -76,6 +76,26 @@ describe("EventEditor", () => {
     await screen.findByText("Event updated.");
   });
 
+  it("generates AI draft and inserts into description", async () => {
+    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ draft: "AI generated description", provider: "deepseek", model: "deepseek-reasoner" })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<EventEditor event={baseEvent} />);
+    fireEvent.click(screen.getByRole("button", { name: "AI draft" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByDisplayValue("AI generated description")).toBeTruthy();
+    await screen.findByText("AI draft inserted into description.");
+  });
+
   it("validates start/end/capacity and shows server and network errors", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
 

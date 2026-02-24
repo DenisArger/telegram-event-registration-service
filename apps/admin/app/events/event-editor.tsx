@@ -32,6 +32,7 @@ export function EventEditor({ event }: { event: EditableEvent }) {
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState(event.registrationSuccessMessage ?? "");
   const [location, setLocation] = useState(event.location ?? "");
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   async function save() {
@@ -106,6 +107,58 @@ export function EventEditor({ event }: { event: EditableEvent }) {
     }
   }
 
+  async function generateAiDraft() {
+    const base = getClientAdminApiBase();
+    if (!base) {
+      setMessage(missingClientApiBaseMessage(ru));
+      return;
+    }
+
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) {
+      setMessage(ru ? "Сначала укажите название мероприятия." : "Set event title first.");
+      return;
+    }
+
+    setAiLoading(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`${base}/api/admin/ai-draft`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          title: normalizedTitle,
+          startsAt: datetimeLocalToIso(startsAt),
+          location: location.trim() || null,
+          description: description.trim() || null,
+          locale: ru ? "ru" : "en",
+          tone: "friendly"
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data?.message ?? (ru ? "Не удалось сгенерировать AI-черновик." : "Failed to generate AI draft."));
+        return;
+      }
+
+      const draft = String(data?.draft ?? "").trim();
+      if (!draft) {
+        setMessage(ru ? "AI вернул пустой черновик." : "AI returned an empty draft.");
+        return;
+      }
+      setDescription(draft);
+      setMessage(ru ? "AI-черновик добавлен в описание." : "AI draft inserted into description.");
+    } catch {
+      setMessage(ru ? "Сетевая ошибка." : "Network error.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   return (
     <div className="section-grid">
       <section className="card">
@@ -128,6 +181,11 @@ export function EventEditor({ event }: { event: EditableEvent }) {
           <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
           <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
           <textarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={generateAiDraft} disabled={aiLoading || loading}>
+              {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
+            </button>
+          </div>
           <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
           {description.trim() ? (
             <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
