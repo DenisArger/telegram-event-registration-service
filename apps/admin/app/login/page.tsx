@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
 
 declare global {
   interface Window {
@@ -18,22 +17,17 @@ export default function LoginPage() {
   const [devLoading, setDevLoading] = useState(false);
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
   const unsafeLoginEnabled = process.env.NEXT_PUBLIC_ADMIN_UNSAFE_LOGIN_ENABLED === "true";
-  const apiBase = getClientAdminApiBase();
 
   useEffect(() => {
     if (!botUsername) {
       setMessage(ru ? "Не задан NEXT_PUBLIC_TELEGRAM_BOT_USERNAME." : "Missing NEXT_PUBLIC_TELEGRAM_BOT_USERNAME.");
       return;
     }
-    if (!apiBase) {
-      setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
 
     window.onTelegramAdminAuth = async (user) => {
       setMessage(null);
       try {
-        const response = await fetch(`${apiBase}/api/admin/auth/telegram`, {
+        const response = await fetch("/api/admin/auth/telegram", {
           method: "POST",
           headers: { "content-type": "application/json" },
           credentials: "include",
@@ -65,14 +59,9 @@ export default function LoginPage() {
     script.setAttribute("data-request-access", "write");
     script.setAttribute("data-onauth", "onTelegramAdminAuth(user)");
     container.appendChild(script);
-  }, [apiBase, botUsername, router, ru]);
+  }, [botUsername, router, ru]);
 
   async function submitUnsafeLogin() {
-    if (!apiBase) {
-      setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
-
     const normalized = devTelegramId.trim();
     if (!normalized || !/^\d+$/.test(normalized)) {
       setMessage(ru ? "Введите корректный telegram_id (число)." : "Enter a valid numeric telegram_id.");
@@ -82,7 +71,7 @@ export default function LoginPage() {
     setDevLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`${apiBase}/api/admin/auth/dev-login`, {
+      const response = await fetch("/api/admin/auth/dev-login", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
