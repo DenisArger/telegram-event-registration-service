@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const { error } = await authClient.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true
+        shouldCreateUser: false
       }
     });
 

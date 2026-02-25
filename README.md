@@ -1,4 +1,5 @@
 # telegram-event-registration-service
+[![CI](https://github.com/DenisArger/telegram-event-registration-service/actions/workflows/ci.yml/badge.svg)](https://github.com/DenisArger/telegram-event-registration-service/actions/workflows/ci.yml)
 
 ## English
 
@@ -62,6 +63,14 @@ Quality checks:
 yarn lint
 yarn typecheck
 yarn test
+```
+
+Email admin auth bootstrap:
+```bash
+# 1) edit supabase/sql/admin_auth_bootstrap.sql
+#    set real admin/organizer emails in ops.admin_auth_seed
+# 2) run script in Supabase SQL editor
+# 3) keep apps/bot/api/admin/auth/email.ts with shouldCreateUser: false
 ```
 
 Docker:
@@ -132,6 +141,14 @@ yarn dev
 yarn lint
 yarn typecheck
 yarn test
+```
+
+Bootstrap email-авторизации для админов:
+```bash
+# 1) откройте supabase/sql/admin_auth_bootstrap.sql
+#    и укажите реальные email админов/организаторов в ops.admin_auth_seed
+# 2) выполните скрипт в Supabase SQL editor
+# 3) в apps/bot/api/admin/auth/email.ts оставьте shouldCreateUser: false
 ```
 
 Через Docker:
