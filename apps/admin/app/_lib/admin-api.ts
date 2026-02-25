@@ -6,6 +6,16 @@ export interface OrganizationItem {
   role: "owner" | "admin";
 }
 
+export interface OrganizationMemberItem {
+  organizationId: string;
+  userId: string;
+  role: "owner" | "admin";
+  createdAt: string;
+  fullName: string | null;
+  username: string | null;
+  telegramId: number | null;
+}
+
 export interface EventItem {
   id: string;
   organizationId?: string | null;
@@ -212,5 +222,25 @@ export async function getAuthMe(): Promise<AuthMeResponse | null> {
     return (await response.json()) as AuthMeResponse;
   } catch {
     return null;
+  }
+}
+
+export async function getOrganizationMembers(organizationId?: string): Promise<OrganizationMemberItem[]> {
+  if (!organizationId) return [];
+  const cfg = getAdminConfig();
+  if (!cfg) return [];
+  const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/organization-members", cfg.base), organizationId);
+
+  try {
+    const response = await fetch(url.toString(), {
+      cache: "no-store",
+      headers: cookieHeader ? { cookie: cookieHeader } : undefined
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { members?: OrganizationMemberItem[] };
+    return data.members ?? [];
+  } catch {
+    return [];
   }
 }

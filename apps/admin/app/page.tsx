@@ -8,7 +8,8 @@ const quickLinks = [
   { href: "/attendees", titleKey: "attendees", subtitleKey: "quick_attendees" },
   { href: "/waitlist", titleKey: "waitlist", subtitleKey: "quick_waitlist" },
   { href: "/stats", titleKey: "stats", subtitleKey: "quick_stats" },
-  { href: "/actions", titleKey: "actions", subtitleKey: "quick_actions" }
+  { href: "/actions", titleKey: "actions", subtitleKey: "quick_actions" },
+  { href: "/organizations", titleKey: "organizations", subtitleKey: "quick_organizations" }
 ] as const;
 
 export default async function HomePage() {

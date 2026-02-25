@@ -12,7 +12,8 @@ const links = [
   { href: "/attendees", labelKey: "nav_attendees" },
   { href: "/waitlist", labelKey: "nav_waitlist" },
   { href: "/stats", labelKey: "nav_stats" },
-  { href: "/actions", labelKey: "nav_actions" }
+  { href: "/actions", labelKey: "nav_actions" },
+  { href: "/organizations", labelKey: "nav_organizations" }
 ] as const;
 
 export function AdminHeader() {
