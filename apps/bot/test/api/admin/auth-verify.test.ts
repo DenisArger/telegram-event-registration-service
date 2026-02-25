@@ -87,5 +87,39 @@ describe("POST /api/admin/auth/verify", () => {
     expect(res.payload).toMatchObject({ ok: true, role: "admin", userId: "u1", authUserId: "auth-1" });
     expect(res.headers["set-cookie"]).toContain("admin_session=");
   });
-});
 
+  it("falls back to magiclink verification type", async () => {
+    mocks.verifyOtp
+      .mockResolvedValueOnce({ error: { message: "otp_expired", name: "AuthApiError" }, data: { user: null } })
+      .mockResolvedValueOnce({ error: null, data: { user: { id: "auth-2" } } });
+
+    const maybeSingleByAuth = vi.fn(async () => ({
+      data: { id: "u2", role: "organizer", telegram_id: null, auth_user_id: "auth-2", email: "admin@example.com" },
+      error: null
+    }));
+    const eqByAuth = vi.fn(() => ({ maybeSingle: maybeSingleByAuth }));
+    const selectByAuth = vi.fn(() => ({ eq: eqByAuth }));
+
+    mocks.db.from.mockImplementationOnce(() => ({ select: selectByAuth }));
+
+    const { default: handler } = await import("../../../api/admin/auth/verify");
+    const res = createRes();
+    await handler(
+      { method: "POST", headers: {}, body: { email: "admin@example.com", token: "654321" } } as any,
+      res as any
+    );
+
+    expect(mocks.verifyOtp).toHaveBeenNthCalledWith(1, {
+      email: "admin@example.com",
+      token: "654321",
+      type: "email"
+    });
+    expect(mocks.verifyOtp).toHaveBeenNthCalledWith(2, {
+      email: "admin@example.com",
+      token: "654321",
+      type: "magiclink"
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({ ok: true, role: "organizer", userId: "u2", authUserId: "auth-2" });
+  });
+});

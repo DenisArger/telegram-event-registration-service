@@ -20,6 +20,7 @@ interface AdminUserRow {
 }
 
 const db = createServiceClient(process.env);
+const OTP_VERIFY_TYPES: Array<"email" | "magiclink"> = ["email", "magiclink"];
 
 function getAnonAuthClient(envSource: Record<string, string | undefined>) {
   const url = String(envSource.SUPABASE_URL ?? "").trim();
@@ -92,17 +93,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    const verifyResult = await authClient.auth.verifyOtp({
-      email,
-      token,
-      type: "email"
-    });
-    if (verifyResult.error || !verifyResult.data.user?.id) {
+    let authUserId: string | null = null;
+
+    for (const type of OTP_VERIFY_TYPES) {
+      const verifyResult = await authClient.auth.verifyOtp({
+        email,
+        token,
+        type
+      });
+      if (!verifyResult.error && verifyResult.data.user?.id) {
+        authUserId = verifyResult.data.user.id;
+        break;
+      }
+    }
+
+    if (!authUserId) {
       sendError(res, 401, "n/a", "otp_verify_failed", "otp_verify_failed");
       return;
     }
 
-    const authUserId = verifyResult.data.user.id;
     const user = await findAdminUser(authUserId, email);
     if (!user) {
       sendError(res, 403, "n/a", "admin_user_not_found", "admin_user_not_found");
@@ -135,4 +144,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     sendError(res, 500, "n/a", "admin_auth_failed", "Failed to verify email auth");
   }
 }
-
