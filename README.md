@@ -54,6 +54,7 @@ Core migrations include:
 - `20260225103000_m16_rls_tenant_hardening.sql`
 - `20260225112000_m17_prevent_last_owner_removal.sql`
 - `20260225121000_m18_transfer_organization_ownership.sql`
+- `20260225133000_m19_roles_to_enums.sql`
 
 ## API
 
