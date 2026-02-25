@@ -7,6 +7,7 @@ import { getUiLocale, ui } from "../i18n";
 import { EmptyState } from "../_components/ui/empty-state";
 import { PageHeader } from "../_components/ui/page-header";
 import { Panel } from "../_components/ui/panel";
+import { EmojiText } from "../_components/emoji-text";
 
 export default async function StatsPage({
   searchParams
@@ -42,7 +43,14 @@ export default async function StatsPage({
           />
         </div>
 
-        <h2>{ui("stats", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
+        <h2>
+          {ui("stats", locale)}{" "}
+          {selectedEvent ? (
+            <>
+              {ui("event_for", locale)} <span>&quot;<EmojiText text={selectedEvent.title} />&quot;</span>
+            </>
+          ) : ""}
+        </h2>
         {!stats ? (
           <EmptyState message={ui("stats_unavailable", locale)} />
         ) : (

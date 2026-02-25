@@ -246,15 +246,15 @@
   }
 
   .attendees-col-drag {
-    @apply min-w-[76px];
+    @apply w-[76px] min-w-[76px];
   }
 
   .attendees-col-color {
-    @apply min-w-[96px];
+    @apply w-[96px] min-w-[96px];
   }
 
   .attendees-col-name {
-    @apply min-w-[170px];
+    @apply w-[170px] min-w-[170px];
   }
 
   .attendees-col-username {
@@ -276,7 +276,7 @@
   }
 
   .sticky-col-3 {
-    left: 224px;
+    left: 172px;
   }
 
   .attendees-table tbody tr:hover .sticky-col-1,
@@ -353,6 +353,14 @@
 
   .markdown-preview code {
     @apply rounded bg-bg px-1 py-0.5 text-xs;
+  }
+
+  .emoji-fallback {
+    display: inline-block;
+    width: 1.05em;
+    height: 1.05em;
+    margin: 0 0.04em;
+    vertical-align: -0.12em;
   }
 }
 

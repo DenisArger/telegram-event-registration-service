@@ -8,6 +8,7 @@ import { AttendeesTable } from "./attendees-table";
 import { EmptyState } from "../_components/ui/empty-state";
 import { PageHeader } from "../_components/ui/page-header";
 import { Panel } from "../_components/ui/panel";
+import { EmojiText } from "../_components/emoji-text";
 
 export default async function AttendeesPage({
   searchParams
@@ -88,7 +89,14 @@ export default async function AttendeesPage({
           </div>
         </div>
 
-        <h2>{ui("attendees", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
+        <h2>
+          {ui("attendees", locale)}{" "}
+          {selectedEvent ? (
+            <>
+              {ui("event_for", locale)} <span>&quot;<EmojiText text={selectedEvent.title} />&quot;</span>
+            </>
+          ) : ""}
+        </h2>
         {viewMode === "table" ? (
           <p className="text-xs text-muted">
             {locale === "ru"

@@ -3,6 +3,7 @@ import React from "react";
 import { getAdminEventById } from "../../_lib/admin-api";
 import { EventEditor } from "../event-editor";
 import { getUiLocale, ui } from "../../i18n";
+import { EmojiText } from "../../_components/emoji-text";
 
 export default async function EventDetailsPage({
   params,
@@ -34,7 +35,7 @@ export default async function EventDetailsPage({
   return (
     <div className="section-grid">
       <section className="card">
-        <h1>{event.title}</h1>
+        <h1><EmojiText text={event.title} /></h1>
         <p>
           {event.status}
           {event.startsAt ? ` — ${new Date(event.startsAt).toLocaleString()}` : ""}

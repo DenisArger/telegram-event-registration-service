@@ -9,6 +9,7 @@ import { Badge } from "../_components/ui/badge";
 import { EmptyState } from "../_components/ui/empty-state";
 import { PageHeader } from "../_components/ui/page-header";
 import { Panel } from "../_components/ui/panel";
+import { EmojiText } from "../_components/emoji-text";
 
 export default async function EventsPage({
   searchParams
@@ -46,7 +47,7 @@ export default async function EventsPage({
                     href={`/events/${event.id}?${new URLSearchParams(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}).toString()}`}
                     className="text-base font-semibold no-underline"
                   >
-                    {event.title}
+                    <EmojiText text={event.title} />
                   </Link>
                   <Badge tone={event.status === "published" ? "success" : "muted"}>{event.status}</Badge>
                 </div>
