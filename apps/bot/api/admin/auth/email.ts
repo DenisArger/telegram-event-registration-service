@@ -46,6 +46,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
     if (error) {
+      logError("admin_auth_email_otp_send_failed", {
+        email,
+        code: (error as { code?: string } | null)?.code ?? null,
+        message: (error as { message?: string } | null)?.message ?? null,
+        status: (error as { status?: number } | null)?.status ?? null
+      });
       sendError(res, 401, "n/a", "otp_send_failed", "otp_send_failed");
       return;
     }

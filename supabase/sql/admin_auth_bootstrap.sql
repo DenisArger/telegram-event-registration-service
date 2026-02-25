@@ -14,7 +14,7 @@ create table if not exists ops.admin_auth_seed (
 -- Keep emails in lowercase.
 insert into ops.admin_auth_seed(email)
 values
-  ('admin@example.com')
+  ('den.arger@gmail.com')
 on conflict (email) do nothing;
 
 do $$
