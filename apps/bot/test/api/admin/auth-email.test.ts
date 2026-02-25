@@ -39,4 +39,18 @@ describe("POST /api/admin/auth/email", () => {
     expect(res.statusCode).toBe(200);
     expect(res.payload).toEqual({ ok: true });
   });
+
+  it("returns 429 when supabase rate limit is reached", async () => {
+    mocks.signInWithOtp.mockResolvedValueOnce({
+      error: { code: "over_email_send_rate_limit", status: 429, message: "email rate limit exceeded" }
+    });
+    const { default: handler } = await import("../../../api/admin/auth/email");
+    const res = createRes();
+    await handler({ method: "POST", headers: {}, body: { email: "admin@example.com" } } as any, res as any);
+
+    expect(res.statusCode).toBe(429);
+    expect(res.payload).toEqual({
+      message: "Too many OTP requests. Please wait a few minutes and try again."
+    });
+  });
 });

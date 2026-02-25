@@ -46,12 +46,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     });
 
     if (error) {
+      const errorCode = (error as { code?: string } | null)?.code ?? null;
+      const errorStatus = (error as { status?: number } | null)?.status ?? null;
       logError("admin_auth_email_otp_send_failed", {
         email,
-        code: (error as { code?: string } | null)?.code ?? null,
+        code: errorCode,
         message: (error as { message?: string } | null)?.message ?? null,
-        status: (error as { status?: number } | null)?.status ?? null
+        status: errorStatus
       });
+      if (errorCode === "over_email_send_rate_limit" || errorStatus === 429) {
+        sendError(
+          res,
+          429,
+          "n/a",
+          "over_email_send_rate_limit",
+          "Too many OTP requests. Please wait a few minutes and try again."
+        );
+        return;
+      }
       sendError(res, 401, "n/a", "otp_send_failed", "otp_send_failed");
       return;
     }
