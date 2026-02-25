@@ -6,6 +6,7 @@ import {
   listOrganizationMembers,
   listUserOrganizations,
   removeOrganizationMember,
+  transferOrganizationOwnership,
   upsertOrganizationMember
 } from "./organizations";
 
@@ -171,5 +172,34 @@ describe("organizations data layer", () => {
     const db = { from: vi.fn(() => ({ delete: vi.fn(() => deleteQuery) })) } as any;
 
     await expect(removeOrganizationMember(db, "org1", "u1")).resolves.toBe(true);
+  });
+
+  it("transfers organization ownership via rpc", async () => {
+    const rpc = vi.fn(async () => ({
+      data: {
+        organization_id: "org1",
+        previous_owner_user_id: "u1",
+        new_owner_user_id: "u2"
+      },
+      error: null
+    }));
+    const db = { rpc } as any;
+
+    const result = await transferOrganizationOwnership(db, {
+      organizationId: "org1",
+      currentOwnerUserId: "u1",
+      newOwnerUserId: "u2"
+    });
+
+    expect(rpc).toHaveBeenCalledWith("transfer_organization_ownership", {
+      p_organization_id: "org1",
+      p_current_owner_user_id: "u1",
+      p_new_owner_user_id: "u2"
+    });
+    expect(result).toEqual({
+      organizationId: "org1",
+      previousOwnerUserId: "u1",
+      newOwnerUserId: "u2"
+    });
   });
 });
