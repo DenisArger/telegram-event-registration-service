@@ -137,7 +137,7 @@ describe("AttendeesTable", () => {
 
     render(<AttendeesTable eventId="e1" attendees={attendees} />);
     const firstRow = screen.getByTestId(`attendee-row-${firstAttendee.userId}`);
-    fireEvent.click(within(firstRow).getByRole("button", { name: "Color #FFE5E5" }));
+    fireEvent.change(within(firstRow).getByLabelText("Custom color"), { target: { value: "#FFE5E5" } });
     await vi.runAllTimersAsync();
 
     const firstCall = (fetch as any).mock.calls[0];
@@ -169,7 +169,7 @@ describe("AttendeesTable", () => {
     const firstRow = screen.getByTestId(`attendee-row-${firstAttendee.userId}`);
     expect(firstRow.getAttribute("style") ?? "").not.toContain("background-color");
 
-    fireEvent.click(within(firstRow).getByRole("button", { name: "Color #FFE5E5" }));
+    fireEvent.change(within(firstRow).getByLabelText("Custom color"), { target: { value: "#FFE5E5" } });
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const rollbackRow = screen.getByTestId(`attendee-row-${firstAttendee.userId}`);

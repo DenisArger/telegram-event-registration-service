@@ -250,7 +250,7 @@
   }
 
   .attendees-col-color {
-    @apply min-w-[148px];
+    @apply min-w-[96px];
   }
 
   .attendees-col-name {
@@ -295,15 +295,7 @@
   }
 
   .row-color-controls {
-    @apply grid min-w-[140px] gap-1;
-  }
-
-  .row-color-presets {
-    @apply grid grid-cols-6 gap-1;
-  }
-
-  .row-color-preset {
-    @apply h-4 w-4 rounded-sm border border-border p-0;
+    @apply grid min-w-[76px] gap-1;
   }
 
   .row-color-controls input[type="color"] {

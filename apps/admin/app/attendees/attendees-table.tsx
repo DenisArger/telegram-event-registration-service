@@ -18,8 +18,6 @@ interface QuestionColumn {
   prompt: string;
 }
 
-const COLOR_PRESETS = ["#FFE5E5", "#FFF1CC", "#E9FAD8", "#DDF4FF", "#EFE6FF", "#FCE7F3"];
-
 function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
   if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return items;
   const next = [...items];
@@ -265,18 +263,6 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
                   </td>
                   <td className="sticky-col-2">
                     <div className="row-color-controls" onClick={(event) => event.stopPropagation()}>
-                      <div className="row-color-presets">
-                        {COLOR_PRESETS.map((color) => (
-                          <button
-                            key={`${attendee.userId}-${color}`}
-                            type="button"
-                            className="row-color-preset"
-                            style={{ backgroundColor: color }}
-                            onClick={() => handleRowColorChange(attendee.userId, color)}
-                            aria-label={`${ui("attendees_color", locale)} ${color}`}
-                          />
-                        ))}
-                      </div>
                       <input
                         type="color"
                         value={attendee.rowColor ?? "#DDF4FF"}
