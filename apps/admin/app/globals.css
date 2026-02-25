@@ -151,11 +151,11 @@
   }
 
   .attendees-toolbar-switch {
-    @apply flex w-full items-end justify-start md:col-span-2 xl:col-span-1 xl:w-auto xl:justify-end;
+    @apply flex w-full items-end justify-start md:col-span-2 xl:col-span-1;
   }
 
   .attendees-toolbar-controls {
-    @apply flex w-full flex-wrap items-center gap-2 xl:w-auto xl:justify-end;
+    @apply grid w-full gap-2 sm:w-auto 2xl:grid-cols-2;
   }
 
   .inline-field {
@@ -180,7 +180,7 @@
   }
 
   .attendees-view-switch {
-    @apply inline-flex rounded-xl border border-border bg-surface p-1;
+    @apply inline-flex w-fit shrink-0 rounded-xl border border-border bg-surface p-1;
   }
 
   .attendees-view-switch a {
@@ -192,7 +192,7 @@
   }
 
   .attendees-density-switch {
-    @apply inline-flex rounded-xl border border-border bg-surface p-1;
+    @apply inline-flex w-fit shrink-0 rounded-xl border border-border bg-surface p-1;
   }
 
   .attendees-density-switch a {
