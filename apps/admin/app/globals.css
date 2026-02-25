@@ -150,6 +150,10 @@
     @apply md:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_minmax(280px,1fr)_auto] xl:items-end;
   }
 
+  .attendees-panel {
+    @apply mx-auto w-full max-w-[1220px];
+  }
+
   .attendees-toolbar-switch {
     @apply flex w-full items-end justify-start md:col-span-2 xl:col-span-1;
   }
@@ -204,7 +208,8 @@
   }
 
   .attendees-table-wrap {
-    @apply overflow-x-auto rounded-xl border border-border bg-surface;
+    @apply max-w-full overflow-x-scroll overflow-y-hidden rounded-xl border border-border bg-surface;
+    scrollbar-gutter: stable both-edges;
   }
 
   .attendees-table {

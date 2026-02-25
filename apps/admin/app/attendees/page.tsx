@@ -56,7 +56,7 @@ export default async function AttendeesPage({
     <>
       <PageHeader title={ui("attendees", locale)} subtitle={ui("attendees_subtitle", locale)} />
 
-      <Panel className="space-y-4">
+      <Panel className="attendees-panel space-y-4">
         <div className="toolbar-grid attendees-toolbar">
           <OrganizationSelector
             organizations={organizations}
@@ -89,6 +89,13 @@ export default async function AttendeesPage({
         </div>
 
         <h2>{ui("attendees", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
+        {viewMode === "table" ? (
+          <p className="text-xs text-muted">
+            {locale === "ru"
+              ? "Прокрутите таблицу по горизонтали, чтобы увидеть все поля."
+              : "Scroll the table horizontally to see all fields."}
+          </p>
+        ) : null}
         {!selectedEvent ? (
           <EmptyState message={ui("attendees_need_event", locale)} />
         ) : attendees.length === 0 ? (
