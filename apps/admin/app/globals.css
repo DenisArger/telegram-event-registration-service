@@ -146,6 +146,18 @@
     @apply grid gap-3 md:grid-cols-2;
   }
 
+  .attendees-toolbar {
+    @apply md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto] xl:items-end;
+  }
+
+  .attendees-toolbar-switch {
+    @apply flex items-end justify-start xl:justify-end;
+  }
+
+  .attendees-toolbar-controls {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
   .inline-field {
     @apply grid gap-1.5;
   }
@@ -179,20 +191,87 @@
     @apply bg-accent/10 text-text;
   }
 
+  .attendees-density-switch {
+    @apply inline-flex rounded-xl border border-border bg-surface p-1;
+  }
+
+  .attendees-density-switch a {
+    @apply rounded-lg px-3 py-1.5 text-sm no-underline transition;
+  }
+
+  .attendees-density-switch a.active {
+    @apply bg-accent/10 text-text;
+  }
+
   .attendees-table-wrap {
-    @apply overflow-x-auto rounded-xl border border-border;
+    @apply overflow-x-auto rounded-xl border border-border bg-surface;
   }
 
   .attendees-table {
-    @apply min-w-[920px] bg-surface;
+    @apply min-w-[1280px] bg-surface text-sm;
   }
 
   .attendees-table thead th {
-    @apply sticky top-0 z-[1];
+    @apply sticky top-0 z-[2] bg-surface-elevated align-top text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+
+  .attendees-table td {
+    @apply text-sm text-text;
+  }
+
+  .attendees-table.compact th,
+  .attendees-table.compact td {
+    @apply px-2 py-1.5 text-xs;
   }
 
   .attendees-table tbody tr {
     @apply cursor-pointer transition-colors hover:bg-surface-elevated;
+  }
+
+  .attendees-table tbody tr:nth-child(even) {
+    @apply bg-surface/70;
+  }
+
+  .th-clamp {
+    @apply block min-w-[96px] normal-case tracking-normal text-xs text-text;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .attendees-col-drag {
+    @apply min-w-[76px];
+  }
+
+  .attendees-col-color {
+    @apply min-w-[148px];
+  }
+
+  .attendees-col-name {
+    @apply min-w-[170px];
+  }
+
+  .attendees-col-username {
+    @apply min-w-[140px];
+  }
+
+  .sticky-col-1,
+  .sticky-col-2,
+  .sticky-col-3 {
+    @apply sticky z-[1] bg-inherit;
+  }
+
+  .sticky-col-1 {
+    left: 0;
+  }
+
+  .sticky-col-2 {
+    left: 76px;
+  }
+
+  .sticky-col-3 {
+    left: 224px;
   }
 
   .attendees-row-dragging {

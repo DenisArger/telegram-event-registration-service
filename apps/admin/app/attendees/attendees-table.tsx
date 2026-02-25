@@ -10,6 +10,7 @@ interface AttendeesTableProps {
   eventId: string;
   organizationId?: string;
   attendees: AttendeeItem[];
+  density?: "comfortable" | "compact";
 }
 
 interface QuestionColumn {
@@ -36,7 +37,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function AttendeesTable({ eventId, organizationId, attendees }: AttendeesTableProps) {
+export function AttendeesTable({ eventId, organizationId, attendees, density = "comfortable" }: AttendeesTableProps) {
   const locale = getUiLocale();
   const [rows, setRows] = useState<AttendeeItem[]>(attendees);
   const [lastPersistedRows, setLastPersistedRows] = useState<AttendeeItem[]>(attendees);
@@ -216,17 +217,19 @@ export function AttendeesTable({ eventId, organizationId, attendees }: Attendees
     <>
       {message ? <p className={`attendees-order-message ${messageType ?? "info"}`}>{message}</p> : null}
       <div className="attendees-table-wrap">
-        <table className="attendees-table">
+        <table className={`attendees-table${density === "compact" ? " compact" : ""}`}>
           <thead>
             <tr>
-              <th>{ui("attendees_column_drag", locale)}</th>
-              <th>{ui("attendees_color", locale)}</th>
-              <th>{ui("attendees_column_name", locale)}</th>
-              <th>{ui("attendees_column_username", locale)}</th>
+              <th className="attendees-col-drag sticky-col-1">{ui("attendees_column_drag", locale)}</th>
+              <th className="attendees-col-color sticky-col-2">{ui("attendees_color", locale)}</th>
+              <th className="attendees-col-name sticky-col-3">{ui("attendees_column_name", locale)}</th>
+              <th className="attendees-col-username">{ui("attendees_column_username", locale)}</th>
               <th>{ui("attendees_column_status", locale)}</th>
               <th>{ui("attendees_column_checked_in", locale)}</th>
               {columns.map((column) => (
-                <th key={column.id}>{column.prompt}</th>
+                <th key={column.id} title={column.prompt}>
+                  <span className="th-clamp">{column.prompt}</span>
+                </th>
               ))}
             </tr>
           </thead>
@@ -243,7 +246,7 @@ export function AttendeesTable({ eventId, organizationId, attendees }: Attendees
                   className={draggingUserId === attendee.userId ? "attendees-row-dragging" : undefined}
                   style={attendee.rowColor ? { backgroundColor: hexToRgba(attendee.rowColor, 0.3) } : undefined}
                 >
-                  <td>
+                  <td className="sticky-col-1">
                     <button
                       type="button"
                       className="drag-handle"
@@ -260,7 +263,7 @@ export function AttendeesTable({ eventId, organizationId, attendees }: Attendees
                       ⋮⋮
                     </button>
                   </td>
-                  <td>
+                  <td className="sticky-col-2">
                     <div className="row-color-controls" onClick={(event) => event.stopPropagation()}>
                       <div className="row-color-presets">
                         {COLOR_PRESETS.map((color) => (
@@ -289,8 +292,8 @@ export function AttendeesTable({ eventId, organizationId, attendees }: Attendees
                       </button>
                     </div>
                   </td>
-                  <td>{attendee.fullName}</td>
-                  <td>{attendee.username ? `@${attendee.username}` : "-"}</td>
+                  <td className="sticky-col-3">{attendee.fullName}</td>
+                  <td className="attendees-col-username">{attendee.username ? `@${attendee.username}` : "-"}</td>
                   <td>{attendee.status}</td>
                   <td>{attendee.checkedIn ? "yes" : "no"}</td>
                   {columns.map((column) => {

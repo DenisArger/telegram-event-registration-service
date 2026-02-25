@@ -12,7 +12,7 @@ import { Panel } from "../_components/ui/panel";
 export default async function AttendeesPage({
   searchParams
 }: {
-  searchParams?: Promise<{ eventId?: string | string[]; view?: string | string[]; organizationId?: string | string[] }>;
+  searchParams?: Promise<{ eventId?: string | string[]; view?: string | string[]; density?: string | string[]; organizationId?: string | string[] }>;
 }) {
   const locale = getUiLocale();
   const me = await getAuthMe();
@@ -22,18 +22,34 @@ export default async function AttendeesPage({
   const events = await getAdminEvents(selectedOrganizationId ?? undefined);
   const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
   const rawView = Array.isArray(resolvedSearchParams?.view) ? resolvedSearchParams?.view[0] : resolvedSearchParams?.view;
+  const rawDensity = Array.isArray(resolvedSearchParams?.density) ? resolvedSearchParams?.density[0] : resolvedSearchParams?.density;
   const viewMode = rawView === "list" ? "list" : "table";
+  const densityMode = rawDensity === "compact" ? "compact" : "comfortable";
   const selectedEvent = events.find((event) => event.id === selectedEventId) ?? null;
   const attendees = selectedEventId ? await getAttendees(selectedEventId, selectedOrganizationId ?? undefined) : [];
   const listHref = `/attendees?${new URLSearchParams({
     ...(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}),
     ...(selectedEventId ? { eventId: selectedEventId } : {}),
+    ...(densityMode ? { density: densityMode } : {}),
     view: "list"
   }).toString()}`;
   const tableHref = `/attendees?${new URLSearchParams({
     ...(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}),
     ...(selectedEventId ? { eventId: selectedEventId } : {}),
+    ...(densityMode ? { density: densityMode } : {}),
     view: "table"
+  }).toString()}`;
+  const compactHref = `/attendees?${new URLSearchParams({
+    ...(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}),
+    ...(selectedEventId ? { eventId: selectedEventId } : {}),
+    view: viewMode,
+    density: "compact"
+  }).toString()}`;
+  const comfortableHref = `/attendees?${new URLSearchParams({
+    ...(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}),
+    ...(selectedEventId ? { eventId: selectedEventId } : {}),
+    view: viewMode,
+    density: "comfortable"
   }).toString()}`;
 
   return (
@@ -41,7 +57,7 @@ export default async function AttendeesPage({
       <PageHeader title={ui("attendees", locale)} subtitle={ui("attendees_subtitle", locale)} />
 
       <Panel className="space-y-4">
-        <div className="toolbar-grid">
+        <div className="toolbar-grid attendees-toolbar">
           <OrganizationSelector
             organizations={organizations}
             selectedOrganizationId={selectedOrganizationId}
@@ -56,11 +72,18 @@ export default async function AttendeesPage({
             organizationId={selectedOrganizationId}
             view={viewMode}
           />
-        </div>
-
-        <div className="attendees-view-switch" role="tablist" aria-label="view-switch">
-          <a href={listHref} className={viewMode === "list" ? "active" : ""}>{ui("attendees_view_list", locale)}</a>
-          <a href={tableHref} className={viewMode === "table" ? "active" : ""}>{ui("attendees_view_table", locale)}</a>
+          <div className="attendees-toolbar-switch">
+            <div className="attendees-toolbar-controls">
+              <div className="attendees-view-switch" role="tablist" aria-label="view-switch">
+                <a href={listHref} className={viewMode === "list" ? "active" : ""}>{ui("attendees_view_list", locale)}</a>
+                <a href={tableHref} className={viewMode === "table" ? "active" : ""}>{ui("attendees_view_table", locale)}</a>
+              </div>
+              <div className="attendees-density-switch" role="tablist" aria-label="density-switch">
+                <a href={comfortableHref} className={densityMode === "comfortable" ? "active" : ""}>Comfortable</a>
+                <a href={compactHref} className={densityMode === "compact" ? "active" : ""}>Compact</a>
+              </div>
+            </div>
+          </div>
         </div>
 
         <h2>{ui("attendees", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
@@ -79,7 +102,12 @@ export default async function AttendeesPage({
             ))}
           </ul>
         ) : (
-          <AttendeesTable eventId={selectedEventId ?? ""} attendees={attendees} organizationId={selectedOrganizationId ?? ""} />
+          <AttendeesTable
+            eventId={selectedEventId ?? ""}
+            attendees={attendees}
+            organizationId={selectedOrganizationId ?? ""}
+            density={densityMode}
+          />
         )}
       </Panel>
     </>
