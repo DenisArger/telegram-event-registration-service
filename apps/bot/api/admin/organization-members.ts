@@ -27,6 +27,11 @@ function readUserId(req: VercelRequest): string {
   return String(raw ?? "").trim();
 }
 
+function isLastOwnerViolation(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return error.message.includes("last_owner_violation");
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
 
@@ -81,6 +86,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       }
       res.status(200).json({ ok: true });
     } catch (error) {
+      if (isLastOwnerViolation(error)) {
+        sendError(res, 409, ctx.requestId, "last_owner_violation", "Cannot remove the last owner");
+        return;
+      }
       logError("admin_organization_member_delete_failed", { error, requestId: ctx.requestId, organizationId, userId });
       sendError(res, 500, ctx.requestId, "organization_member_delete_failed", "Failed to delete organization member");
     }
@@ -100,6 +109,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const member = await upsertOrganizationMember(db, parsed.data);
     res.status(req.method === "POST" ? 201 : 200).json({ member });
   } catch (error) {
+    if (isLastOwnerViolation(error)) {
+      sendError(res, 409, ctx.requestId, "last_owner_violation", "Cannot demote the last owner");
+      return;
+    }
     logError("admin_organization_member_upsert_failed", {
       error,
       requestId: ctx.requestId,

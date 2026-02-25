@@ -8,6 +8,7 @@ import eventsHandler from "./events";
 import exportHandler from "./export";
 import organizationsHandler from "./organizations";
 import organizationMembersHandler from "./organization-members";
+import organizationTransferOwnershipHandler from "./organization-transfer-ownership";
 import promoteHandler from "./promote";
 import publishHandler from "./publish";
 import statsHandler from "./stats";
@@ -25,6 +26,7 @@ const HANDLERS_BY_ROUTE: Record<string, Handler> = {
   export: exportHandler,
   organizations: organizationsHandler,
   "organization-members": organizationMembersHandler,
+  "organization-transfer-ownership": organizationTransferOwnershipHandler,
   promote: promoteHandler,
   publish: publishHandler,
   stats: statsHandler,

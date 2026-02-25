@@ -51,6 +51,8 @@ Core migrations include:
 - `20260218132000_m1_core.sql`
 - `20260218162000_m6_waitlist_promote.sql`
 - `20260224170000_m15_multi_tenant_organizations.sql`
+- `20260225103000_m16_rls_tenant_hardening.sql`
+- `20260225112000_m17_prevent_last_owner_removal.sql`
 
 ## API
 
@@ -61,6 +63,10 @@ Health/readiness:
 Admin API (selected):
 - `GET /api/admin/organizations`
 - `POST /api/admin/organizations`
+- `GET /api/admin/organization-members?organizationId=<uuid>`
+- `POST /api/admin/organization-members`
+- `PUT /api/admin/organization-members`
+- `DELETE /api/admin/organization-members`
 - `GET /api/admin/events?organizationId=<uuid>`
 - `POST /api/admin/events`
 - `PUT /api/admin/events`

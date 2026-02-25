@@ -242,3 +242,30 @@ export async function removeOrganizationMember(
   if (error) throw error;
   return Boolean(data);
 }
+
+export async function transferOrganizationOwnership(
+  db: SupabaseClient,
+  payload: {
+    organizationId: string;
+    currentOwnerUserId: string;
+    newOwnerUserId: string;
+  }
+): Promise<{
+  organizationId: string;
+  previousOwnerUserId: string;
+  newOwnerUserId: string;
+}> {
+  const { data, error } = await db.rpc("transfer_organization_ownership", {
+    p_organization_id: payload.organizationId,
+    p_current_owner_user_id: payload.currentOwnerUserId,
+    p_new_owner_user_id: payload.newOwnerUserId
+  });
+
+  if (error) throw error;
+
+  return {
+    organizationId: String((data as any).organization_id),
+    previousOwnerUserId: String((data as any).previous_owner_user_id),
+    newOwnerUserId: String((data as any).new_owner_user_id)
+  };
+}

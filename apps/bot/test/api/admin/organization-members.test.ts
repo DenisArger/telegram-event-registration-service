@@ -149,4 +149,45 @@ describe("/api/admin/organization-members", () => {
 
     expect(res.statusCode).toBe(404);
   });
+
+  it("returns 409 when deleting last owner", async () => {
+    mocks.removeOrganizationMember.mockRejectedValueOnce(new Error("last_owner_violation"));
+    const { default: handler } = await import("../../../api/admin/organization-members");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "DELETE",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          organizationId: "11111111-1111-4111-8111-111111111111",
+          userId: "22222222-2222-4222-8222-222222222222"
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  it("returns 409 when demoting last owner", async () => {
+    mocks.upsertOrganizationMember.mockRejectedValueOnce(new Error("last_owner_violation"));
+    const { default: handler } = await import("../../../api/admin/organization-members");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "PUT",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: {
+          organizationId: "11111111-1111-4111-8111-111111111111",
+          userId: "22222222-2222-4222-8222-222222222222",
+          role: "admin"
+        }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(409);
+  });
 });
