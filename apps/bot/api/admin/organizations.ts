@@ -26,7 +26,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   if (req.method === "GET") {
     try {
-      const organizations = await listUserOrganizations(db, ctx.principal.userId);
+      const organizations = await listUserOrganizations(db, ctx.principal.userId, {
+        includeAllForAdmin: ctx.principal.role === "admin"
+      });
       res.status(200).json({ organizations, requestId: ctx.requestId });
     } catch (error) {
       logError("admin_organizations_list_failed", { error, requestId: ctx.requestId });

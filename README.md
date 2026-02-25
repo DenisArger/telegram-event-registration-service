@@ -87,6 +87,7 @@ Admin API (selected):
 - Primary auth: Telegram Login + signed `HttpOnly` cookie session.
 - Email header fallback controlled by `ADMIN_AUTH_ALLOW_EMAIL_FALLBACK` (disable in production).
 - Tenant hard boundary controlled by `ADMIN_REQUIRE_ORG_CONTEXT=true` (recommended).
+- Global admin behavior: users with session role `admin` can view and access all organizations.
 - Secret data in logs is redacted by shared logger.
 
 ## Environment variables

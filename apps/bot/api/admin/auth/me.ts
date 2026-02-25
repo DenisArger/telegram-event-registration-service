@@ -21,7 +21,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
-    const organizations = await listUserOrganizations(db, principal.userId);
+    const organizations = await listUserOrganizations(db, principal.userId, {
+      includeAllForAdmin: principal.role === "admin"
+    });
     res.status(200).json({
       authenticated: true,
       role: principal.role,

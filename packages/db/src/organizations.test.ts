@@ -74,6 +74,32 @@ describe("organizations data layer", () => {
     );
   });
 
+  it("lists all organizations for global admin mode", async () => {
+    const order = vi.fn(async () => ({
+      data: [
+        {
+          id: "org1",
+          name: "Org 1",
+          owner_user_id: "u1",
+          created_at: "2026-02-24T12:00:00Z"
+        },
+        {
+          id: "org2",
+          name: "Org 2",
+          owner_user_id: "u2",
+          created_at: "2026-02-24T13:00:00Z"
+        }
+      ],
+      error: null
+    }));
+    const select = vi.fn(() => ({ order }));
+    const db = { from: vi.fn(() => ({ select })) } as any;
+
+    const result = await listUserOrganizations(db, "admin-user", { includeAllForAdmin: true });
+    expect(result).toHaveLength(2);
+    expect(result[0]?.role).toBe("owner");
+  });
+
   it("checks org and event scope access", async () => {
     const eqOrg = vi.fn().mockReturnThis();
     const inOrg = vi.fn(async () => ({ count: 1, error: null }));

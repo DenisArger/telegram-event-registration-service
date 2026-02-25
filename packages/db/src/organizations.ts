@@ -81,8 +81,23 @@ export async function createOrganization(
 
 export async function listUserOrganizations(
   db: SupabaseClient,
-  userId: string
+  userId: string,
+  options?: { includeAllForAdmin?: boolean }
 ): Promise<Array<OrganizationEntity & { role: OrganizationMemberRole }>> {
+  if (options?.includeAllForAdmin) {
+    const { data, error } = await db
+      .from("organizations")
+      .select("id,name,owner_user_id,created_at")
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    return (data ?? []).map((row: any) => ({
+      ...mapOrganization(row as OrganizationRow),
+      role: "owner" as const
+    }));
+  }
+
   const { data, error } = await db
     .from("organization_members")
     .select(

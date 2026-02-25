@@ -48,6 +48,10 @@ export async function requireOrganizationAccess(
     return true;
   }
 
+  if (ctx.principal.role === "admin") {
+    return true;
+  }
+
   const hasAccess = await assertUserOrganizationAccess(db, ctx.principal.userId, organizationId);
   if (!hasAccess) {
     sendError(res, 403, ctx.requestId, "forbidden", "No access to organization");
