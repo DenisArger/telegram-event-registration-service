@@ -13,9 +13,10 @@ interface EventSelectorProps {
   basePath: string;
   organizationId?: string | null;
   view?: string | null;
+  density?: string | null;
 }
 
-export function EventSelector({ events, selectedEventId, basePath, organizationId, view }: EventSelectorProps) {
+export function EventSelector({ events, selectedEventId, basePath, organizationId, view, density }: EventSelectorProps) {
   const router = useRouter();
   const locale = getUiLocale();
 
@@ -32,6 +33,7 @@ export function EventSelector({ events, selectedEventId, basePath, organizationI
           params.set("eventId", e.target.value);
           if (organizationId) params.set("organizationId", organizationId);
           if (view) params.set("view", view);
+          if (density) params.set("density", density);
           router.push(`${basePath}?${params.toString()}`);
         }}
       >

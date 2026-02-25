@@ -30,7 +30,8 @@ export function ThemeToggle() {
 
   return (
     <Button type="button" variant="ghost" onClick={toggleTheme} aria-label="Toggle theme">
-      {theme === "light" ? "Dark" : "Light"}
+      <span aria-hidden="true">{theme === "light" ? "🌙" : "☀️"}</span>
+      <span className="ml-1">{theme === "light" ? "Dark" : "Light"}</span>
     </Button>
   );
 }

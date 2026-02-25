@@ -64,6 +64,7 @@ export default async function AttendeesPage({
             basePath="/attendees"
             eventId={selectedEventId}
             view={viewMode}
+            density={densityMode}
           />
           <EventSelector
             events={events}
@@ -71,6 +72,7 @@ export default async function AttendeesPage({
             basePath="/attendees"
             organizationId={selectedOrganizationId}
             view={viewMode}
+            density={densityMode}
           />
           <div className="attendees-toolbar-switch">
             <div className="attendees-toolbar-controls">

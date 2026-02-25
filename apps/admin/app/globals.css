@@ -57,7 +57,7 @@
   }
 
   body {
-    @apply bg-bg text-text antialiased;
+    @apply overflow-x-hidden bg-bg text-text antialiased;
     font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   }
 
@@ -115,7 +115,7 @@
 
 @layer components {
   .page-shell {
-    @apply min-h-screen;
+    @apply min-h-screen overflow-x-hidden;
   }
 
   .page-content {
@@ -147,15 +147,15 @@
   }
 
   .attendees-toolbar {
-    @apply md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto] xl:items-end;
+    @apply md:grid-cols-2 xl:grid-cols-[minmax(280px,1fr)_minmax(280px,1fr)_auto] xl:items-end;
   }
 
   .attendees-toolbar-switch {
-    @apply flex items-end justify-start xl:justify-end;
+    @apply flex w-full items-end justify-start md:col-span-2 xl:col-span-1 xl:w-auto xl:justify-end;
   }
 
   .attendees-toolbar-controls {
-    @apply flex flex-wrap items-center gap-2;
+    @apply flex w-full flex-wrap items-center gap-2 xl:w-auto xl:justify-end;
   }
 
   .inline-field {
@@ -184,7 +184,7 @@
   }
 
   .attendees-view-switch a {
-    @apply rounded-lg px-3 py-1.5 text-sm no-underline transition;
+    @apply rounded-lg px-2.5 py-1.5 text-xs no-underline transition sm:text-sm;
   }
 
   .attendees-view-switch a.active {
@@ -196,7 +196,7 @@
   }
 
   .attendees-density-switch a {
-    @apply rounded-lg px-3 py-1.5 text-sm no-underline transition;
+    @apply rounded-lg px-2.5 py-1.5 text-xs no-underline transition sm:text-sm;
   }
 
   .attendees-density-switch a.active {
@@ -208,7 +208,7 @@
   }
 
   .attendees-table {
-    @apply min-w-[1280px] bg-surface text-sm;
+    @apply min-w-[1100px] bg-surface text-sm;
   }
 
   .attendees-table thead th {
@@ -259,7 +259,7 @@
   .sticky-col-1,
   .sticky-col-2,
   .sticky-col-3 {
-    @apply sticky z-[1] bg-inherit;
+    @apply sticky z-[1] bg-surface;
   }
 
   .sticky-col-1 {
@@ -272,6 +272,12 @@
 
   .sticky-col-3 {
     left: 224px;
+  }
+
+  .attendees-table tbody tr:hover .sticky-col-1,
+  .attendees-table tbody tr:hover .sticky-col-2,
+  .attendees-table tbody tr:hover .sticky-col-3 {
+    @apply bg-surface-elevated;
   }
 
   .attendees-row-dragging {

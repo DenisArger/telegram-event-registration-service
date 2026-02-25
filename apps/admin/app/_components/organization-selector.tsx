@@ -13,6 +13,7 @@ interface OrganizationSelectorProps {
   basePath: string;
   eventId?: string | null;
   view?: string | null;
+  density?: string | null;
 }
 
 export function OrganizationSelector({
@@ -20,7 +21,8 @@ export function OrganizationSelector({
   selectedOrganizationId,
   basePath,
   eventId,
-  view
+  view,
+  density
 }: OrganizationSelectorProps) {
   const router = useRouter();
   const locale = getUiLocale();
@@ -39,6 +41,7 @@ export function OrganizationSelector({
           params.set("organizationId", e.target.value);
           if (eventId) params.set("eventId", eventId);
           if (view) params.set("view", view);
+          if (density) params.set("density", density);
           router.push(`${basePath}?${params.toString()}`);
         }}
       >
