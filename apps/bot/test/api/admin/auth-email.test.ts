@@ -34,10 +34,9 @@ describe("POST /api/admin/auth/email", () => {
 
     expect(mocks.signInWithOtp).toHaveBeenCalledWith({
       email: "admin@example.com",
-      options: { shouldCreateUser: false }
+      options: { shouldCreateUser: true }
     });
     expect(res.statusCode).toBe(200);
     expect(res.payload).toEqual({ ok: true });
   });
 });
-

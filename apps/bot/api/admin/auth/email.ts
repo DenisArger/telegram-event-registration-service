@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     const { error } = await authClient.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: false
+        shouldCreateUser: true
       }
     });
 
@@ -56,4 +56,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     sendError(res, 500, "n/a", "admin_auth_failed", "Failed to start email auth");
   }
 }
-
