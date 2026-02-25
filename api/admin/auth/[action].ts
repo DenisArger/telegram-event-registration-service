@@ -19,6 +19,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const mod = await import("../../../apps/bot/api/admin/auth/dev-login.js");
       return mod.default(req, res);
     }
+    if (action === "email") {
+      const mod = await import("../../../apps/bot/api/admin/auth/email.js");
+      return mod.default(req, res);
+    }
+    if (action === "verify") {
+      const mod = await import("../../../apps/bot/api/admin/auth/verify.js");
+      return mod.default(req, res);
+    }
     res.status(404).json({ message: "Not found" });
   } catch (error) {
     console.error("admin_auth_proxy_failed", { action, error });
