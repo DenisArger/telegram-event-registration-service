@@ -4,6 +4,7 @@ import { getAuthMe, getOrganizationMembers } from "../_lib/admin-api";
 import { resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 import { OrganizationMembersManager } from "./organization-members-manager";
+import { OrganizationSettingsManager } from "./organization-settings-manager";
 
 export default async function OrganizationsPage({
   searchParams
@@ -31,6 +32,11 @@ export default async function OrganizationsPage({
           basePath="/organizations"
         />
       </section>
+
+      <OrganizationSettingsManager
+        organizations={organizations}
+        selectedOrganizationId={selectedOrganizationId}
+      />
 
       {selectedOrganizationId ? (
         <OrganizationMembersManager

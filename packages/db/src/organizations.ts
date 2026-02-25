@@ -79,6 +79,35 @@ export async function createOrganization(
   return mapOrganization(data as OrganizationRow);
 }
 
+export async function updateOrganization(
+  db: SupabaseClient,
+  payload: {
+    organizationId: string;
+    name?: string;
+    telegramBotTokenEncrypted?: string | null;
+  }
+): Promise<OrganizationEntity | null> {
+  const updates: Record<string, unknown> = {};
+  if (typeof payload.name === "string") updates.name = payload.name;
+  if (payload.telegramBotTokenEncrypted !== undefined) {
+    updates.telegram_bot_token_encrypted = payload.telegramBotTokenEncrypted;
+  }
+  if (Object.keys(updates).length === 0) {
+    throw new Error("organization_update_empty");
+  }
+
+  const { data, error } = await db
+    .from("organizations")
+    .update(updates)
+    .eq("id", payload.organizationId)
+    .select("id,name,owner_user_id,created_at")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+  return mapOrganization(data as OrganizationRow);
+}
+
 export async function listUserOrganizations(
   db: SupabaseClient,
   userId: string,

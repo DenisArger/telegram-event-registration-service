@@ -7,6 +7,7 @@ import {
   listUserOrganizations,
   removeOrganizationMember,
   transferOrganizationOwnership,
+  updateOrganization,
   upsertOrganizationMember
 } from "./organizations";
 
@@ -227,5 +228,23 @@ describe("organizations data layer", () => {
       previousOwnerUserId: "u1",
       newOwnerUserId: "u2"
     });
+  });
+
+  it("updates organization fields", async () => {
+    const maybeSingle = vi.fn(async () => ({
+      data: {
+        id: "org1",
+        name: "Org Renamed",
+        owner_user_id: "u1",
+        created_at: "2026-02-24T12:00:00Z"
+      },
+      error: null
+    }));
+    const eq = vi.fn(() => ({ select: vi.fn(() => ({ maybeSingle })) }));
+    const update = vi.fn(() => ({ eq }));
+    const db = { from: vi.fn(() => ({ update })) } as any;
+
+    const result = await updateOrganization(db, { organizationId: "org1", name: "Org Renamed" });
+    expect(result?.name).toBe("Org Renamed");
   });
 });

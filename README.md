@@ -65,6 +65,7 @@ Health/readiness:
 Admin API (selected):
 - `GET /api/admin/organizations`
 - `POST /api/admin/organizations`
+- `PUT /api/admin/organizations`
 - `GET /api/admin/organization-members?organizationId=<uuid>`
 - `POST /api/admin/organization-members`
 - `PUT /api/admin/organization-members`

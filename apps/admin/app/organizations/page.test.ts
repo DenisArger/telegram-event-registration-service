@@ -7,6 +7,10 @@ vi.mock("../_components/organization-selector", () => ({
 vi.mock("./organization-members-manager", () => ({
   OrganizationMembersManager: ({ organizationId }: { organizationId: string }) => `members:${organizationId}`
 }));
+vi.mock("./organization-settings-manager", () => ({
+  OrganizationSettingsManager: ({ selectedOrganizationId }: { selectedOrganizationId: string | null }) =>
+    `settings:${selectedOrganizationId ?? "none"}`
+}));
 vi.mock("../_lib/admin-api", () => ({
   getAuthMe: vi.fn(async () => ({
     authenticated: true,
@@ -25,6 +29,7 @@ describe("OrganizationsPage", () => {
     } as any));
 
     expect(html).toContain("org-selector");
+    expect(html).toContain("settings:org1");
     expect(html).toContain("members:org1");
   });
 });
