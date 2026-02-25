@@ -28,7 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       authenticated: true,
       role: principal.role,
       userId: principal.userId,
-      telegramId: principal.telegramId,
+      authUserId: principal.authUserId,
+      telegramId: principal.telegramId ?? null,
       organizations
     });
   } catch (error) {
@@ -37,7 +38,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       authenticated: true,
       role: principal.role,
       userId: principal.userId,
-      telegramId: principal.telegramId,
+      authUserId: principal.authUserId,
+      telegramId: principal.telegramId ?? null,
       organizations: []
     });
   }

@@ -67,7 +67,7 @@ export function requireAdminSession(
     if (isEmailFallbackEnabled(envSource) && isAllowedByHeaderFallback(req, envSource)) {
       const fallbackPrincipal: AdminPrincipal = {
         userId: String(envSource.ADMIN_DEFAULT_CREATOR_ID ?? "").trim() || "legacy-email-fallback",
-        telegramId: 0,
+        authUserId: "legacy-email-fallback",
         role: "admin",
         iat: 0,
         exp: Number.MAX_SAFE_INTEGER

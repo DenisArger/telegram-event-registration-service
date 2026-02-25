@@ -1,28 +1,54 @@
 # telegram-event-registration-service
 
-Monorepo for Telegram event registration SaaS: bot runtime, admin panel, shared DB/data layer, and Supabase SQL migrations.
+## English
 
-## Requirements
+## Problem
+Event organizers lose registrations in Telegram chats and need auditable participant data, capacity control, and admin tools.
 
+## Solution
+This monorepo implements an event registration service: Telegram bot + admin panel + Supabase data layer with export and lifecycle operations.
+
+## Tech Stack
 - Node.js 20+
-- Yarn 1.22+
-- Docker (optional, for local compose)
+- TypeScript
+- PostgreSQL / Supabase
+- Telegram Bot API (`telegraf`)
+- Next.js (admin UI)
+- Docker Compose
 
 ## Architecture
+Top-level structure:
+```text
+apps/
+  bot/
+  admin/
+packages/
+  db/
+  shared/
+supabase/migrations/
+api/
+docker-compose.yml
+```
 
-- `apps/bot`: Vercel-style API routes for Telegram webhook and admin API
-- `apps/admin`: Next.js admin UI
-- `packages/db`: Supabase data-access layer
-- `packages/shared`: contracts, env validation, logger
-- `supabase/migrations`: schema, constraints, and transactional SQL/RPC
+```mermaid
+flowchart TD
+  A[Telegram User] --> B[apps/bot runtime]
+  B --> C[packages/db]
+  C --> D[Supabase/Postgres]
+  E[Admin UI apps/admin] --> F[Admin API routes]
+  F --> C
+  F --> G[CSV export/lifecycle endpoints]
+```
 
-Multi-tenant model:
-- `organizations`
-- `organization_members`
-- `events.organization_id` (tenant boundary)
+## Features
+- Event registration through Telegram bot
+- Data validation in API/domain flows
+- Capacity limit with waitlist/promote mechanics
+- Admin commands and event lifecycle (`publish`, `close`, `checkin`, `promote`)
+- CSV export via admin endpoint
 
-## Quick start
-
+## How to Run
+Local:
 ```bash
 nvm install
 nvm use
@@ -31,88 +57,85 @@ cp .env.example .env
 yarn dev
 ```
 
-Run quality gates:
-
+Quality checks:
 ```bash
 yarn lint
 yarn typecheck
 yarn test
 ```
 
-## Database
-
-Apply SQL migrations with Supabase CLI:
-
-```bash
-supabase db push
-```
-
-Core migrations include:
-- `20260218132000_m1_core.sql`
-- `20260218162000_m6_waitlist_promote.sql`
-- `20260224170000_m15_multi_tenant_organizations.sql`
-- `20260225103000_m16_rls_tenant_hardening.sql`
-- `20260225112000_m17_prevent_last_owner_removal.sql`
-- `20260225121000_m18_transfer_organization_ownership.sql`
-- `20260225133000_m19_roles_to_enums.sql`
-
-## API
-
-Health/readiness:
-- `GET /api/health` (liveness)
-- `GET /api/ready` (Supabase connectivity)
-
-Admin API (selected):
-- `GET /api/admin/organizations`
-- `POST /api/admin/organizations`
-- `PUT /api/admin/organizations`
-- `GET /api/admin/organization-members?organizationId=<uuid>`
-- `POST /api/admin/organization-members`
-- `PUT /api/admin/organization-members`
-- `DELETE /api/admin/organization-members`
-- `POST /api/admin/organization-transfer-ownership`
-- `GET /api/admin/events?organizationId=<uuid>`
-- `POST /api/admin/events`
-- `PUT /api/admin/events`
-- `GET /api/admin/attendees?organizationId=<uuid>&eventId=<uuid>`
-- `GET /api/admin/waitlist?organizationId=<uuid>&eventId=<uuid>`
-- `GET /api/admin/stats?organizationId=<uuid>&eventId=<uuid>`
-- `GET /api/admin/export?organizationId=<uuid>&eventId=<uuid>`
-- `POST /api/admin/publish`
-- `POST /api/admin/close`
-- `POST /api/admin/promote`
-- `POST /api/admin/checkin`
-- `POST /api/admin/ai-draft`
-
-## Auth and Tenant isolation
-
-- Primary auth: Telegram Login + signed `HttpOnly` cookie session.
-- Email header fallback controlled by `ADMIN_AUTH_ALLOW_EMAIL_FALLBACK` (disable in production).
-- Tenant hard boundary controlled by `ADMIN_REQUIRE_ORG_CONTEXT=true` (recommended).
-- Global admin behavior: users with session role `admin` can view and access all organizations.
-- Secret data in logs is redacted by shared logger.
-
-## Environment variables
-
-See `.env.example` for full list. Important variables:
-- `ADMIN_AUTH_ALLOW_EMAIL_FALLBACK`
-- `ADMIN_REQUIRE_ORG_CONTEXT`
-- `TOKEN_ENCRYPTION_KEY`
-- `ADMIN_SESSION_SECRET`
-
-## Docker
-
+Docker:
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-Services:
-- bot: `http://localhost:3000`
-- admin: `http://localhost:3001`
-- postgres: `localhost:5432`
+## Русский
 
-## Notes
+## Проблема
+Организаторы мероприятий теряют регистрации в Telegram-чатах и нуждаются в прозрачном учете участников, контроле мест и админ-инструментах.
 
-- `organizationId` is required for admin event-scoped endpoints when `ADMIN_REQUIRE_ORG_CONTEXT=true`.
-- CSV export and lifecycle operations are validated inside organization scope.
+## Решение
+Этот монорепозиторий реализует сервис регистрации на мероприятия: Telegram-бот + админ-панель + слой данных Supabase с экспортом и lifecycle-операциями.
+
+## Стек
+- Node.js 20+
+- TypeScript
+- PostgreSQL / Supabase
+- Telegram Bot API (`telegraf`)
+- Next.js (админ-интерфейс)
+- Docker Compose
+
+## Архитектура
+Верхнеуровневая структура:
+```text
+apps/
+  bot/
+  admin/
+packages/
+  db/
+  shared/
+supabase/migrations/
+api/
+docker-compose.yml
+```
+
+```mermaid
+flowchart TD
+  A[Пользователь Telegram] --> B[apps/bot runtime]
+  B --> C[packages/db]
+  C --> D[Supabase/Postgres]
+  E[Админ UI apps/admin] --> F[Admin API routes]
+  F --> C
+  F --> G[CSV export/lifecycle endpoints]
+```
+
+## Возможности
+- Регистрация участников через Telegram-бота
+- Валидация данных в API и доменной логике
+- Ограничение мест с waitlist/promote
+- Админ-команды и lifecycle событий (`publish`, `close`, `checkin`, `promote`)
+- Экспорт в CSV через admin endpoint
+
+## Как запустить
+Локально:
+```bash
+nvm install
+nvm use
+yarn install
+cp .env.example .env
+yarn dev
+```
+
+Проверка качества:
+```bash
+yarn lint
+yarn typecheck
+yarn test
+```
+
+Через Docker:
+```bash
+cp .env.example .env
+docker compose up --build
+```

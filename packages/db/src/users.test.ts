@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { getUserByTelegramId, upsertTelegramUser } from "./users";
+import {
+  getUserByAuthUserId,
+  getUserByEmail,
+  getUserByTelegramId,
+  linkUserToAuthUser,
+  upsertTelegramUser
+} from "./users";
 
 describe("upsertTelegramUser", () => {
   it("upserts user and maps id/role", async () => {
@@ -62,5 +68,85 @@ describe("upsertTelegramUser", () => {
 
     const result = await getUserByTelegramId(db, 7);
     expect(result).toBeNull();
+  });
+
+  it("loads user by auth user id", async () => {
+    const maybeSingle = vi.fn(async () => ({
+      data: { id: "u3", role: "organizer", auth_user_id: "a1", email: "admin@example.com" },
+      error: null
+    }));
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    const db = { from } as any;
+
+    const result = await getUserByAuthUserId(db, "a1");
+
+    expect(result).toEqual({
+      id: "u3",
+      role: "organizer",
+      authUserId: "a1",
+      email: "admin@example.com"
+    });
+  });
+
+  it("normalizes email when searching user by email", async () => {
+    const maybeSingle = vi.fn(async () => ({
+      data: { id: "u4", role: "admin", auth_user_id: "a2", email: "owner@example.com" },
+      error: null
+    }));
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    const db = { from } as any;
+
+    const result = await getUserByEmail(db, "  Owner@Example.com  ");
+
+    expect(eq).toHaveBeenCalledWith("email", "owner@example.com");
+    expect(result).toEqual({
+      id: "u4",
+      role: "admin",
+      authUserId: "a2",
+      email: "owner@example.com"
+    });
+  });
+
+  it("returns null for empty email search", async () => {
+    const from = vi.fn();
+    const db = { from } as any;
+
+    const result = await getUserByEmail(db, "   ");
+    expect(result).toBeNull();
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it("links user to auth user id with normalized email", async () => {
+    const single = vi.fn(async () => ({
+      data: { id: "u5", role: "admin", auth_user_id: "a5", email: "ops@example.com" },
+      error: null
+    }));
+    const select = vi.fn(() => ({ single }));
+    const eq = vi.fn(() => ({ select }));
+    const update = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ update }));
+    const db = { from } as any;
+
+    const result = await linkUserToAuthUser(db, {
+      userId: "u5",
+      authUserId: "a5",
+      email: "  Ops@Example.com "
+    });
+
+    expect(update).toHaveBeenCalledWith({
+      auth_user_id: "a5",
+      email: "ops@example.com"
+    });
+    expect(eq).toHaveBeenCalledWith("id", "u5");
+    expect(result).toEqual({
+      id: "u5",
+      role: "admin",
+      authUserId: "a5",
+      email: "ops@example.com"
+    });
   });
 });

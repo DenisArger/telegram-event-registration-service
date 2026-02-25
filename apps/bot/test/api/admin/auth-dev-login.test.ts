@@ -22,11 +22,20 @@ describe("POST /api/admin/auth/dev-login", () => {
     vi.clearAllMocks();
     setRequiredEnv();
     process.env.ADMIN_SESSION_SECRET = "session-secret";
+    process.env.ADMIN_AUTH_TELEGRAM_ENABLED = "true";
     process.env.ADMIN_UNSAFE_LOGIN_ENABLED = "true";
   });
 
   it("returns 403 when unsafe login disabled", async () => {
     process.env.ADMIN_UNSAFE_LOGIN_ENABLED = "false";
+    const { default: handler } = await import("../../../api/admin/auth/dev-login");
+    const res = createRes();
+    await handler({ method: "POST", headers: {}, body: { telegramId: "1" } } as any, res as any);
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 403 when telegram auth is disabled", async () => {
+    process.env.ADMIN_AUTH_TELEGRAM_ENABLED = "false";
     const { default: handler } = await import("../../../api/admin/auth/dev-login");
     const res = createRes();
     await handler({ method: "POST", headers: {}, body: { telegramId: "1" } } as any, res as any);

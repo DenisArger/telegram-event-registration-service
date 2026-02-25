@@ -50,6 +50,7 @@ describe("isAdminRequest", () => {
     const token = createSessionToken(
       {
         userId: "u1",
+        authUserId: "auth-u1",
         telegramId: 123,
         role: "admin",
         iat: Math.floor(Date.now() / 1000),

@@ -8,11 +8,20 @@ import { sendError } from "../../../src/adminApi.js";
 
 const db = createServiceClient(process.env);
 
+function isTelegramAuthEnabled(): boolean {
+  return String(process.env.ADMIN_AUTH_TELEGRAM_ENABLED ?? "true").trim().toLowerCase() !== "false";
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
 
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
+    return;
+  }
+
+  if (!isTelegramAuthEnabled()) {
+    sendError(res, 403, "n/a", "telegram_auth_disabled", "telegram_auth_disabled");
     return;
   }
 
@@ -41,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     setAdminSession(
       res,
-      { userId: user.id, telegramId: user.telegramId, role: user.role },
+      { userId: user.id, authUserId: user.id, telegramId: user.telegramId, role: user.role },
       process.env
     );
 

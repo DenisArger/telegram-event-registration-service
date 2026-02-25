@@ -6,7 +6,8 @@ export const ADMIN_SESSION_COOKIE = "admin_session";
 
 export interface AdminPrincipal {
   userId: string;
-  telegramId: number;
+  authUserId: string;
+  telegramId?: number;
   role: UserRole;
   iat: number;
   exp: number;
@@ -77,7 +78,10 @@ export function verifySessionToken(
 
   if (!parsed || typeof parsed !== "object") return null;
   if (!parsed.userId || typeof parsed.userId !== "string") return null;
-  if (!Number.isInteger(parsed.telegramId) || parsed.telegramId <= 0) return null;
+  if (!parsed.authUserId || typeof parsed.authUserId !== "string") return null;
+  if (parsed.telegramId !== undefined && (!Number.isInteger(parsed.telegramId) || parsed.telegramId <= 0)) {
+    return null;
+  }
   if (parsed.role !== "admin" && parsed.role !== "organizer") return null;
   if (!Number.isInteger(parsed.iat) || !Number.isInteger(parsed.exp)) return null;
   if (parsed.exp <= Math.floor(nowMs / 1000)) return null;
@@ -105,7 +109,7 @@ export function getAdminPrincipal(req: VercelRequest, envSource: Record<string, 
 
 export function setAdminSession(
   res: VercelResponse,
-  payload: { userId: string; telegramId: number; role: UserRole },
+  payload: { userId: string; authUserId: string; role: UserRole; telegramId?: number },
   envSource: Record<string, string | undefined>,
   nowMs = Date.now()
 ): AdminPrincipal {
@@ -113,6 +117,7 @@ export function setAdminSession(
   const iat = Math.floor(nowMs / 1000);
   const principal: AdminPrincipal = {
     userId: payload.userId,
+    authUserId: payload.authUserId,
     telegramId: payload.telegramId,
     role: payload.role,
     iat,

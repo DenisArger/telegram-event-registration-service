@@ -1,0 +1,59 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { createClient } from "@supabase/supabase-js";
+import { logError } from "@event/shared";
+import { applyCors } from "../../../src/cors.js";
+import { sendError } from "../../../src/adminApi.js";
+
+interface EmailAuthPayload {
+  email?: unknown;
+}
+
+function getAnonAuthClient(envSource: Record<string, string | undefined>) {
+  const url = String(envSource.SUPABASE_URL ?? "").trim();
+  const anonKey = String(envSource.SUPABASE_ANON_KEY ?? "").trim();
+  if (!url || !anonKey) return null;
+  return createClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  if (applyCors(req, res)) return;
+
+  if (req.method !== "POST") {
+    res.status(405).json({ message: "Method not allowed" });
+    return;
+  }
+
+  const authClient = getAnonAuthClient(process.env);
+  if (!authClient) {
+    sendError(res, 500, "n/a", "supabase_auth_not_configured", "Supabase auth is not configured");
+    return;
+  }
+
+  const email = String((req.body as EmailAuthPayload | undefined)?.email ?? "").trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    sendError(res, 400, "n/a", "invalid_payload", "email must be valid");
+    return;
+  }
+
+  try {
+    const { error } = await authClient.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false
+      }
+    });
+
+    if (error) {
+      sendError(res, 401, "n/a", "otp_send_failed", "otp_send_failed");
+      return;
+    }
+
+    res.status(200).json({ ok: true });
+  } catch (error) {
+    logError("admin_auth_email_failed", { error, email });
+    sendError(res, 500, "n/a", "admin_auth_failed", "Failed to start email auth");
+  }
+}
+

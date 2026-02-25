@@ -22,6 +22,7 @@ describe("POST /api/admin/auth/telegram", () => {
     vi.clearAllMocks();
     setRequiredEnv();
     process.env.ADMIN_SESSION_SECRET = "session-secret";
+    process.env.ADMIN_AUTH_TELEGRAM_ENABLED = "true";
     process.env.NODE_ENV = "test";
   });
 
@@ -37,6 +38,14 @@ describe("POST /api/admin/auth/telegram", () => {
     const res = createRes();
     await handler({ method: "POST", headers: {}, body: {} } as any, res as any);
     expect(res.statusCode).toBe(401);
+  });
+
+  it("returns 403 when telegram auth is disabled", async () => {
+    process.env.ADMIN_AUTH_TELEGRAM_ENABLED = "false";
+    const { default: handler } = await import("../../../api/admin/auth/telegram");
+    const res = createRes();
+    await handler({ method: "POST", headers: {}, body: {} } as any, res as any);
+    expect(res.statusCode).toBe(403);
   });
 
   it("returns 200 and sets cookie for allowed role", async () => {

@@ -1,22 +1,17 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-
-declare global {
-  interface Window {
-    onTelegramAdminAuth?: (user: Record<string, unknown>) => void;
-  }
-}
 
 export default function LoginPage() {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
-  const [devTelegramId, setDevTelegramId] = useState("");
-  const [devLoading, setDevLoading] = useState(false);
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME;
-  const unsafeLoginEnabled = process.env.NEXT_PUBLIC_ADMIN_UNSAFE_LOGIN_ENABLED === "true";
+  const [email, setEmail] = useState("");
+  const [otpToken, setOtpToken] = useState("");
+  const [otpStep, setOtpStep] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   const getErrorMessage = useCallback(async (response: Response): Promise<string> => {
     const fallback = ru ? "Ошибка входа." : "Login failed.";
@@ -36,63 +31,50 @@ export default function LoginPage() {
     return trimmed.slice(0, 200);
   }, [ru]);
 
-  useEffect(() => {
-    if (!botUsername) {
-      setMessage(ru ? "Не задан NEXT_PUBLIC_TELEGRAM_BOT_USERNAME." : "Missing NEXT_PUBLIC_TELEGRAM_BOT_USERNAME.");
+  async function submitEmail() {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setMessage(ru ? "Введите корректный email." : "Enter a valid email.");
       return;
     }
 
-    window.onTelegramAdminAuth = async (user) => {
-      setMessage(null);
-      try {
-        const response = await fetch("/api/admin/auth/telegram", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(user)
-        });
-        if (!response.ok) {
-          setMessage(await getErrorMessage(response));
-          return;
-        }
-        router.push("/");
-        router.refresh();
-      } catch {
-        setMessage(ru ? "Сетевая ошибка." : "Network error.");
-      }
-    };
-
-    const container = document.getElementById("telegram-login-container");
-    if (!container) return;
-    container.innerHTML = "";
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute("data-telegram-login", botUsername);
-    script.setAttribute("data-size", "large");
-    script.setAttribute("data-radius", "8");
-    script.setAttribute("data-userpic", "false");
-    script.setAttribute("data-request-access", "write");
-    script.setAttribute("data-onauth", "onTelegramAdminAuth(user)");
-    container.appendChild(script);
-  }, [botUsername, getErrorMessage, router, ru]);
-
-  async function submitUnsafeLogin() {
-    const normalized = devTelegramId.trim();
-    if (!normalized || !/^\d+$/.test(normalized)) {
-      setMessage(ru ? "Введите корректный telegram_id (число)." : "Enter a valid numeric telegram_id.");
-      return;
-    }
-
-    setDevLoading(true);
+    setSending(true);
     setMessage(null);
     try {
-      const response = await fetch("/api/admin/auth/dev-login", {
+      const response = await fetch("/api/admin/auth/email", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail })
+      });
+      if (!response.ok) {
+        setMessage(await getErrorMessage(response));
+        return;
+      }
+      setOtpStep(true);
+      setMessage(ru ? "Код отправлен на email." : "OTP code has been sent to your email.");
+    } catch {
+      setMessage(ru ? "Сетевая ошибка." : "Network error.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function submitOtp() {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedToken = otpToken.trim();
+    if (!normalizedEmail || !normalizedEmail.includes("@") || !normalizedToken) {
+      setMessage(ru ? "Введите email и код из письма." : "Enter your email and OTP code.");
+      return;
+    }
+
+    setVerifying(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/admin/auth/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ telegramId: normalized })
+        body: JSON.stringify({ email: normalizedEmail, token: normalizedToken })
       });
       if (!response.ok) {
         setMessage(await getErrorMessage(response));
@@ -103,7 +85,7 @@ export default function LoginPage() {
     } catch {
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
-      setDevLoading(false);
+      setVerifying(false);
     }
   }
 
@@ -111,25 +93,41 @@ export default function LoginPage() {
     <div className="section-grid">
       <section className="card">
         <h1>{ru ? "Вход в админку" : "Admin login"}</h1>
-        <p>{ru ? "Войдите через Telegram, чтобы открыть панель управления." : "Sign in with Telegram to access admin panel."}</p>
-        <div id="telegram-login-container" />
-        {unsafeLoginEnabled ? (
-          <div style={{ marginTop: 16, display: "grid", gap: 8, maxWidth: 420 }}>
-            <p style={{ margin: 0 }}>
-              {ru
-                ? "Dev-вход: введите telegram_id пользователя (должен иметь роль organizer/admin)."
-                : "Dev login: enter user telegram_id (must have organizer/admin role)."}
-            </p>
-            <input
-              placeholder="telegram_id"
-              value={devTelegramId}
-              onChange={(e) => setDevTelegramId(e.target.value)}
-            />
-            <button type="button" onClick={submitUnsafeLogin} disabled={devLoading}>
-              {devLoading ? (ru ? "Вход..." : "Signing in...") : (ru ? "Войти по telegram_id" : "Sign in by telegram_id")}
+        <p>{ru ? "Войдите по email-коду, чтобы открыть панель управления." : "Sign in with email OTP to access admin panel."}</p>
+        <div style={{ marginTop: 16, display: "grid", gap: 8, maxWidth: 420 }}>
+          <input
+            type="email"
+            placeholder="admin@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={sending || verifying}
+          />
+          {!otpStep ? (
+            <button type="button" onClick={submitEmail} disabled={sending}>
+              {sending
+                ? (ru ? "Отправка..." : "Sending...")
+                : (ru ? "Получить код" : "Send OTP code")}
             </button>
-          </div>
-        ) : null}
+          ) : (
+            <>
+              <input
+                inputMode="numeric"
+                placeholder={ru ? "Код из письма" : "OTP code"}
+                value={otpToken}
+                onChange={(e) => setOtpToken(e.target.value)}
+                disabled={verifying}
+              />
+              <button type="button" onClick={submitOtp} disabled={verifying}>
+                {verifying
+                  ? (ru ? "Проверка..." : "Verifying...")
+                  : (ru ? "Войти" : "Sign in")}
+              </button>
+              <button type="button" onClick={submitEmail} disabled={sending || verifying}>
+                {ru ? "Отправить код заново" : "Resend code"}
+              </button>
+            </>
+          )}
+        </div>
         {message ? <p>{message}</p> : null}
       </section>
     </div>

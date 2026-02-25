@@ -13,6 +13,7 @@ describe("adminSession", () => {
     const token = createSessionToken(
       {
         userId: "u1",
+        authUserId: "auth-u1",
         telegramId: 123,
         role: "organizer",
         iat: Math.floor(now / 1000),
@@ -31,6 +32,7 @@ describe("adminSession", () => {
     const token = createSessionToken(
       {
         userId: "u1",
+        authUserId: "auth-u1",
         telegramId: 123,
         role: "admin",
         iat: Math.floor(now / 1000),
@@ -53,7 +55,7 @@ describe("adminSession", () => {
 
     const principal = setAdminSession(
       res,
-      { userId: "u1", telegramId: 111, role: "admin" },
+      { userId: "u1", authUserId: "auth-u1", telegramId: 111, role: "admin" },
       { ADMIN_SESSION_SECRET: "secret", NODE_ENV: "test", ADMIN_SESSION_TTL_SECONDS: "120" },
       Date.UTC(2026, 1, 20, 10, 0, 0)
     );
@@ -64,6 +66,7 @@ describe("adminSession", () => {
     req.headers.cookie = `admin_session=${createSessionToken(
       {
         userId: "u1",
+        authUserId: "auth-u1",
         telegramId: 111,
         role: "admin",
         iat: nowSeconds - 10,
