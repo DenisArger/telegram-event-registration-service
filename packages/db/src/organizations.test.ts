@@ -3,7 +3,10 @@ import {
   assertEventInOrg,
   assertUserOrganizationAccess,
   createOrganization,
-  listUserOrganizations
+  listOrganizationMembers,
+  listUserOrganizations,
+  removeOrganizationMember,
+  upsertOrganizationMember
 } from "./organizations";
 
 describe("organizations data layer", () => {
@@ -84,5 +87,89 @@ describe("organizations data layer", () => {
 
     await expect(assertUserOrganizationAccess(db, "u1", "org1")).resolves.toBe(true);
     await expect(assertEventInOrg(db, "e1", "org1")).resolves.toBe(true);
+  });
+
+  it("lists organization members", async () => {
+    const order = vi.fn(async () => ({
+      data: [
+        {
+          organization_id: "org1",
+          user_id: "u1",
+          role: "owner",
+          created_at: "2026-02-25T10:00:00Z",
+          users: {
+            full_name: "Alice",
+            username: "alice",
+            telegram_id: 1001
+          }
+        }
+      ],
+      error: null
+    }));
+    const eq = vi.fn(() => ({ order }));
+    const select = vi.fn(() => ({ eq }));
+    const db = { from: vi.fn(() => ({ select })) } as any;
+
+    const result = await listOrganizationMembers(db, "org1");
+    expect(result).toEqual([
+      expect.objectContaining({
+        organizationId: "org1",
+        userId: "u1",
+        role: "owner",
+        fullName: "Alice"
+      })
+    ]);
+  });
+
+  it("upserts organization member and returns joined user fields", async () => {
+    const maybeSingle = vi.fn(async () => ({
+      data: {
+        organization_id: "org1",
+        user_id: "u2",
+        role: "admin",
+        created_at: "2026-02-25T10:00:00Z",
+        users: {
+          full_name: "Bob",
+          username: null,
+          telegram_id: 1002
+        }
+      },
+      error: null
+    }));
+    const eqMember = vi.fn().mockReturnThis();
+    const memberQuery = { select: vi.fn().mockReturnThis(), eq: eqMember, maybeSingle };
+    eqMember.mockImplementationOnce(() => memberQuery).mockImplementationOnce(() => memberQuery);
+
+    const upsert = vi.fn(async () => ({ error: null }));
+    const db = {
+      from: vi.fn((table: string) => {
+        if (table === "organization_members") {
+          return { upsert, ...memberQuery };
+        }
+        return {};
+      })
+    } as any;
+
+    const result = await upsertOrganizationMember(db, { organizationId: "org1", userId: "u2", role: "admin" });
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organization_id: "org1",
+        user_id: "u2",
+        role: "admin"
+      }),
+      { onConflict: "organization_id,user_id" }
+    );
+    expect(result.userId).toBe("u2");
+    expect(result.role).toBe("admin");
+  });
+
+  it("removes organization member", async () => {
+    const maybeSingle = vi.fn(async () => ({ data: { organization_id: "org1" }, error: null }));
+    const eq = vi.fn().mockReturnThis();
+    const deleteQuery = { eq, select: vi.fn().mockReturnThis(), maybeSingle };
+    eq.mockImplementationOnce(() => deleteQuery).mockImplementationOnce(() => deleteQuery);
+    const db = { from: vi.fn(() => ({ delete: vi.fn(() => deleteQuery) })) } as any;
+
+    await expect(removeOrganizationMember(db, "org1", "u1")).resolves.toBe(true);
   });
 });

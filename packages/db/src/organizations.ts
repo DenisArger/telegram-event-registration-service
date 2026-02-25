@@ -8,12 +8,52 @@ interface OrganizationRow {
   created_at: string;
 }
 
+interface OrganizationMemberRow {
+  organization_id: string;
+  user_id: string;
+  role: OrganizationMemberRole;
+  created_at: string;
+  users?:
+  | {
+    full_name: string;
+    username: string | null;
+    telegram_id: number | null;
+  }
+  | Array<{
+    full_name: string;
+    username: string | null;
+    telegram_id: number | null;
+  }>;
+}
+
 function mapOrganization(row: OrganizationRow): OrganizationEntity {
   return {
     id: row.id,
     name: row.name,
     ownerUserId: row.owner_user_id,
     createdAt: row.created_at
+  };
+}
+
+function mapOrganizationMember(row: OrganizationMemberRow): {
+  organizationId: string;
+  userId: string;
+  role: OrganizationMemberRole;
+  createdAt: string;
+  fullName: string | null;
+  username: string | null;
+  telegramId: number | null;
+} {
+  const user = Array.isArray(row.users) ? row.users[0] : row.users;
+
+  return {
+    organizationId: row.organization_id,
+    userId: row.user_id,
+    role: row.role,
+    createdAt: row.created_at,
+    fullName: user?.full_name ?? null,
+    username: user?.username ?? null,
+    telegramId: user?.telegram_id ?? null
   };
 }
 
@@ -96,4 +136,109 @@ export async function assertEventInOrg(
 
   if (error) throw error;
   return (count ?? 0) > 0;
+}
+
+export async function listOrganizationMembers(
+  db: SupabaseClient,
+  organizationId: string
+): Promise<Array<{
+  organizationId: string;
+  userId: string;
+  role: OrganizationMemberRole;
+  createdAt: string;
+  fullName: string | null;
+  username: string | null;
+  telegramId: number | null;
+}>> {
+  const { data, error } = await db
+    .from("organization_members")
+    .select(
+      `
+      organization_id,
+      user_id,
+      role,
+      created_at,
+      users!inner(
+        full_name,
+        username,
+        telegram_id
+      )
+    `
+    )
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => mapOrganizationMember(row as OrganizationMemberRow));
+}
+
+export async function upsertOrganizationMember(
+  db: SupabaseClient,
+  payload: {
+    organizationId: string;
+    userId: string;
+    role: OrganizationMemberRole;
+  }
+): Promise<{
+  organizationId: string;
+  userId: string;
+  role: OrganizationMemberRole;
+  createdAt: string;
+  fullName: string | null;
+  username: string | null;
+  telegramId: number | null;
+}> {
+  const { error: upsertError } = await db.from("organization_members").upsert(
+    {
+      organization_id: payload.organizationId,
+      user_id: payload.userId,
+      role: payload.role
+    },
+    { onConflict: "organization_id,user_id" }
+  );
+  if (upsertError) throw upsertError;
+
+  const { data, error } = await db
+    .from("organization_members")
+    .select(
+      `
+      organization_id,
+      user_id,
+      role,
+      created_at,
+      users!inner(
+        full_name,
+        username,
+        telegram_id
+      )
+    `
+    )
+    .eq("organization_id", payload.organizationId)
+    .eq("user_id", payload.userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("organization_member_not_found_after_upsert");
+  }
+
+  return mapOrganizationMember(data as OrganizationMemberRow);
+}
+
+export async function removeOrganizationMember(
+  db: SupabaseClient,
+  organizationId: string,
+  userId: string
+): Promise<boolean> {
+  const { data, error } = await db
+    .from("organization_members")
+    .delete()
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .select("organization_id")
+    .maybeSingle();
+
+  if (error) throw error;
+  return Boolean(data);
 }
