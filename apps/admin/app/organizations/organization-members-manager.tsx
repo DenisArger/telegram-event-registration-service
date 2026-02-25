@@ -10,8 +10,14 @@ interface OrganizationMembersManagerProps {
   initialMembers: OrganizationMemberItem[];
 }
 
-function parseErrorMessage(payload: any, fallback: string): string {
-  return String(payload?.message ?? fallback);
+function parseErrorMessage(payload: unknown, fallback: string): string {
+  if (payload && typeof payload === "object" && "message" in payload) {
+    const message = (payload as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+  return fallback;
 }
 
 export function OrganizationMembersManager({

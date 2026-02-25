@@ -53,6 +53,7 @@ Core migrations include:
 - `20260224170000_m15_multi_tenant_organizations.sql`
 - `20260225103000_m16_rls_tenant_hardening.sql`
 - `20260225112000_m17_prevent_last_owner_removal.sql`
+- `20260225121000_m18_transfer_organization_ownership.sql`
 
 ## API
 
@@ -67,6 +68,7 @@ Admin API (selected):
 - `POST /api/admin/organization-members`
 - `PUT /api/admin/organization-members`
 - `DELETE /api/admin/organization-members`
+- `POST /api/admin/organization-transfer-ownership`
 - `GET /api/admin/events?organizationId=<uuid>`
 - `POST /api/admin/events`
 - `PUT /api/admin/events`
