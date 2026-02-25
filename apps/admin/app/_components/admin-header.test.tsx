@@ -24,6 +24,17 @@ vi.mock("./logout-button", () => ({
 }));
 
 describe("AdminHeader", () => {
+  (window as any).matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  });
+
   afterEach(() => {
     cleanup();
   });
@@ -33,7 +44,7 @@ describe("AdminHeader", () => {
 
     expect(screen.getByText("Event Registration Admin")).toBeTruthy();
     const attendeesLink = screen.getByRole("link", { name: "Attendees" });
-    expect(attendeesLink.getAttribute("class") ?? "").toContain("active");
+    expect(attendeesLink.getAttribute("class") ?? "").toContain("bg-accent/15");
   });
 
   it("marks root as active for dashboard path", () => {
@@ -41,6 +52,6 @@ describe("AdminHeader", () => {
     render(<AdminHeader />);
 
     const dashboardLink = screen.getByRole("link", { name: "Dashboard" });
-    expect(dashboardLink.getAttribute("class") ?? "").toContain("active");
+    expect(dashboardLink.getAttribute("class") ?? "").toContain("bg-accent/15");
   });
 });

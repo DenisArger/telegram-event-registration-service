@@ -4,6 +4,9 @@ import { OrganizationSelector } from "../_components/organization-selector";
 import { getAdminEvents, getAuthMe, getStats } from "../_lib/admin-api";
 import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
+import { EmptyState } from "../_components/ui/empty-state";
+import { PageHeader } from "../_components/ui/page-header";
+import { Panel } from "../_components/ui/panel";
 
 export default async function StatsPage({
   searchParams
@@ -21,37 +24,36 @@ export default async function StatsPage({
   const stats = selectedEventId ? await getStats(selectedEventId, selectedOrganizationId ?? undefined) : null;
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ui("stats", locale)}</h1>
-        <p>{ui("stats_subtitle", locale)}</p>
-      </section>
+    <>
+      <PageHeader title={ui("stats", locale)} subtitle={ui("stats_subtitle", locale)} />
+      <Panel className="space-y-4">
+        <div className="toolbar-grid">
+          <OrganizationSelector
+            organizations={organizations}
+            selectedOrganizationId={selectedOrganizationId}
+            basePath="/stats"
+            eventId={selectedEventId}
+          />
+          <EventSelector
+            events={events}
+            selectedEventId={selectedEventId}
+            basePath="/stats"
+            organizationId={selectedOrganizationId}
+          />
+        </div>
 
-      <section className="card">
-        <OrganizationSelector
-          organizations={organizations}
-          selectedOrganizationId={selectedOrganizationId}
-          basePath="/stats"
-          eventId={selectedEventId}
-        />
-        <EventSelector
-          events={events}
-          selectedEventId={selectedEventId}
-          basePath="/stats"
-          organizationId={selectedOrganizationId}
-        />
         <h2>{ui("stats", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
         {!stats ? (
-          <p>{ui("stats_unavailable", locale)}</p>
+          <EmptyState message={ui("stats_unavailable", locale)} />
         ) : (
-          <ul>
-            <li>{ui("registered", locale)}: {stats.registeredCount}</li>
-            <li>{ui("checked_in", locale)}: {stats.checkedInCount}</li>
-            <li>{ui("waitlist", locale)}: {stats.waitlistCount}</li>
-            <li>{ui("no_show_rate", locale)}: {stats.noShowRate}%</li>
-          </ul>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <article className="panel-compact"><h3>{ui("registered", locale)}</h3><p className="text-2xl font-semibold text-text">{stats.registeredCount}</p></article>
+            <article className="panel-compact"><h3>{ui("checked_in", locale)}</h3><p className="text-2xl font-semibold text-text">{stats.checkedInCount}</p></article>
+            <article className="panel-compact"><h3>{ui("waitlist", locale)}</h3><p className="text-2xl font-semibold text-text">{stats.waitlistCount}</p></article>
+            <article className="panel-compact"><h3>{ui("no_show_rate", locale)}</h3><p className="text-2xl font-semibold text-text">{stats.noShowRate}%</p></article>
+          </div>
         )}
-      </section>
-    </div>
+      </Panel>
+    </>
   );
 }

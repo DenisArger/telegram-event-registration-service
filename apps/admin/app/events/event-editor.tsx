@@ -6,6 +6,8 @@ import { CloseButton } from "../close-button";
 import { EventQuestionsEditor } from "../event-questions-editor";
 import { PublishButton } from "../publish-button";
 import { MarkdownPreview } from "../_components/markdown-preview";
+import { Button } from "../_components/ui/button";
+import { InlineAlert } from "../_components/ui/inline-alert";
 import { datetimeLocalToIso, isoToDatetimeLocal } from "../_lib/datetime";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
 
@@ -164,12 +166,12 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
     <div className="section-grid">
       <section className="card">
         <p>{ru ? "Редактировать событие" : "Edit event"}</p>
-        <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
+        <div className="grid max-w-[560px] gap-2">
           <input placeholder="title" value={title} onChange={(e) => setTitle(e.target.value)} />
           <small>{ru ? "Короткое понятное название. Поддерживается Markdown." : "Short clear title. Markdown is supported."}</small>
           {title.trim() ? (
-            <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-              <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
+            <div className="rounded-lg border border-border bg-surface-elevated p-3">
+              <p className="mt-0">{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
               <MarkdownPreview markdown={title} />
             </div>
           ) : null}
@@ -182,15 +184,15 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
           <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
           <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
           <textarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={generateAiDraft} disabled={aiLoading || loading}>
+          <div className="flex gap-2">
+            <Button onClick={generateAiDraft} loading={aiLoading} disabled={loading}>
               {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
-            </button>
+            </Button>
           </div>
           <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
           {description.trim() ? (
-            <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-              <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр описания" : "Description preview"}</p>
+            <div className="rounded-lg border border-border bg-surface-elevated p-3">
+              <p className="mt-0">{ru ? "Предпросмотр описания" : "Description preview"}</p>
               <MarkdownPreview markdown={description} />
             </div>
           ) : null}
@@ -205,20 +207,20 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
               : "Bot sends this text after successful registration."}
           </small>
           {registrationSuccessMessage.trim() ? (
-            <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-              <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
+            <div className="rounded-lg border border-border bg-surface-elevated p-3">
+              <p className="mt-0">{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
               <MarkdownPreview markdown={registrationSuccessMessage} />
             </div>
           ) : null}
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={save} disabled={loading}>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={save} loading={loading} variant="primary">
               {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
-            </button>
+            </Button>
             {event.status === "draft" ? <PublishButton eventId={event.id} organizationId={organizationId} /> : null}
             {event.status === "published" ? <CloseButton eventId={event.id} organizationId={organizationId} /> : null}
           </div>
-          {message ? <p>{message}</p> : null}
+          {message ? <InlineAlert message={message} /> : null}
         </div>
       </section>
 

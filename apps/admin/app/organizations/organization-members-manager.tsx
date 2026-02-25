@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import type { OrganizationMemberItem } from "../_lib/admin-api";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
+import { Button } from "../_components/ui/button";
+import { InlineAlert } from "../_components/ui/inline-alert";
 
 interface OrganizationMembersManagerProps {
   organizationId: string;
@@ -95,10 +97,6 @@ export function OrganizationMembersManager({
     const base = getClientAdminApiBase();
     if (!base) {
       setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
-    if (!userId.trim()) {
-      setMessage(ru ? "Укажите userId." : "userId is required.");
       return;
     }
 
@@ -196,32 +194,30 @@ export function OrganizationMembersManager({
   }
 
   return (
-    <section className="card">
+    <section className="panel">
       <h2>{ru ? "Участники организации" : "Organization members"}</h2>
-      <p>{ru ? `Owners: ${ownerCount}.` : `Owners: ${ownerCount}.`}</p>
+      <p>{`Owners: ${ownerCount}.`}</p>
 
-      <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+      <div className="mt-4 grid gap-3">
         <strong>{ru ? "Добавить/обновить участника" : "Add or update member"}</strong>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="grid gap-2 sm:grid-cols-3">
           <input
             type="text"
             placeholder="userId (uuid)"
             value={memberUserId}
             onChange={(e) => setMemberUserId(e.target.value)}
           />
-          <select value={memberRole} onChange={(e) => setMemberRole(e.target.value as "owner" | "admin")}>
+          <select value={memberRole} onChange={(e) => setMemberRole(e.target.value as "owner" | "admin") }>
             <option value="admin">admin</option>
             <option value="owner">owner</option>
           </select>
-          <button onClick={saveMember} disabled={loading}>
-            {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
-          </button>
+          <Button onClick={saveMember} loading={loading}>{ru ? "Сохранить" : "Save"}</Button>
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: 8, marginBottom: 12 }}>
+      <div className="mt-5 grid gap-3">
         <strong>{ru ? "Передать ownership" : "Transfer ownership"}</strong>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
           <select value={newOwnerUserId} onChange={(e) => setNewOwnerUserId(e.target.value)}>
             <option value="">{ru ? "Выберите участника" : "Select member"}</option>
             {nonOwnerCandidates.map((candidate) => (
@@ -230,15 +226,13 @@ export function OrganizationMembersManager({
               </option>
             ))}
           </select>
-          <button onClick={transferOwnership} disabled={loading}>
-            {loading ? (ru ? "Передача..." : "Transferring...") : (ru ? "Передать" : "Transfer")}
-          </button>
+          <Button onClick={transferOwnership} loading={loading} variant="primary">{ru ? "Передать" : "Transfer"}</Button>
         </div>
       </div>
 
-      {members.length === 0 ? <p>{ru ? "Нет участников." : "No members."}</p> : null}
+      {members.length === 0 ? <p className="mt-4">{ru ? "Нет участников." : "No members."}</p> : null}
       {members.length > 0 ? (
-        <div className="attendees-table-wrap">
+        <div className="mt-4 attendees-table-wrap">
           <table className="attendees-table">
             <thead>
               <tr>
@@ -258,31 +252,30 @@ export function OrganizationMembersManager({
                   <td>{member.username ?? "-"}</td>
                   <td>{member.telegramId ?? "-"}</td>
                   <td>{member.role}</td>
-                  <td>
+                  <td className="space-x-2">
                     {member.role === "admin" ? (
-                      <button
+                      <Button
                         onClick={() => saveMemberByRole(member.userId, "owner")}
                         disabled={loading}
-                        style={{ marginRight: 6 }}
                       >
                         {ru ? "Сделать owner" : "Promote to owner"}
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         onClick={() => saveMemberByRole(member.userId, "admin")}
                         disabled={loading}
-                        style={{ marginRight: 6 }}
                       >
                         {ru ? "Сделать admin" : "Demote to admin"}
-                      </button>
+                      </Button>
                     )}
-                    <button
+                    <Button
                       onClick={() => deleteMember(member.userId)}
                       disabled={loading || member.userId === currentUserId}
+                      variant="danger"
                       title={member.userId === currentUserId ? (ru ? "Нельзя удалить себя." : "Cannot remove yourself.") : ""}
                     >
                       {ru ? "Удалить" : "Remove"}
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -291,7 +284,7 @@ export function OrganizationMembersManager({
         </div>
       ) : null}
 
-      {message ? <p>{message}</p> : null}
+      {message ? <div className="mt-4"><InlineAlert message={message} /></div> : null}
     </section>
   );
 }

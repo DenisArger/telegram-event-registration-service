@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
+import { Button } from "./_components/ui/button";
+import { InlineAlert } from "./_components/ui/inline-alert";
 
 export function CheckInForm({
   initialEventId = "",
@@ -64,9 +66,9 @@ export function CheckInForm({
   }
 
   return (
-    <div>
+    <div className="grid gap-3">
       <p>{ru ? "Ручной чекин" : "Manual check-in"}</p>
-      <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
+      <div className="grid max-w-[560px] gap-2">
         <input
           placeholder="eventId"
           value={eventId}
@@ -77,10 +79,10 @@ export function CheckInForm({
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
         />
-        <button onClick={submit} disabled={loading}>
+        <Button onClick={submit} loading={loading} variant="primary">
           {loading ? (ru ? "Выполняется..." : "Checking in...") : (ru ? "Отметить участника" : "Check in attendee")}
-        </button>
-        {message ? <p>{message}</p> : null}
+        </Button>
+        {message ? <InlineAlert message={message} tone="info" /> : null}
       </div>
     </div>
   );

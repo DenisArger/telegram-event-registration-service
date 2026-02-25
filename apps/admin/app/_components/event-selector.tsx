@@ -4,6 +4,8 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import type { EventItem } from "../_lib/admin-api";
 import { getUiLocale, ui } from "../i18n";
+import { EmptyState } from "./ui/empty-state";
+import { Field, Select } from "./ui/field";
 
 interface EventSelectorProps {
   events: EventItem[];
@@ -18,13 +20,12 @@ export function EventSelector({ events, selectedEventId, basePath, organizationI
   const locale = getUiLocale();
 
   if (events.length === 0) {
-    return <p>{ui("no_events_for_select", locale)}</p>;
+    return <EmptyState message={ui("no_events_for_select", locale)} />;
   }
 
   return (
-    <label className="event-selector">
-      <span>{ui("select_event", locale)}:</span>
-      <select
+    <Field label={ui("select_event", locale)}>
+      <Select
         value={selectedEventId ?? events[0]?.id ?? ""}
         onChange={(e) => {
           const params = new URLSearchParams();
@@ -39,7 +40,7 @@ export function EventSelector({ events, selectedEventId, basePath, organizationI
             {event.title}
           </option>
         ))}
-      </select>
-    </label>
+      </Select>
+    </Field>
   );
 }

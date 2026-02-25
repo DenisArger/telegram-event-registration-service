@@ -4,6 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrganizationItem } from "../_lib/admin-api";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
+import { Button } from "../_components/ui/button";
+import { InlineAlert } from "../_components/ui/inline-alert";
 
 interface OrganizationSettingsManagerProps {
   organizations: OrganizationItem[];
@@ -143,12 +145,12 @@ export function OrganizationSettingsManager({
   }
 
   return (
-    <section className="card">
+    <section className="panel">
       <h2>{ru ? "Настройки организации" : "Organization settings"}</h2>
 
-      <div style={{ display: "grid", gap: 8, marginBottom: 16 }}>
+      <div className="mt-4 grid gap-3">
         <strong>{ru ? "Создать организацию" : "Create organization"}</strong>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="grid gap-2 sm:grid-cols-3">
           <input
             type="text"
             placeholder={ru ? "Название" : "Name"}
@@ -161,15 +163,15 @@ export function OrganizationSettingsManager({
             value={createToken}
             onChange={(e) => setCreateToken(e.target.value)}
           />
-          <button onClick={createOrganization} disabled={loading}>
+          <Button onClick={createOrganization} loading={loading} variant="primary">
             {loading ? (ru ? "Создание..." : "Creating...") : (ru ? "Создать" : "Create")}
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: 8 }}>
+      <div className="mt-5 grid gap-3">
         <strong>{ru ? "Редактировать выбранную организацию" : "Edit selected organization"}</strong>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div className="grid gap-2 sm:grid-cols-4">
           <input
             type="text"
             placeholder={ru ? "Название" : "Name"}
@@ -184,22 +186,23 @@ export function OrganizationSettingsManager({
             onChange={(e) => setEditToken(e.target.value)}
             disabled={!selectedOrganizationId || clearToken}
           />
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <label className="inline-flex items-center gap-2 text-sm text-muted">
             <input
               type="checkbox"
               checked={clearToken}
               onChange={(e) => setClearToken(e.target.checked)}
               disabled={!selectedOrganizationId}
+              className="h-4 w-4"
             />
             {ru ? "Очистить токен" : "Clear token"}
           </label>
-          <button onClick={updateOrganization} disabled={loading || !selectedOrganizationId}>
+          <Button onClick={updateOrganization} loading={loading} disabled={!selectedOrganizationId}>
             {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {message ? <p>{message}</p> : null}
+      {message ? <div className="mt-4"><InlineAlert message={message} /></div> : null}
     </section>
   );
 }

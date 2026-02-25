@@ -5,6 +5,9 @@ import { resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 import { OrganizationMembersManager } from "./organization-members-manager";
 import { OrganizationSettingsManager } from "./organization-settings-manager";
+import { EmptyState } from "../_components/ui/empty-state";
+import { PageHeader } from "../_components/ui/page-header";
+import { Panel } from "../_components/ui/panel";
 
 export default async function OrganizationsPage({
   searchParams
@@ -19,19 +22,16 @@ export default async function OrganizationsPage({
   const members = await getOrganizationMembers(selectedOrganizationId ?? undefined);
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ui("organizations", locale)}</h1>
-        <p>{ui("organizations_subtitle", locale)}</p>
-      </section>
+    <>
+      <PageHeader title={ui("organizations", locale)} subtitle={ui("organizations_subtitle", locale)} />
 
-      <section className="card">
+      <Panel compact>
         <OrganizationSelector
           organizations={organizations}
           selectedOrganizationId={selectedOrganizationId}
           basePath="/organizations"
         />
-      </section>
+      </Panel>
 
       <OrganizationSettingsManager
         organizations={organizations}
@@ -45,10 +45,10 @@ export default async function OrganizationsPage({
           initialMembers={members}
         />
       ) : (
-        <section className="card">
-          <p>{ui("no_organization_selected", locale)}</p>
-        </section>
+        <Panel>
+          <EmptyState message={ui("no_organization_selected", locale)} />
+        </Panel>
       )}
-    </div>
+    </>
   );
 }

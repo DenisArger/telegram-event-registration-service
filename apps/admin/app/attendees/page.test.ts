@@ -44,12 +44,13 @@ describe("AttendeesPage", () => {
     expect(html).toContain("Table");
   });
 
-  it("renders list mode with attendee answers", async () => {
+  it("renders list mode with attendee summary", async () => {
     const html = renderToStaticMarkup(await AttendeesPage({
       searchParams: Promise.resolve({ organizationId: "org1", eventId: "e1", view: "list" })
     } as any));
     expect(html).toContain("List");
     expect(html).toContain("John");
-    expect(html).toContain("Why?: Because");
+    expect(html).toContain("@john");
+    expect(html).toContain("checked in");
   });
 });

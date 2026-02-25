@@ -26,7 +26,8 @@ describe("Dashboard page", () => {
 
     const html = renderToStaticMarkup(await HomePage());
 
-    expect(html).toContain("Bot API health: ok");
+    expect(html).toContain("Bot API health");
+    expect(html).toContain(">ok<");
     expect(html).toContain("/actions");
   });
 });

@@ -2,6 +2,8 @@
 
 import React, { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "../_components/ui/button";
+import { InlineAlert } from "../_components/ui/inline-alert";
 
 export default function LoginPage() {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -90,46 +92,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ru ? "Вход в админку" : "Admin login"}</h1>
-        <p>{ru ? "Войдите по email-коду, чтобы открыть панель управления." : "Sign in with email OTP to access admin panel."}</p>
-        <div style={{ marginTop: 16, display: "grid", gap: 8, maxWidth: 420 }}>
-          <input
-            type="email"
-            placeholder="admin@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={sending || verifying}
-          />
-          {!otpStep ? (
-            <button type="button" onClick={submitEmail} disabled={sending}>
-              {sending
-                ? (ru ? "Отправка..." : "Sending...")
-                : (ru ? "Получить код" : "Send OTP code")}
-            </button>
-          ) : (
-            <>
-              <input
-                inputMode="numeric"
-                placeholder={ru ? "Код из письма" : "OTP code"}
-                value={otpToken}
-                onChange={(e) => setOtpToken(e.target.value)}
-                disabled={verifying}
-              />
-              <button type="button" onClick={submitOtp} disabled={verifying}>
-                {verifying
-                  ? (ru ? "Проверка..." : "Verifying...")
-                  : (ru ? "Войти" : "Sign in")}
-              </button>
-              <button type="button" onClick={submitEmail} disabled={sending || verifying}>
-                {ru ? "Отправить код заново" : "Resend code"}
-              </button>
-            </>
-          )}
-        </div>
-        {message ? <p>{message}</p> : null}
-      </section>
+    <div className="mx-auto mt-12 w-full max-w-[460px] rounded-2xl border border-border bg-surface p-6 shadow-panel">
+      <h1>{ru ? "Вход в админку" : "Admin login"}</h1>
+      <p className="mt-2">{ru ? "Войдите по email-коду, чтобы открыть панель управления." : "Sign in with email OTP to access admin panel."}</p>
+      <div className="mt-5 grid gap-3">
+        <input
+          type="email"
+          placeholder="admin@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={sending || verifying}
+        />
+        {!otpStep ? (
+          <Button type="button" variant="primary" onClick={submitEmail} loading={sending}>
+            {sending ? (ru ? "Отправка..." : "Sending...") : (ru ? "Получить код" : "Send OTP code")}
+          </Button>
+        ) : (
+          <>
+            <input
+              inputMode="numeric"
+              placeholder={ru ? "Код из письма" : "OTP code"}
+              value={otpToken}
+              onChange={(e) => setOtpToken(e.target.value)}
+              disabled={verifying}
+            />
+            <Button type="button" variant="primary" onClick={submitOtp} loading={verifying}>
+              {verifying ? (ru ? "Проверка..." : "Verifying...") : (ru ? "Войти" : "Sign in")}
+            </Button>
+            <Button type="button" onClick={submitEmail} disabled={sending || verifying}>
+              {ru ? "Отправить код заново" : "Resend code"}
+            </Button>
+          </>
+        )}
+      </div>
+      {message ? <div className="mt-3"><InlineAlert message={message} tone="info" /></div> : null}
     </div>
   );
 }

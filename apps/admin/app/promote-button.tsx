@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
+import { Button } from "./_components/ui/button";
+import { InlineAlert } from "./_components/ui/inline-alert";
 
 export function PromoteButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -47,11 +49,11 @@ export function PromoteButton({ eventId, organizationId }: { eventId: string; or
   }
 
   return (
-    <div>
-      <button onClick={promote} disabled={loading}>
+    <div className="grid gap-2">
+      <Button onClick={promote} loading={loading} variant="primary">
         {loading ? (ru ? "Выполняется..." : "Promoting...") : (ru ? "Продвинуть из листа ожидания" : "Promote next from waitlist")}
-      </button>
-      {message ? <p>{message}</p> : null}
+      </Button>
+      {message ? <InlineAlert message={message} tone="info" /> : null}
     </div>
   );
 }

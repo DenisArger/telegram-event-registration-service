@@ -4,6 +4,9 @@ import { OrganizationSelector } from "../_components/organization-selector";
 import { getAdminEvents, getAuthMe, getWaitlist } from "../_lib/admin-api";
 import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
+import { EmptyState } from "../_components/ui/empty-state";
+import { PageHeader } from "../_components/ui/page-header";
+import { Panel } from "../_components/ui/panel";
 
 export default async function WaitlistPage({
   searchParams
@@ -21,41 +24,51 @@ export default async function WaitlistPage({
   const waitlist = selectedEventId ? await getWaitlist(selectedEventId, selectedOrganizationId ?? undefined) : [];
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ui("waitlist", locale)}</h1>
-        <p>{ui("waitlist_subtitle", locale)}</p>
-      </section>
-
-      <section className="card">
-        <OrganizationSelector
-          organizations={organizations}
-          selectedOrganizationId={selectedOrganizationId}
-          basePath="/waitlist"
-          eventId={selectedEventId}
-        />
-        <EventSelector
-          events={events}
-          selectedEventId={selectedEventId}
-          basePath="/waitlist"
-          organizationId={selectedOrganizationId}
-        />
+    <>
+      <PageHeader title={ui("waitlist", locale)} subtitle={ui("waitlist_subtitle", locale)} />
+      <Panel className="space-y-4">
+        <div className="toolbar-grid">
+          <OrganizationSelector
+            organizations={organizations}
+            selectedOrganizationId={selectedOrganizationId}
+            basePath="/waitlist"
+            eventId={selectedEventId}
+          />
+          <EventSelector
+            events={events}
+            selectedEventId={selectedEventId}
+            basePath="/waitlist"
+            organizationId={selectedOrganizationId}
+          />
+        </div>
         <h2>{ui("waitlist", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
         {!selectedEvent ? (
-          <p>{ui("no_event_selected", locale)}</p>
+          <EmptyState message={ui("no_event_selected", locale)} />
         ) : waitlist.length === 0 ? (
-          <p>{ui("waitlist_empty", locale)}</p>
+          <EmptyState message={ui("waitlist_empty", locale)} />
         ) : (
-          <ul>
-            {waitlist.map((entry) => (
-              <li key={entry.userId}>
-                #{entry.position} {entry.fullName}
-                {entry.username ? ` (@${entry.username})` : ""}
-              </li>
-            ))}
-          </ul>
+          <div className="attendees-table-wrap">
+            <table className="attendees-table min-w-[640px]">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{ui("attendees_column_name", locale)}</th>
+                  <th>{ui("attendees_column_username", locale)}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {waitlist.map((entry) => (
+                  <tr key={entry.userId}>
+                    <td>{entry.position}</td>
+                    <td>{entry.fullName}</td>
+                    <td>{entry.username ? `@${entry.username}` : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </section>
-    </div>
+      </Panel>
+    </>
   );
 }

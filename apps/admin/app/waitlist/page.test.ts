@@ -25,6 +25,7 @@ describe("WaitlistPage", () => {
     } as any));
     expect(html).toContain("org-selector");
     expect(html).toContain("selector");
-    expect(html).toContain("#1 Jane");
+    expect(html).toContain(">1<");
+    expect(html).toContain("Jane");
   });
 });

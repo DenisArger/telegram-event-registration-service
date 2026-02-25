@@ -6,6 +6,9 @@ import { OrganizationSelector } from "../_components/organization-selector";
 import { getAdminEvents, getAuthMe } from "../_lib/admin-api";
 import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
+import { EmptyState } from "../_components/ui/empty-state";
+import { PageHeader } from "../_components/ui/page-header";
+import { Panel } from "../_components/ui/panel";
 
 export default async function ActionsPage({
   searchParams
@@ -21,34 +24,33 @@ export default async function ActionsPage({
   const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ui("actions", locale)}</h1>
-        <p>{ui("actions_subtitle", locale)}</p>
-      </section>
+    <>
+      <PageHeader title={ui("actions", locale)} subtitle={ui("actions_subtitle", locale)} />
+      <Panel className="space-y-4">
+        <div className="toolbar-grid">
+          <OrganizationSelector
+            organizations={organizations}
+            selectedOrganizationId={selectedOrganizationId}
+            basePath="/actions"
+            eventId={selectedEventId}
+          />
+          <EventSelector
+            events={events}
+            selectedEventId={selectedEventId}
+            basePath="/actions"
+            organizationId={selectedOrganizationId}
+          />
+        </div>
 
-      <section className="card">
-        <OrganizationSelector
-          organizations={organizations}
-          selectedOrganizationId={selectedOrganizationId}
-          basePath="/actions"
-          eventId={selectedEventId}
-        />
-        <EventSelector
-          events={events}
-          selectedEventId={selectedEventId}
-          basePath="/actions"
-          organizationId={selectedOrganizationId}
-        />
         {selectedEventId ? (
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="flex flex-wrap gap-2">
             <PromoteButton eventId={selectedEventId} organizationId={selectedOrganizationId ?? ""} />
             <ExportButton eventId={selectedEventId} organizationId={selectedOrganizationId ?? ""} />
           </div>
         ) : (
-          <p>{ui("no_event_selected", locale)}</p>
+          <EmptyState message={ui("no_event_selected", locale)} />
         )}
-      </section>
-    </div>
+      </Panel>
+    </>
   );
 }

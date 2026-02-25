@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
+import { Button } from "./_components/ui/button";
 
 export function PublishButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -45,11 +46,11 @@ export function PublishButton({ eventId, organizationId }: { eventId: string; or
   }
 
   return (
-    <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-      <button onClick={publish} disabled={loading}>
+    <div className="inline-flex items-center gap-2">
+      <Button onClick={publish} loading={loading} variant="primary">
         {loading ? (ru ? "Публикация..." : "Publishing...") : (ru ? "Опубликовать" : "Publish")}
-      </button>
-      {message ? <span>{message}</span> : null}
+      </Button>
+      {message ? <span className="text-sm text-muted">{message}</span> : null}
     </div>
   );
 }

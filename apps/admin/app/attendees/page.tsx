@@ -5,6 +5,9 @@ import { getAdminEvents, getAttendees, getAuthMe } from "../_lib/admin-api";
 import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 import { AttendeesTable } from "./attendees-table";
+import { EmptyState } from "../_components/ui/empty-state";
+import { PageHeader } from "../_components/ui/page-header";
+import { Panel } from "../_components/ui/panel";
 
 export default async function AttendeesPage({
   searchParams
@@ -34,59 +37,51 @@ export default async function AttendeesPage({
   }).toString()}`;
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ui("attendees", locale)}</h1>
-        <p>{ui("attendees_subtitle", locale)}</p>
-      </section>
+    <>
+      <PageHeader title={ui("attendees", locale)} subtitle={ui("attendees_subtitle", locale)} />
 
-      <section className="card">
-        <OrganizationSelector
-          organizations={organizations}
-          selectedOrganizationId={selectedOrganizationId}
-          basePath="/attendees"
-          eventId={selectedEventId}
-          view={viewMode}
-        />
-        <EventSelector
-          events={events}
-          selectedEventId={selectedEventId}
-          basePath="/attendees"
-          organizationId={selectedOrganizationId}
-          view={viewMode}
-        />
+      <Panel className="space-y-4">
+        <div className="toolbar-grid">
+          <OrganizationSelector
+            organizations={organizations}
+            selectedOrganizationId={selectedOrganizationId}
+            basePath="/attendees"
+            eventId={selectedEventId}
+            view={viewMode}
+          />
+          <EventSelector
+            events={events}
+            selectedEventId={selectedEventId}
+            basePath="/attendees"
+            organizationId={selectedOrganizationId}
+            view={viewMode}
+          />
+        </div>
+
         <div className="attendees-view-switch" role="tablist" aria-label="view-switch">
           <a href={listHref} className={viewMode === "list" ? "active" : ""}>{ui("attendees_view_list", locale)}</a>
           <a href={tableHref} className={viewMode === "table" ? "active" : ""}>{ui("attendees_view_table", locale)}</a>
         </div>
+
         <h2>{ui("attendees", locale)} {selectedEvent ? `${ui("event_for", locale)} "${selectedEvent.title}"` : ""}</h2>
         {!selectedEvent ? (
-          <p>{ui("attendees_need_event", locale)}</p>
+          <EmptyState message={ui("attendees_need_event", locale)} />
         ) : attendees.length === 0 ? (
-          <p>{ui("no_attendees", locale)}</p>
+          <EmptyState message={ui("no_attendees", locale)} />
         ) : viewMode === "list" ? (
-          <ul>
+          <ul className="grid gap-2">
             {attendees.map((attendee) => (
-              <li key={attendee.userId}>
-                {attendee.fullName}
-                {attendee.username ? ` (@${attendee.username})` : ""} — {attendee.status}
-                {attendee.checkedIn ? ` — ${ui("checked_in_mark", locale)}` : ""}
-                {(attendee.answers ?? []).length > 0 ? (
-                  <ul>
-                    {(attendee.answers ?? []).map((answer) => (
-                      <li key={`${attendee.userId}-${answer.questionId}-${answer.questionVersion}`}>
-                        {answer.prompt}: {answer.isSkipped ? ui("skipped", locale) : answer.answerText}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+              <li key={attendee.userId} className="rounded-xl border border-border bg-surface-elevated p-3 text-sm text-text">
+                <strong>{attendee.fullName}</strong>
+                {attendee.username ? ` (@${attendee.username})` : ""} - {attendee.status}
+                {attendee.checkedIn ? ` - ${ui("checked_in_mark", locale)}` : ""}
               </li>
             ))}
           </ul>
         ) : (
           <AttendeesTable eventId={selectedEventId ?? ""} attendees={attendees} organizationId={selectedOrganizationId ?? ""} />
         )}
-      </section>
-    </div>
+      </Panel>
+    </>
   );
 }

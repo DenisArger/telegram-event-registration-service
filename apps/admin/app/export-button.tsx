@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
+import { Button } from "./_components/ui/button";
+import { InlineAlert } from "./_components/ui/inline-alert";
 
 export function ExportButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -23,9 +25,10 @@ export function ExportButton({ eventId, organizationId }: { eventId: string; org
       const response = await fetch(
         `${base}/api/admin/export?${params.toString()}`,
         {
-        method: "GET",
-        credentials: "include"
-      });
+          method: "GET",
+          credentials: "include"
+        }
+      );
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
@@ -51,11 +54,11 @@ export function ExportButton({ eventId, organizationId }: { eventId: string; org
   }
 
   return (
-    <div>
-      <button onClick={onExport} disabled={loading}>
+    <div className="grid gap-2">
+      <Button onClick={onExport} loading={loading}>
         {loading ? (ru ? "Экспорт..." : "Exporting...") : "Export CSV"}
-      </button>
-      {message ? <p>{message}</p> : null}
+      </Button>
+      {message ? <InlineAlert message={message} tone="info" /> : null}
     </div>
   );
 }

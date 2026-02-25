@@ -25,7 +25,9 @@ describe("StatsPage", () => {
     } as any));
     expect(html).toContain("org-selector");
     expect(html).toContain("selector");
-    expect(html).toContain("Registered: 1");
-    expect(html).toContain("Waitlist: 2");
+    expect(html).toContain("Registered");
+    expect(html).toContain(">1<");
+    expect(html).toContain("Waitlist");
+    expect(html).toContain(">2<");
   });
 });

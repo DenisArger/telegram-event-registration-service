@@ -3,6 +3,9 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import type { OrganizationItem } from "../_lib/admin-api";
+import { getUiLocale } from "../i18n";
+import { EmptyState } from "./ui/empty-state";
+import { Field, Select } from "./ui/field";
 
 interface OrganizationSelectorProps {
   organizations: OrganizationItem[];
@@ -20,15 +23,16 @@ export function OrganizationSelector({
   view
 }: OrganizationSelectorProps) {
   const router = useRouter();
+  const locale = getUiLocale();
+  const orgLabel = locale === "ru" ? "Организация" : "Organization";
 
   if (organizations.length === 0) {
-    return <p>No organizations available.</p>;
+    return <EmptyState message={locale === "ru" ? "Нет организаций." : "No organizations available."} />;
   }
 
   return (
-    <label className="event-selector">
-      <span>Organization:</span>
-      <select
+    <Field label={orgLabel}>
+      <Select
         value={selectedOrganizationId ?? organizations[0]?.id ?? ""}
         onChange={(e) => {
           const params = new URLSearchParams();
@@ -43,7 +47,7 @@ export function OrganizationSelector({
             {organization.name}
           </option>
         ))}
-      </select>
-    </label>
+      </Select>
+    </Field>
   );
 }

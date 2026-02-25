@@ -5,6 +5,8 @@ import { OrganizationSelector } from "../_components/organization-selector";
 import { getAdminEvents, getAuthMe } from "../_lib/admin-api";
 import { resolveSelectedEventId, resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
+import { PageHeader } from "../_components/ui/page-header";
+import { Panel } from "../_components/ui/panel";
 
 export default async function CheckinPage({
   searchParams
@@ -20,27 +22,26 @@ export default async function CheckinPage({
   const selectedEventId = resolveSelectedEventId(resolvedSearchParams, events);
 
   return (
-    <div className="section-grid">
-      <section className="card">
-        <h1>{ui("checkin", locale)}</h1>
-        <p>{ui("checkin_subtitle", locale)}</p>
-      </section>
+    <>
+      <PageHeader title={ui("checkin", locale)} subtitle={ui("checkin_subtitle", locale)} />
 
-      <section className="card">
-        <OrganizationSelector
-          organizations={organizations}
-          selectedOrganizationId={selectedOrganizationId}
-          basePath="/checkin"
-          eventId={selectedEventId}
-        />
-        <EventSelector
-          events={events}
-          selectedEventId={selectedEventId}
-          basePath="/checkin"
-          organizationId={selectedOrganizationId}
-        />
+      <Panel className="space-y-4">
+        <div className="toolbar-grid">
+          <OrganizationSelector
+            organizations={organizations}
+            selectedOrganizationId={selectedOrganizationId}
+            basePath="/checkin"
+            eventId={selectedEventId}
+          />
+          <EventSelector
+            events={events}
+            selectedEventId={selectedEventId}
+            basePath="/checkin"
+            organizationId={selectedOrganizationId}
+          />
+        </div>
         <CheckInForm initialEventId={selectedEventId ?? ""} organizationId={selectedOrganizationId ?? ""} />
-      </section>
-    </div>
+      </Panel>
+    </>
   );
 }

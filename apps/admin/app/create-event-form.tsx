@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MarkdownPreview } from "./_components/markdown-preview";
+import { Button } from "./_components/ui/button";
+import { InlineAlert } from "./_components/ui/inline-alert";
 import { datetimeLocalToIso } from "./_lib/datetime";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 
@@ -151,7 +153,7 @@ export function CreateEventForm({
   return (
     <div>
       {showTitle ? <p>{ru ? "Создать мероприятие" : "Create event"}</p> : null}
-      <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
+      <div className="grid max-w-[560px] gap-2">
         <input
           placeholder={ru ? "Название мероприятия" : "Event title"}
           value={title}
@@ -163,8 +165,8 @@ export function CreateEventForm({
             : "Short clear title. Markdown is supported. Example: **POWER** #12"}
         </small>
         {title.trim() ? (
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-            <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
+          <div className="rounded-lg border border-border bg-surface-elevated p-3">
+            <p className="mt-0">{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
             <MarkdownPreview markdown={title} />
           </div>
         ) : null}
@@ -201,8 +203,8 @@ export function CreateEventForm({
         />
         <small>{ru ? "Поддерживаются # заголовки, **жирный**, *курсив*, `код`, [ссылка](https://...)" : "Supports # headings, **bold**, *italic*, `code`, [link](https://...)"}</small>
         {description.trim() ? (
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-            <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр описания" : "Description preview"}</p>
+          <div className="rounded-lg border border-border bg-surface-elevated p-3">
+            <p className="mt-0">{ru ? "Предпросмотр описания" : "Description preview"}</p>
             <MarkdownPreview markdown={description} />
           </div>
         ) : null}
@@ -217,46 +219,47 @@ export function CreateEventForm({
             : "Bot sends this text after successful registration."}
         </small>
         {registrationSuccessMessage.trim() ? (
-          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
-            <p style={{ marginTop: 0 }}>{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
+          <div className="rounded-lg border border-border bg-surface-elevated p-3">
+            <p className="mt-0">{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
             <MarkdownPreview markdown={registrationSuccessMessage} />
           </div>
         ) : null}
 
-        <div style={{ border: "1px solid #ccc", borderRadius: 8, padding: 12, display: "grid", gap: 8 }}>
+        <div className="grid gap-2 rounded-lg border border-border bg-surface-elevated p-3">
           <strong>{ru ? "Вопросы при регистрации" : "Registration questions"}</strong>
           {questions.length === 0 ? (
-            <p style={{ margin: 0 }}>{ru ? "Вопросов пока нет." : "No questions yet."}</p>
+            <p className="m-0">{ru ? "Вопросов пока нет." : "No questions yet."}</p>
           ) : null}
           {questions.map((question, index) => (
-            <div key={index} style={{ display: "grid", gap: 6, border: "1px solid #eee", borderRadius: 6, padding: 8 }}>
+            <div key={index} className="grid gap-2 rounded-lg border border-border bg-surface p-3">
               <input
                 placeholder={ru ? `Вопрос #${index + 1}` : `Question #${index + 1}`}
                 value={question.prompt}
                 onChange={(e) => updateQuestion(index, { prompt: e.target.value })}
               />
-              <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label className="inline-flex items-center gap-2 text-sm text-muted">
                 <input
                   type="checkbox"
+                  className="h-4 w-4"
                   checked={question.required}
                   onChange={(e) => updateQuestion(index, { required: e.target.checked })}
                 />
                 {ru ? "Обязательный" : "Required"}
               </label>
-              <button type="button" onClick={() => removeQuestion(index)}>
+              <Button type="button" onClick={() => removeQuestion(index)} variant="danger" className="w-fit">
                 {ru ? "Удалить вопрос" : "Remove question"}
-              </button>
+              </Button>
             </div>
           ))}
-          <button type="button" onClick={addQuestion} disabled={questions.length >= 10}>
+          <Button type="button" onClick={addQuestion} disabled={questions.length >= 10} className="w-fit">
             {ru ? "Добавить вопрос" : "Add question"}
-          </button>
+          </Button>
         </div>
 
-        <button onClick={submit} disabled={loading}>
+        <Button onClick={submit} loading={loading} variant="primary" className="w-fit">
           {loading ? (ru ? "Создание..." : "Creating...") : (ru ? "Создать событие" : "Create event")}
-        </button>
-        {message ? <p>{message}</p> : null}
+        </Button>
+        {message ? <InlineAlert message={message} /> : null}
       </div>
     </div>
   );

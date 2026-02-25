@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
+import { Button } from "./_components/ui/button";
 
 export function CloseButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -45,11 +46,11 @@ export function CloseButton({ eventId, organizationId }: { eventId: string; orga
   }
 
   return (
-    <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-      <button onClick={close} disabled={loading}>
+    <div className="inline-flex items-center gap-2">
+      <Button onClick={close} loading={loading} variant="danger">
         {loading ? (ru ? "Закрытие..." : "Closing...") : (ru ? "Закрыть" : "Close")}
-      </button>
-      {message ? <span>{message}</span> : null}
+      </Button>
+      {message ? <span className="text-sm text-muted">{message}</span> : null}
     </div>
   );
 }

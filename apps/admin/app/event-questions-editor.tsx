@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
+import { Button } from "./_components/ui/button";
+import { InlineAlert } from "./_components/ui/inline-alert";
 
 interface QuestionItem {
   id?: string;
@@ -139,38 +141,39 @@ export function EventQuestionsEditor({ eventId, organizationId }: { eventId: str
   }
 
   return (
-    <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
-      <p style={{ margin: 0 }}>{ru ? "Вопросы регистрации" : "Registration questions"}</p>
+    <div className="mt-2 grid gap-3">
+      <p className="text-sm font-medium text-text">{ru ? "Вопросы регистрации" : "Registration questions"}</p>
       {loading ? <p>{ru ? "Загрузка..." : "Loading..."}</p> : null}
       {questions.map((question, index) => (
-        <div key={question.id ?? index} style={{ display: "grid", gap: 6, border: "1px solid #eee", borderRadius: 6, padding: 8 }}>
+        <div key={question.id ?? index} className="grid gap-2 rounded-lg border border-border bg-surface-elevated p-3">
           <input
             placeholder={ru ? `Вопрос #${index + 1}` : `Question #${index + 1}`}
             value={question.prompt}
             onChange={(e) => updateQuestion(index, { prompt: e.target.value })}
           />
-          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <label className="inline-flex items-center gap-2 text-sm text-muted">
             <input
               type="checkbox"
+              className="h-4 w-4"
               checked={question.isRequired}
               onChange={(e) => updateQuestion(index, { isRequired: e.target.checked })}
             />
             {ru ? "Обязательный" : "Required"}
           </label>
-          <button type="button" onClick={() => removeQuestion(index)}>
+          <Button type="button" onClick={() => removeQuestion(index)} variant="danger" className="w-fit">
             {ru ? "Удалить вопрос" : "Remove question"}
-          </button>
+          </Button>
         </div>
       ))}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={addQuestion} disabled={questions.length >= 10}>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" onClick={addQuestion} disabled={questions.length >= 10}>
           {ru ? "Добавить вопрос" : "Add question"}
-        </button>
-        <button type="button" onClick={save} disabled={saving || loading}>
+        </Button>
+        <Button type="button" onClick={save} loading={saving} disabled={loading} variant="primary">
           {saving ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить вопросы" : "Save questions")}
-        </button>
+        </Button>
       </div>
-      {message ? <p>{message}</p> : null}
+      {message ? <InlineAlert message={message} /> : null}
     </div>
   );
 }
