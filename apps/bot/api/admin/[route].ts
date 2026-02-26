@@ -7,6 +7,7 @@ import eventQuestionsHandler from "./event-questions";
 import eventsHandler from "./events";
 import exportHandler from "./export";
 import organizationsHandler from "./organizations";
+import organizationWebhookHandler from "./organization-webhook";
 import organizationMembersHandler from "./organization-members";
 import organizationTransferOwnershipHandler from "./organization-transfer-ownership";
 import promoteHandler from "./promote";
@@ -25,6 +26,7 @@ const HANDLERS_BY_ROUTE: Record<string, Handler> = {
   events: eventsHandler,
   export: exportHandler,
   organizations: organizationsHandler,
+  "organization-webhook": organizationWebhookHandler,
   "organization-members": organizationMembersHandler,
   "organization-transfer-ownership": organizationTransferOwnershipHandler,
   promote: promoteHandler,

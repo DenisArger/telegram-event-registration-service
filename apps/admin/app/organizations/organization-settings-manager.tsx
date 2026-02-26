@@ -133,6 +133,34 @@ export function OrganizationSettingsManager({
     }
   }
 
+  async function registerOrganizationWebhook() {
+    if (!selectedOrganizationId) {
+      setMessage(ru ? "Организация не выбрана." : "No organization selected.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/admin/organization-webhook", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ organizationId: selectedOrganizationId })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(parseErrorMessage(data, ru ? "Не удалось зарегистрировать webhook." : "Failed to register webhook."));
+        return;
+      }
+      setMessage(ru ? "Webhook зарегистрирован." : "Webhook registered.");
+    } catch {
+      setMessage(ru ? "Сетевая ошибка." : "Network error.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <section className="panel">
       <h2>{ru ? "Настройки организации" : "Organization settings"}</h2>
@@ -187,6 +215,11 @@ export function OrganizationSettingsManager({
           </label>
           <Button onClick={updateOrganization} loading={loading} disabled={!selectedOrganizationId}>
             {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
+          </Button>
+        </div>
+        <div className="flex">
+          <Button onClick={registerOrganizationWebhook} loading={loading} disabled={!selectedOrganizationId}>
+            {ru ? "Зарегистрировать webhook" : "Register webhook"}
           </Button>
         </div>
       </div>
