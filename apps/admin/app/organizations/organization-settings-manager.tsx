@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrganizationItem } from "../_lib/admin-api";
-import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
 import { Button } from "../_components/ui/button";
 import { InlineAlert } from "../_components/ui/inline-alert";
 
@@ -47,11 +46,6 @@ export function OrganizationSettingsManager({
   }, [selectedOrg?.id, selectedOrg?.name]);
 
   async function createOrganization() {
-    const base = getClientAdminApiBase();
-    if (!base) {
-      setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
     const name = createName.trim();
     if (!name) {
       setMessage(ru ? "Укажите название организации." : "Organization name is required.");
@@ -61,7 +55,7 @@ export function OrganizationSettingsManager({
     setLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`${base}/api/admin/organizations`, {
+      const response = await fetch("/api/admin/organizations", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
@@ -91,11 +85,6 @@ export function OrganizationSettingsManager({
   }
 
   async function updateOrganization() {
-    const base = getClientAdminApiBase();
-    if (!base) {
-      setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
     if (!selectedOrganizationId) {
       setMessage(ru ? "Организация не выбрана." : "No organization selected.");
       return;
@@ -122,7 +111,7 @@ export function OrganizationSettingsManager({
     setLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`${base}/api/admin/organizations`, {
+      const response = await fetch("/api/admin/organizations", {
         method: "PUT",
         headers: { "content-type": "application/json" },
         credentials: "include",
