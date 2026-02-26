@@ -40,6 +40,17 @@ describe("POST /api/admin/auth/email", () => {
     expect(res.payload).toEqual({ ok: true });
   });
 
+  it("returns 403 for email outside allowlist", async () => {
+    process.env.ADMIN_EMAIL_ALLOWLIST = "admin@example.com";
+    const { default: handler } = await import("../../../api/admin/auth/email");
+    const res = createRes();
+    await handler({ method: "POST", headers: {}, body: { email: "other@example.com" } } as any, res as any);
+
+    expect(mocks.signInWithOtp).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(403);
+    expect(res.payload).toEqual({ message: "admin_email_not_allowed" });
+  });
+
   it("returns 429 when supabase rate limit is reached", async () => {
     mocks.signInWithOtp.mockResolvedValueOnce({
       error: { code: "over_email_send_rate_limit", status: 429, message: "email rate limit exceeded" }
@@ -52,5 +63,17 @@ describe("POST /api/admin/auth/email", () => {
     expect(res.payload).toEqual({
       message: "Too many OTP requests. Please wait a few minutes and try again."
     });
+  });
+
+  it("returns 403 when otp is disabled for requested email", async () => {
+    mocks.signInWithOtp.mockResolvedValueOnce({
+      error: { code: "otp_disabled", status: 422, message: "Signups not allowed for otp" }
+    });
+    const { default: handler } = await import("../../../api/admin/auth/email");
+    const res = createRes();
+    await handler({ method: "POST", headers: {}, body: { email: "admin@example.com" } } as any, res as any);
+
+    expect(res.statusCode).toBe(403);
+    expect(res.payload).toEqual({ message: "admin_email_not_allowed" });
   });
 });

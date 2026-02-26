@@ -8,6 +8,13 @@ interface EmailAuthPayload {
   email?: unknown;
 }
 
+function getAllowedEmails(envSource: Record<string, string | undefined>): string[] {
+  return String(envSource.ADMIN_EMAIL_ALLOWLIST ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 function getAnonAuthClient(envSource: Record<string, string | undefined>) {
   const url = String(envSource.SUPABASE_URL ?? "").trim();
   const anonKey = String(envSource.SUPABASE_ANON_KEY ?? "").trim();
@@ -36,6 +43,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     sendError(res, 400, "n/a", "invalid_payload", "email must be valid");
     return;
   }
+  const allowedEmails = getAllowedEmails(process.env);
+  if (allowedEmails.length > 0 && !allowedEmails.includes(email)) {
+    sendError(res, 403, "n/a", "admin_email_not_allowed", "admin_email_not_allowed");
+    return;
+  }
 
   try {
     const { error } = await authClient.auth.signInWithOtp({
@@ -62,6 +74,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           "over_email_send_rate_limit",
           "Too many OTP requests. Please wait a few minutes and try again."
         );
+        return;
+      }
+      if (errorCode === "otp_disabled" || errorStatus === 422) {
+        sendError(res, 403, "n/a", "admin_email_not_allowed", "admin_email_not_allowed");
         return;
       }
       sendError(res, 401, "n/a", "otp_send_failed", "otp_send_failed");
