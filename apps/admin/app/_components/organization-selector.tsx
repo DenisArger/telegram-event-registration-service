@@ -16,6 +16,10 @@ interface OrganizationSelectorProps {
   density?: string | null;
 }
 
+function displayOrganizationName(name: string): string {
+  return name.replace(/\s+[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, "");
+}
+
 export function OrganizationSelector({
   organizations,
   selectedOrganizationId,
@@ -47,7 +51,7 @@ export function OrganizationSelector({
       >
         {organizations.map((organization) => (
           <option key={organization.id} value={organization.id}>
-            {organization.name}
+            {displayOrganizationName(organization.name)}
           </option>
         ))}
       </Select>
