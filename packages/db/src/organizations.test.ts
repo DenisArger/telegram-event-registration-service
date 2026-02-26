@@ -7,6 +7,7 @@ import {
   listUserOrganizations,
   removeOrganizationMember,
   transferOrganizationOwnership,
+  getOrganizationTelegramBotTokenEncrypted,
   updateOrganization,
   upsertOrganizationMember
 } from "./organizations";
@@ -246,5 +247,18 @@ describe("organizations data layer", () => {
 
     const result = await updateOrganization(db, { organizationId: "org1", name: "Org Renamed" });
     expect(result?.name).toBe("Org Renamed");
+  });
+
+  it("reads encrypted telegram bot token for organization", async () => {
+    const maybeSingle = vi.fn(async () => ({
+      data: { telegram_bot_token_encrypted: "enc-token" },
+      error: null
+    }));
+    const eq = vi.fn(() => ({ maybeSingle }));
+    const select = vi.fn(() => ({ eq }));
+    const db = { from: vi.fn(() => ({ select })) } as any;
+
+    const result = await getOrganizationTelegramBotTokenEncrypted(db, "org1");
+    expect(result).toBe("enc-token");
   });
 });

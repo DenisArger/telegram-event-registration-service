@@ -1,10 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createServiceClient, getUserByTelegramId } from "@event/db";
+import { createServiceClient, getOrganizationTelegramBotTokenEncrypted, getUserByTelegramId } from "@event/db";
 import { logError } from "@event/shared";
 import { applyCors } from "../../../src/cors.js";
 import { setAdminSession } from "../../../src/adminSession.js";
 import { verifyTelegramLoginPayload } from "../../../src/adminTelegramAuth.js";
 import { sendError } from "../../../src/adminApi.js";
+import { readOrganizationId } from "../../../src/adminOrgAccess.js";
+import { decryptSecret } from "../../../src/crypto.js";
 
 const db = createServiceClient(process.env);
 
@@ -31,7 +33,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  const verification = verifyTelegramLoginPayload(req.body, process.env);
+  let botTokenOverride: string | undefined;
+  const organizationId = readOrganizationId(req) || undefined;
+  if (organizationId) {
+    try {
+      const encryptedToken = await getOrganizationTelegramBotTokenEncrypted(db, organizationId);
+      if (encryptedToken) {
+        botTokenOverride = decryptSecret(encryptedToken, process.env);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown_error";
+      if (
+        message === "missing_token_encryption_key" ||
+        message === "invalid_token_encryption_key" ||
+        message === "invalid_encrypted_secret"
+      ) {
+        sendError(res, 500, "n/a", message, "TOKEN_ENCRYPTION_KEY is invalid or missing");
+        return;
+      }
+      logError("admin_auth_telegram_org_token_load_failed", { error, organizationId });
+      sendError(res, 500, "n/a", "admin_auth_failed", "Failed to authorize admin");
+      return;
+    }
+  }
+
+  const verification = verifyTelegramLoginPayload(req.body, process.env, Date.now(), botTokenOverride);
   if (!verification.ok) {
     sendError(res, 401, "n/a", "unauthorized", verification.error ?? "Unauthorized");
     return;

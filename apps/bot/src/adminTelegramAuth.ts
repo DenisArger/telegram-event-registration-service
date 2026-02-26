@@ -66,9 +66,10 @@ function buildDataCheckString(raw: Record<string, unknown>): string {
 export function verifyTelegramLoginPayload(
   raw: any,
   envSource: Record<string, string | undefined>,
-  nowMs = Date.now()
+  nowMs = Date.now(),
+  botTokenOverride?: string
 ): TelegramPayloadVerificationResult {
-  const botToken = String(envSource.TELEGRAM_BOT_TOKEN ?? "").trim();
+  const botToken = String(botTokenOverride ?? envSource.TELEGRAM_BOT_TOKEN ?? "").trim();
   if (!botToken) return { ok: false, error: "missing_bot_token" };
 
   const normalized = normalizePayload(raw);

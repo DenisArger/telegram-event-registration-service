@@ -108,6 +108,20 @@ export async function updateOrganization(
   return mapOrganization(data as OrganizationRow);
 }
 
+export async function getOrganizationTelegramBotTokenEncrypted(
+  db: SupabaseClient,
+  organizationId: string
+): Promise<string | null> {
+  const { data, error } = await db
+    .from("organizations")
+    .select("telegram_bot_token_encrypted")
+    .eq("id", organizationId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as { telegram_bot_token_encrypted?: string | null } | null)?.telegram_bot_token_encrypted ?? null;
+}
+
 export async function listUserOrganizations(
   db: SupabaseClient,
   userId: string,
