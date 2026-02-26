@@ -39,4 +39,27 @@ describe("logger", () => {
     expect(payload).toContain('"api_key":"[REDACTED]"');
     expect(payload).toContain('"safe":"value"');
   });
+
+  it("does not throw on circular payload", () => {
+    const data: Record<string, unknown> = { ok: true };
+    data.self = data;
+
+    expect(() => logError("circular", data)).not.toThrow();
+    const payload = String(consoleErrorSpy.mock.calls[0][0]);
+    expect(payload).toContain('"self":"[Circular]"');
+  });
+
+  it("does not throw on unreadable getter payload", () => {
+    const data: Record<string, unknown> = {};
+    Object.defineProperty(data, "broken", {
+      enumerable: true,
+      get() {
+        throw new Error("boom");
+      }
+    });
+
+    expect(() => logError("getter", data)).not.toThrow();
+    const payload = String(consoleErrorSpy.mock.calls[0][0]);
+    expect(payload).toContain('"broken":"[Getter]"');
+  });
 });
