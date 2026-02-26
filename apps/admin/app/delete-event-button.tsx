@@ -4,24 +4,21 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 import { Button } from "./_components/ui/button";
+import { ConfirmDialog } from "./_components/ui/confirm-dialog";
 
 export function DeleteEventButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function remove() {
+  async function removeConfirmed() {
     const base = getClientAdminApiBase();
     if (!base) {
       setMessage(missingClientApiBaseMessage(ru));
       return;
     }
-
-    const confirmed = window.confirm(
-      ru ? "Удалить мероприятие? Это действие нельзя отменить." : "Delete event? This action cannot be undone."
-    );
-    if (!confirmed) return;
 
     setLoading(true);
     setMessage(null);
@@ -42,6 +39,7 @@ export function DeleteEventButton({ eventId, organizationId }: { eventId: string
       }
 
       setMessage(ru ? "Событие удалено." : "Event deleted.");
+      setConfirmOpen(false);
       router.refresh();
     } catch {
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
@@ -52,10 +50,21 @@ export function DeleteEventButton({ eventId, organizationId }: { eventId: string
 
   return (
     <div className="inline-flex items-center gap-2">
-      <Button onClick={remove} loading={loading} variant="danger">
+      <Button onClick={() => setConfirmOpen(true)} loading={loading} variant="danger">
         {loading ? (ru ? "Удаление..." : "Deleting...") : (ru ? "Удалить" : "Delete")}
       </Button>
       {message ? <span className="text-sm text-muted">{message}</span> : null}
+      <ConfirmDialog
+        open={confirmOpen}
+        title={ru ? "Удалить мероприятие?" : "Delete event?"}
+        description={ru ? "Это действие нельзя отменить." : "This action cannot be undone."}
+        confirmLabel={ru ? "Удалить" : "Delete"}
+        cancelLabel={ru ? "Отмена" : "Cancel"}
+        confirmVariant="danger"
+        loading={loading}
+        onConfirm={removeConfirmed}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

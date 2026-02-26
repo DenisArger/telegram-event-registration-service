@@ -25,12 +25,12 @@ describe("DeleteEventButton", () => {
     render(React.createElement(DeleteEventButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[1]!);
     await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
   });
 
   it("deletes event and refreshes page", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    vi.stubGlobal("confirm", vi.fn(() => true));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -42,20 +42,20 @@ describe("DeleteEventButton", () => {
     render(React.createElement(DeleteEventButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[1]!);
     await screen.findByText("Event deleted.");
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it("does nothing when delete is not confirmed", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     render(React.createElement(DeleteEventButton, { eventId: "e1" }));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

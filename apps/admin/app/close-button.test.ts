@@ -25,6 +25,7 @@ describe("CloseButton", () => {
     render(React.createElement(CloseButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1]!);
     await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
   });
 
@@ -41,6 +42,7 @@ describe("CloseButton", () => {
     render(React.createElement(CloseButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1]!);
     await screen.findByText("Event closed.");
     expect(refresh).toHaveBeenCalledTimes(1);
   });
@@ -58,9 +60,11 @@ describe("CloseButton", () => {
     render(React.createElement(CloseButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1]!);
     await screen.findByText("Forbidden");
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1]!);
     await screen.findByText("Network error.");
   });
 });

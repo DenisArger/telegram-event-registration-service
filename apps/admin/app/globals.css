@@ -326,6 +326,14 @@
     @apply fixed inset-0 z-30 flex justify-end bg-slate-950/50 backdrop-blur-sm;
   }
 
+  .confirm-dialog-overlay {
+    @apply fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4;
+  }
+
+  .confirm-dialog-card {
+    @apply w-full max-w-md rounded-xl border border-border bg-surface p-4 shadow-panel;
+  }
+
   .attendee-drawer {
     @apply h-screen w-full max-w-[520px] overflow-y-auto border-l border-border bg-surface p-5 shadow-panel;
     animation: slide-in 180ms ease-out;

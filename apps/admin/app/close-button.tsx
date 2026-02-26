@@ -4,12 +4,14 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 import { Button } from "./_components/ui/button";
+import { ConfirmDialog } from "./_components/ui/confirm-dialog";
 
 export function CloseButton({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function close() {
     const base = getClientAdminApiBase();
@@ -47,10 +49,24 @@ export function CloseButton({ eventId, organizationId }: { eventId: string; orga
 
   return (
     <div className="inline-flex items-center gap-2">
-      <Button onClick={close} loading={loading} variant="danger">
+      <Button onClick={() => setConfirmOpen(true)} loading={loading} variant="danger">
         {loading ? (ru ? "Закрытие..." : "Closing...") : (ru ? "Закрыть" : "Close")}
       </Button>
       {message ? <span className="text-sm text-muted">{message}</span> : null}
+      <ConfirmDialog
+        open={confirmOpen}
+        title={ru ? "Закрыть мероприятие?" : "Close event?"}
+        description={ru ? "Регистрация будет остановлена." : "Registration will be stopped."}
+        confirmLabel={ru ? "Закрыть" : "Close"}
+        cancelLabel={ru ? "Отмена" : "Cancel"}
+        confirmVariant="danger"
+        loading={loading}
+        onConfirm={async () => {
+          await close();
+          setConfirmOpen(false);
+        }}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
