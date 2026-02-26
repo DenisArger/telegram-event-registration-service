@@ -5,8 +5,10 @@ const mocks = vi.hoisted(() => {
   const query: any = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn(),
-    update: vi.fn().mockReturnThis()
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis()
   };
 
   return {
@@ -52,7 +54,7 @@ describe("/api/admin/events", () => {
     const { default: handler } = await import("../../../api/admin/events");
     const res = createRes();
 
-    await handler({ method: "DELETE", headers: {} } as any, res as any);
+    await handler({ method: "PATCH", headers: {} } as any, res as any);
 
     expect(res.statusCode).toBe(405);
   });
@@ -209,6 +211,42 @@ describe("/api/admin/events", () => {
           eventId: " ",
           title: "Team Updated"
         }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toEqual({ message: "eventId is required" });
+  });
+
+  it("deletes event with DELETE", async () => {
+    mocks.query.maybeSingle.mockResolvedValueOnce({ data: { id: "e1" }, error: null });
+    const { default: handler } = await import("../../../api/admin/events");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "DELETE",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: "e1" }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toEqual({ eventId: "e1" });
+    expect(mocks.query.update).toHaveBeenCalledWith(expect.objectContaining({ deleted_at: expect.any(String) }));
+  });
+
+  it("returns 400 for DELETE when eventId is missing", async () => {
+    const { default: handler } = await import("../../../api/admin/events");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "DELETE",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: " " }
       } as any,
       res as any
     );

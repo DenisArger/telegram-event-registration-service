@@ -1,14 +1,12 @@
-import Link from "next/link";
 import React from "react";
 import { OrganizationSelector } from "../_components/organization-selector";
 import { getAdminEvents, getAuthMe } from "../_lib/admin-api";
 import { resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
-import { Badge } from "../_components/ui/badge";
 import { EmptyState } from "../_components/ui/empty-state";
 import { PageHeader } from "../_components/ui/page-header";
 import { Panel } from "../_components/ui/panel";
-import { EmojiText } from "../_components/emoji-text";
+import { EventsManager } from "./events-manager";
 
 export default async function EventsPage({
   searchParams
@@ -35,29 +33,10 @@ export default async function EventsPage({
           />
         </div>
 
-        {events.length === 0 ? (
+        {!selectedOrganizationId ? (
           <EmptyState message={ui("no_events", locale)} />
         ) : (
-          <ul className="grid gap-3">
-            {events.map((event) => (
-              <li key={event.id} className="rounded-xl border border-border bg-surface-elevated p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/events/${event.id}?${new URLSearchParams(selectedOrganizationId ? { organizationId: selectedOrganizationId } : {}).toString()}`}
-                    className="text-base font-semibold no-underline"
-                  >
-                    <EmojiText text={event.title} />
-                  </Link>
-                  <Badge tone={event.status === "published" ? "success" : "muted"}>{event.status}</Badge>
-                </div>
-                <p className="mt-2">
-                  {event.startsAt ? `${new Date(event.startsAt).toLocaleString()}` : ""}
-                  {event.endsAt ? ` -> ${new Date(event.endsAt).toLocaleString()}` : ""}
-                  {typeof event.capacity === "number" && event.capacity > 0 ? ` | cap: ${event.capacity}` : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <EventsManager events={events} organizationId={selectedOrganizationId} />
         )}
       </Panel>
     </>

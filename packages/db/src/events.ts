@@ -26,6 +26,7 @@ export async function listPublishedEvents(db: SupabaseClient): Promise<EventEnti
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("status", "published")
+    .is("deleted_at", null)
     .order("starts_at", { ascending: true });
 
   if (error) throw error;
@@ -77,6 +78,7 @@ export async function getEventById(
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("id", eventId)
+    .is("deleted_at", null)
     .maybeSingle();
 
   if (error) throw error;
@@ -94,6 +96,7 @@ export async function publishEvent(
     .update({ status: "published" })
     .eq("id", eventId)
     .eq("status", "draft")
+    .is("deleted_at", null)
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
 
@@ -112,6 +115,7 @@ export async function closeEvent(
     .update({ status: "closed" })
     .eq("id", eventId)
     .eq("status", "published")
+    .is("deleted_at", null)
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
 
@@ -125,6 +129,7 @@ export async function listAllEvents(db: SupabaseClient, organizationId?: string)
   const query = db
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .is("deleted_at", null)
     .order("starts_at", { ascending: false });
 
   const { data, error } = organizationId

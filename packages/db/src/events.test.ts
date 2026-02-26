@@ -22,7 +22,7 @@ describe("events data layer", () => {
       data: [{ id: "e1", title: "T", description: null, starts_at: "2026", ends_at: null, capacity: 10, registration_success_message: null, status: "published" }],
       error: null
     }));
-    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
+    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), is: vi.fn().mockReturnThis(), order };
     const db = { from: vi.fn(() => query) } as any;
 
     const result = await listPublishedEvents(db);
@@ -64,7 +64,7 @@ describe("events data layer", () => {
 
   it("getEventById returns null when missing", async () => {
     const maybeSingle = vi.fn(async () => ({ data: null, error: null }));
-    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), is: vi.fn().mockReturnThis(), maybeSingle };
     const db = { from: vi.fn(() => query) } as any;
 
     await expect(getEventById(db, "missing")).resolves.toBeNull();
@@ -84,7 +84,7 @@ describe("events data layer", () => {
       },
       error: null
     }));
-    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), maybeSingle };
+    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), is: vi.fn().mockReturnThis(), maybeSingle };
     const db = { from: vi.fn(() => query) } as any;
 
     const result = await getEventById(db, "e1");
@@ -111,11 +111,13 @@ describe("events data layer", () => {
     const publishQuery = {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       select: vi.fn(() => ({ maybeSingle: maybeSinglePublish }))
     };
     const closeQuery = {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
       select: vi.fn(() => ({ maybeSingle: maybeSingleClose }))
     };
     const db = {
@@ -135,7 +137,7 @@ describe("events data layer", () => {
       error: null
     }));
     const db = {
-      from: vi.fn(() => ({ select: vi.fn().mockReturnThis(), order }))
+      from: vi.fn(() => ({ select: vi.fn().mockReturnThis(), is: vi.fn().mockReturnThis(), order }))
     } as any;
 
     const result = await listAllEvents(db);
@@ -468,7 +470,7 @@ describe("events data layer", () => {
 
   it("throws on db errors", async () => {
     const order = vi.fn(async () => ({ data: null, error: new Error("boom") }));
-    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), order };
+    const query = { select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), is: vi.fn().mockReturnThis(), order };
     const db = { from: vi.fn(() => query) } as any;
 
     await expect(listPublishedEvents(db)).rejects.toThrow("boom");

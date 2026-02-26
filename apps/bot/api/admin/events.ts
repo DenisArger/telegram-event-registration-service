@@ -42,7 +42,7 @@ function parseQuestions(raw: unknown): { value: Array<{ prompt: string; isRequir
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
 
-  if (req.method !== "GET" && req.method !== "POST" && req.method !== "PUT") {
+  if (req.method !== "GET" && req.method !== "POST" && req.method !== "PUT" && req.method !== "DELETE") {
     res.status(405).json({ message: "Method not allowed" });
     return;
   }
@@ -73,7 +73,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         const query = db
           .from("events")
           .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
-          .eq("id", eventId);
+          .eq("id", eventId)
+          .is("deleted_at", null);
         const { data, error } = organizationId
           ? await query.eq("organization_id", organizationId).maybeSingle()
           : await query.maybeSingle();
@@ -123,6 +124,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   if (organizationId) {
     const hasOrgAccess = await requireOrganizationAccess(req, res, db, ctx, organizationId);
     if (!hasOrgAccess) return;
+  }
+
+  if (req.method === "DELETE") {
+    const eventId = String(req.body?.eventId ?? "").trim();
+    if (!eventId) {
+      res.status(400).json({ message: "eventId is required" });
+      return;
+    }
+
+    const hasEventAccess = await requireEventOrganizationAccess(req, res, db, ctx, organizationId, eventId);
+    if (!hasEventAccess) return;
+
+    try {
+      const baseQuery = db
+        .from("events")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", eventId)
+        .is("deleted_at", null);
+
+      const { data, error } = organizationId
+        ? await baseQuery
+          .eq("organization_id", organizationId)
+          .select("id")
+          .maybeSingle()
+        : await baseQuery
+          .select("id")
+          .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        res.status(404).json({ message: "Event not found" });
+        return;
+      }
+
+      res.status(200).json({ eventId: data.id });
+    } catch (error) {
+      logError("admin_event_delete_failed", { error, eventId, organizationId });
+      res.status(500).json({ message: "Failed to delete event" });
+    }
+    return;
   }
 
   if (req.method === "PUT") {

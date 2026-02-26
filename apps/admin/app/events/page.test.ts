@@ -14,22 +14,23 @@ vi.mock("../_lib/admin-api", () => ({
 vi.mock("../_components/organization-selector", () => ({
   OrganizationSelector: () => "org-selector"
 }));
+vi.mock("./events-manager", () => ({
+  EventsManager: ({ organizationId, events }: { organizationId?: string; events: Array<{ id: string }> }) =>
+    `events-manager:${organizationId ?? ""}:${events.map((item) => item.id).join(",")}`
+}));
 
 import EventsPage from "./page";
 
 describe("EventsPage", () => {
   it("renders brief list and links to event edit pages", async () => {
     const html = renderToStaticMarkup(await EventsPage({ searchParams: Promise.resolve({ organizationId: "org1" }) }));
-    expect(html).toContain("Team");
-    expect(html).not.toContain("Sync");
-    expect(html).toContain("/events/e1");
-    expect(html).toContain("organizationId=org1");
+    expect(html).toContain("events-manager:org1:e1");
   });
 
   it("renders no events message when list is empty", async () => {
     vi.mocked(getAdminEvents).mockResolvedValueOnce([]);
     const html = renderToStaticMarkup(await EventsPage({ searchParams: Promise.resolve({ organizationId: "org1" }) }));
-    expect(html).toContain("No events available or admin API is not configured.");
+    expect(html).toContain("events-manager:org1:");
   });
 
   it("renders endsAt and capacity without startsAt", async () => {
@@ -46,7 +47,6 @@ describe("EventsPage", () => {
     ] as any);
 
     const html = renderToStaticMarkup(await EventsPage({ searchParams: Promise.resolve({ organizationId: "org1" }) }));
-    expect(html).toContain("Afterparty");
-    expect(html).not.toContain("cap:");
+    expect(html).toContain("events-manager:org1:e2");
   });
 });
