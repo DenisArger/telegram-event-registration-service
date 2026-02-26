@@ -9,20 +9,10 @@ describe("EventQuestionsEditor", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-    delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
     delete process.env.NEXT_PUBLIC_LOCALE;
   });
 
-  it("shows missing env message on save", async () => {
-    render(<EventQuestionsEditor eventId="e1" />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Save questions" }));
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
-  });
-
   it("loads and saves questions", async () => {
-    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
@@ -50,7 +40,7 @@ describe("EventQuestionsEditor", () => {
     });
 
     const secondCall = fetchMock.mock.calls[1];
-    expect(secondCall?.[0]).toBe("https://api.example/api/admin/event-questions");
+    expect(secondCall?.[0]).toBe("/api/admin/event-questions");
     const body = JSON.parse((secondCall?.[1] as any).body);
     expect(body).toEqual({
       eventId: "e1",
@@ -61,8 +51,6 @@ describe("EventQuestionsEditor", () => {
   });
 
   it("shows load error message", async () => {
-    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValueOnce({

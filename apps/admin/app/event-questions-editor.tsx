@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getClientAdminApiBase, missingClientApiBaseMessage } from "./_lib/admin-client";
 import { Button } from "./_components/ui/button";
 import { InlineAlert } from "./_components/ui/inline-alert";
 
@@ -21,7 +20,6 @@ interface EventQuestionApiItem {
 
 export function EventQuestionsEditor({ eventId, organizationId }: { eventId: string; organizationId?: string }) {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
-  const base = getClientAdminApiBase();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,13 +29,12 @@ export function EventQuestionsEditor({ eventId, organizationId }: { eventId: str
   useEffect(() => {
     let mounted = true;
     async function load() {
-      if (!base) return;
       setLoading(true);
       setMessage(null);
       try {
         const params = new URLSearchParams({ eventId });
         if (organizationId) params.set("organizationId", organizationId);
-        const response = await fetch(`${base}/api/admin/event-questions?${params.toString()}`, {
+        const response = await fetch(`/api/admin/event-questions?${params.toString()}`, {
           credentials: "include"
         });
         const data = await response.json();
@@ -67,7 +64,7 @@ export function EventQuestionsEditor({ eventId, organizationId }: { eventId: str
     return () => {
       mounted = false;
     };
-  }, [base, eventId, organizationId, ru]);
+  }, [eventId, organizationId, ru]);
 
   function syncPositions(next: QuestionItem[]) {
     return next.map((item, index) => ({ ...item, position: index + 1 }));
@@ -87,11 +84,6 @@ export function EventQuestionsEditor({ eventId, organizationId }: { eventId: str
   }
 
   async function save() {
-    if (!base) {
-      setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
-
     if (questions.some((item) => item.prompt.trim().length < 1 || item.prompt.trim().length > 500)) {
       setMessage(ru ? "Текст вопроса должен быть 1..500 символов." : "Question text must be 1..500 chars.");
       return;
@@ -100,7 +92,7 @@ export function EventQuestionsEditor({ eventId, organizationId }: { eventId: str
     setSaving(true);
     setMessage(null);
     try {
-      const response = await fetch(`${base}/api/admin/event-questions`, {
+      const response = await fetch("/api/admin/event-questions", {
         method: "PUT",
         headers: {
           "content-type": "application/json"
