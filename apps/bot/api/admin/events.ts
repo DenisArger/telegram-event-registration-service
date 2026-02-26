@@ -44,6 +44,14 @@ function isMissingDeletedAtColumn(error: unknown): boolean {
   return message.includes("deleted_at") && (message.includes("column") || message.includes("schema cache"));
 }
 
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? "").trim();
+    if (message) return message;
+  }
+  return fallback;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
 
@@ -372,6 +380,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(201).json({ event, questions: savedQuestions });
   } catch (error) {
     logError("admin_create_event_failed", { error, title, startsAt: startsAtRaw, capacity: capacity.value });
-    res.status(500).json({ message: "Failed to create event" });
+    res.status(500).json({ message: extractErrorMessage(error, "Failed to create event") });
   }
 }
