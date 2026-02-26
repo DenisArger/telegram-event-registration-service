@@ -18,7 +18,7 @@ function resolveCorsOrigin(req: VercelRequest, envSource: Record<string, string 
 
 export function applyCors(req: VercelRequest, res: VercelResponse): boolean {
   res.setHeader("access-control-allow-origin", resolveCorsOrigin(req, process.env));
-  res.setHeader("access-control-allow-methods", "GET,POST,PUT,OPTIONS");
+  res.setHeader("access-control-allow-methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.setHeader("access-control-allow-credentials", "true");
   res.setHeader("access-control-allow-headers", "content-type,x-admin-email");
 
