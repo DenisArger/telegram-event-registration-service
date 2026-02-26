@@ -39,6 +39,11 @@ function parseQuestions(raw: unknown): { value: Array<{ prompt: string; isRequir
   return { value: mapped };
 }
 
+function isMissingDeletedAtColumn(error: unknown): boolean {
+  const message = String((error as { message?: unknown } | null)?.message ?? "");
+  return message.includes("deleted_at") && (message.includes("column") || message.includes("schema cache"));
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
 
@@ -70,14 +75,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         const hasAccess = await requireEventOrganizationAccess(req, res, db, ctx, organizationId, eventId);
         if (!hasAccess) return;
 
-        const query = db
+        const withDeletedFilter = db
           .from("events")
           .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
           .eq("id", eventId)
           .is("deleted_at", null);
-        const { data, error } = organizationId
-          ? await query.eq("organization_id", organizationId).maybeSingle()
-          : await query.maybeSingle();
+        let data: any = null;
+        let error: any = null;
+        if (organizationId) {
+          const result = await withDeletedFilter.eq("organization_id", organizationId).maybeSingle();
+          data = result.data;
+          error = result.error;
+        } else {
+          const result = await withDeletedFilter.maybeSingle();
+          data = result.data;
+          error = result.error;
+        }
+
+        if (error && isMissingDeletedAtColumn(error)) {
+          const fallback = db
+            .from("events")
+            .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
+            .eq("id", eventId);
+          if (organizationId) {
+            const result = await fallback.eq("organization_id", organizationId).maybeSingle();
+            data = result.data;
+            error = result.error;
+          } else {
+            const result = await fallback.maybeSingle();
+            data = result.data;
+            error = result.error;
+          }
+        }
 
         if (error) throw error;
         if (!data) {

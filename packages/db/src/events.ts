@@ -7,6 +7,11 @@ import type {
   WaitlistEntryEntity
 } from "@event/shared";
 
+function isMissingDeletedAtColumn(error: unknown): boolean {
+  const message = String((error as { message?: unknown } | null)?.message ?? "");
+  return message.includes("deleted_at") && (message.includes("column") || message.includes("schema cache"));
+}
+
 function mapEventRow(row: any): EventEntity {
   return {
     id: row.id,
@@ -22,16 +27,24 @@ function mapEventRow(row: any): EventEntity {
 }
 
 export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
-  const { data, error } = await db
+  const withDeletedFilter = await db
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("status", "published")
     .is("deleted_at", null)
     .order("starts_at", { ascending: true });
+  if (!withDeletedFilter.error) {
+    return (withDeletedFilter.data ?? []).map((row) => mapEventRow(row));
+  }
+  if (!isMissingDeletedAtColumn(withDeletedFilter.error)) throw withDeletedFilter.error;
 
-  if (error) throw error;
-
-  return (data ?? []).map((row) => mapEventRow(row));
+  const fallback = await db
+    .from("events")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .eq("status", "published")
+    .order("starts_at", { ascending: true });
+  if (fallback.error) throw fallback.error;
+  return (fallback.data ?? []).map((row) => mapEventRow(row));
 }
 
 export async function createEvent(
@@ -74,24 +87,33 @@ export async function getEventById(
   db: SupabaseClient,
   eventId: string
 ): Promise<EventEntity | null> {
-  const { data, error } = await db
+  const withDeletedFilter = await db
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("id", eventId)
     .is("deleted_at", null)
     .maybeSingle();
+  if (!withDeletedFilter.error) {
+    if (!withDeletedFilter.data) return null;
+    return mapEventRow(withDeletedFilter.data);
+  }
+  if (!isMissingDeletedAtColumn(withDeletedFilter.error)) throw withDeletedFilter.error;
 
-  if (error) throw error;
-  if (!data) return null;
-
-  return mapEventRow(data);
+  const fallback = await db
+    .from("events")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (fallback.error) throw fallback.error;
+  if (!fallback.data) return null;
+  return mapEventRow(fallback.data);
 }
 
 export async function publishEvent(
   db: SupabaseClient,
   eventId: string
 ): Promise<EventEntity | null> {
-  const { data, error } = await db
+  const withDeletedFilter = await db
     .from("events")
     .update({ status: "published" })
     .eq("id", eventId)
@@ -99,18 +121,29 @@ export async function publishEvent(
     .is("deleted_at", null)
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
+  if (!withDeletedFilter.error) {
+    if (!withDeletedFilter.data) return null;
+    return mapEventRow(withDeletedFilter.data);
+  }
+  if (!isMissingDeletedAtColumn(withDeletedFilter.error)) throw withDeletedFilter.error;
 
-  if (error) throw error;
-  if (!data) return null;
-
-  return mapEventRow(data);
+  const fallback = await db
+    .from("events")
+    .update({ status: "published" })
+    .eq("id", eventId)
+    .eq("status", "draft")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .maybeSingle();
+  if (fallback.error) throw fallback.error;
+  if (!fallback.data) return null;
+  return mapEventRow(fallback.data);
 }
 
 export async function closeEvent(
   db: SupabaseClient,
   eventId: string
 ): Promise<EventEntity | null> {
-  const { data, error } = await db
+  const withDeletedFilter = await db
     .from("events")
     .update({ status: "closed" })
     .eq("id", eventId)
@@ -118,27 +151,47 @@ export async function closeEvent(
     .is("deleted_at", null)
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .maybeSingle();
+  if (!withDeletedFilter.error) {
+    if (!withDeletedFilter.data) return null;
+    return mapEventRow(withDeletedFilter.data);
+  }
+  if (!isMissingDeletedAtColumn(withDeletedFilter.error)) throw withDeletedFilter.error;
 
-  if (error) throw error;
-  if (!data) return null;
-
-  return mapEventRow(data);
+  const fallback = await db
+    .from("events")
+    .update({ status: "closed" })
+    .eq("id", eventId)
+    .eq("status", "published")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .maybeSingle();
+  if (fallback.error) throw fallback.error;
+  if (!fallback.data) return null;
+  return mapEventRow(fallback.data);
 }
 
 export async function listAllEvents(db: SupabaseClient, organizationId?: string): Promise<EventEntity[]> {
-  const query = db
+  const withDeletedFilterQuery = db
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .is("deleted_at", null)
     .order("starts_at", { ascending: false });
+  const withDeletedFilter = organizationId
+    ? await withDeletedFilterQuery.eq("organization_id", organizationId)
+    : await withDeletedFilterQuery;
+  if (!withDeletedFilter.error) {
+    return (withDeletedFilter.data ?? []).map((row) => mapEventRow(row));
+  }
+  if (!isMissingDeletedAtColumn(withDeletedFilter.error)) throw withDeletedFilter.error;
 
-  const { data, error } = organizationId
-    ? await query.eq("organization_id", organizationId)
-    : await query;
-
-  if (error) throw error;
-
-  return (data ?? []).map((row) => mapEventRow(row));
+  const fallbackQuery = db
+    .from("events")
+    .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
+    .order("starts_at", { ascending: false });
+  const fallback = organizationId
+    ? await fallbackQuery.eq("organization_id", organizationId)
+    : await fallbackQuery;
+  if (fallback.error) throw fallback.error;
+  return (fallback.data ?? []).map((row) => mapEventRow(row));
 }
 
 export async function listEventAttendees(

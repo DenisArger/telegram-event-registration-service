@@ -25,6 +25,7 @@ describe("EventsPage", () => {
   it("renders brief list and links to event edit pages", async () => {
     const html = renderToStaticMarkup(await EventsPage({ searchParams: Promise.resolve({ organizationId: "org1" }) }));
     expect(html).toContain("events-manager:org1:e1");
+    expect(html).toContain("/events/new?organizationId=org1");
   });
 
   it("renders no events message when list is empty", async () => {

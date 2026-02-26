@@ -4,7 +4,6 @@ import Link from "next/link";
 import React from "react";
 import type { EventItem } from "../_lib/admin-api";
 import { Badge } from "../_components/ui/badge";
-import { CreateEventForm } from "../create-event-form";
 import { CloseButton } from "../close-button";
 import { DeleteEventButton } from "../delete-event-button";
 import { PublishButton } from "../publish-button";
@@ -15,10 +14,6 @@ export function EventsManager({ events, organizationId }: { events: EventItem[];
 
   return (
     <div className="space-y-4">
-      <section className="rounded-xl border border-border bg-surface-elevated p-4">
-        <CreateEventForm showTitle={false} organizationId={organizationId} />
-      </section>
-
       <ul className="grid gap-3">
         {events.map((event) => (
           <li key={event.id} className="rounded-xl border border-border bg-surface-elevated p-4">
