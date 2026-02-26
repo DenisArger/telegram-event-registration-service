@@ -2,7 +2,6 @@ import Link from "next/link";
 import React from "react";
 import { OrganizationSelector } from "../_components/organization-selector";
 import { getAdminEvents, getAuthMe } from "../_lib/admin-api";
-import { MarkdownPreview } from "../_components/markdown-preview";
 import { resolveSelectedOrganizationId } from "../_lib/event-selection";
 import { getUiLocale, ui } from "../i18n";
 import { Badge } from "../_components/ui/badge";
@@ -56,7 +55,6 @@ export default async function EventsPage({
                   {event.endsAt ? ` -> ${new Date(event.endsAt).toLocaleString()}` : ""}
                   {typeof event.capacity === "number" && event.capacity > 0 ? ` | cap: ${event.capacity}` : ""}
                 </p>
-                {event.description ? <MarkdownPreview markdown={event.description} /> : null}
               </li>
             ))}
           </ul>

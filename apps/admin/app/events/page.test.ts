@@ -21,7 +21,7 @@ describe("EventsPage", () => {
   it("renders brief list and links to event edit pages", async () => {
     const html = renderToStaticMarkup(await EventsPage({ searchParams: Promise.resolve({ organizationId: "org1" }) }));
     expect(html).toContain("Team");
-    expect(html).toContain("Sync");
+    expect(html).not.toContain("Sync");
     expect(html).toContain("/events/e1");
     expect(html).toContain("organizationId=org1");
   });
