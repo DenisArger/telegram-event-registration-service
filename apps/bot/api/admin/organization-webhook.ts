@@ -17,6 +17,9 @@ function resolveWebhookBaseUrl(envSource: Record<string, string | undefined>): s
   const explicit = String(envSource.TELEGRAM_WEBHOOK_BASE_URL ?? "").trim();
   if (explicit) return explicit;
 
+  const adminApiBase = String(envSource.ADMIN_API_BASE_URL ?? "").trim();
+  if (adminApiBase) return adminApiBase;
+
   const vercelUrl = String(envSource.VERCEL_URL ?? "").trim();
   if (vercelUrl) return `https://${vercelUrl}`;
 
@@ -103,7 +106,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       return;
     }
     if (message === "missing_webhook_base_url") {
-      sendError(res, 500, ctx.requestId, message, "TELEGRAM_WEBHOOK_BASE_URL or VERCEL_URL is required");
+      sendError(
+        res,
+        500,
+        ctx.requestId,
+        message,
+        "TELEGRAM_WEBHOOK_BASE_URL, ADMIN_API_BASE_URL or VERCEL_URL is required"
+      );
       return;
     }
 
