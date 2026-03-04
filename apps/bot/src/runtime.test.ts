@@ -216,6 +216,15 @@ describe("bot runtime", () => {
     expect(filledCtx.reply).toHaveBeenCalled();
   });
 
+  it("passes organizationId from webhook update to /events query", async () => {
+    const command = state.commands.get("events");
+    const ctx = baseCtx({ update: { __organizationId: "org-1" } });
+
+    await command?.(ctx);
+
+    expect(mocks.listPublishedEvents).toHaveBeenCalledWith({}, "org-1");
+  });
+
   it("shows only cancel button when user is already registered", async () => {
     const command = state.commands.get("events");
     mocks.listPublishedEvents.mockResolvedValueOnce([

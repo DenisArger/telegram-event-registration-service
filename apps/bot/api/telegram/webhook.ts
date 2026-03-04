@@ -37,9 +37,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   }
 
   try {
+    const organizationId = readOrganizationId(req);
     const botToken = await resolveBotToken(req);
     const bot = getBotForToken(botToken);
-    await bot.handleUpdate(req.body);
+    const update =
+      organizationId && req.body && typeof req.body === "object"
+        ? { ...(req.body as Record<string, unknown>), __organizationId: organizationId }
+        : req.body;
+    await bot.handleUpdate(update);
     res.status(200).json({ ok: true });
   } catch (error) {
     logError("telegram_webhook_failed", { error });

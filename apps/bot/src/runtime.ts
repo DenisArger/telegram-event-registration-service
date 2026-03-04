@@ -34,6 +34,13 @@ const db = createServiceClient(process.env);
 
 export const bot = new Telegraf(env.TELEGRAM_BOT_TOKEN);
 
+function readOrganizationIdFromCtx(ctx: any): string | undefined {
+  const fromState = String(ctx?.state?.organizationId ?? "").trim();
+  if (fromState) return fromState;
+  const fromUpdate = String(ctx?.update?.__organizationId ?? "").trim();
+  return fromUpdate || undefined;
+}
+
 bot.start(async (ctx) => {
   try {
     await handleStart(ctx);
@@ -47,7 +54,8 @@ bot.start(async (ctx) => {
 bot.command("events", async (ctx) => {
   const locale = getLocaleFromCtx(ctx);
   try {
-    const events = await listPublishedEvents(db);
+    const organizationId = readOrganizationIdFromCtx(ctx);
+    const events = await listPublishedEvents(db, organizationId);
 
     if (events.length === 0) {
       await ctx.reply(t(locale, "no_events"));

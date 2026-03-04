@@ -26,23 +26,29 @@ function mapEventRow(row: any): EventEntity {
   };
 }
 
-export async function listPublishedEvents(db: SupabaseClient): Promise<EventEntity[]> {
-  const withDeletedFilter = await db
+export async function listPublishedEvents(db: SupabaseClient, organizationId?: string): Promise<EventEntity[]> {
+  const withDeletedFilterQuery = db
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("status", "published")
     .is("deleted_at", null)
     .order("starts_at", { ascending: true });
+  const withDeletedFilter = organizationId
+    ? await withDeletedFilterQuery.eq("organization_id", organizationId)
+    : await withDeletedFilterQuery;
   if (!withDeletedFilter.error) {
     return (withDeletedFilter.data ?? []).map((row) => mapEventRow(row));
   }
   if (!isMissingDeletedAtColumn(withDeletedFilter.error)) throw withDeletedFilter.error;
 
-  const fallback = await db
+  const fallbackQuery = db
     .from("events")
     .select("id,organization_id,title,description,starts_at,ends_at,capacity,registration_success_message,status")
     .eq("status", "published")
     .order("starts_at", { ascending: true });
+  const fallback = organizationId
+    ? await fallbackQuery.eq("organization_id", organizationId)
+    : await fallbackQuery;
   if (fallback.error) throw fallback.error;
   return (fallback.data ?? []).map((row) => mapEventRow(row));
 }

@@ -96,6 +96,7 @@ describe("POST /api/telegram/webhook", () => {
 
     expect(mocks.getOrganizationTelegramBotTokenEncrypted).toHaveBeenCalledWith({}, "org1");
     expect(mocks.getBotForToken).toHaveBeenCalledWith("org-token");
+    expect(mocks.handleUpdate).toHaveBeenCalledWith({ update_id: 2, __organizationId: "org1" });
     expect(res.statusCode).toBe(200);
   });
 

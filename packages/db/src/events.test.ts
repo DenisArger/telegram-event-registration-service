@@ -39,6 +39,23 @@ describe("events data layer", () => {
     });
   });
 
+  it("listPublishedEvents filters by organizationId when provided", async () => {
+    const eq = vi.fn().mockReturnThis();
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq,
+      is: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      data: [],
+      error: null
+    };
+    const db = { from: vi.fn(() => query) } as any;
+
+    await listPublishedEvents(db, "org1");
+
+    expect(eq).toHaveBeenCalledWith("organization_id", "org1");
+  });
+
   it("createEvent inserts draft event", async () => {
     const single = vi.fn(async () => ({
       data: { id: "e1", title: "T", description: "D", starts_at: "2026", ends_at: null, capacity: 10, status: "draft" },
