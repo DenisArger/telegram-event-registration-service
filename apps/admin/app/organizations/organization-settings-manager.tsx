@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { OrganizationItem } from "../_lib/admin-api";
-import { getClientAdminApiBase, missingClientApiBaseMessage } from "../_lib/admin-client";
 import { Button } from "../_components/ui/button";
 import { InlineAlert } from "../_components/ui/inline-alert";
 
@@ -139,16 +138,11 @@ export function OrganizationSettingsManager({
       setMessage(ru ? "Организация не выбрана." : "No organization selected.");
       return;
     }
-    const apiBase = getClientAdminApiBase();
-    if (!apiBase) {
-      setMessage(missingClientApiBaseMessage(ru));
-      return;
-    }
 
     setLoading(true);
     setMessage(null);
     try {
-      const response = await fetch(`${apiBase}/api/admin/organization-webhook`, {
+      const response = await fetch("/api/admin/organization-webhook", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
