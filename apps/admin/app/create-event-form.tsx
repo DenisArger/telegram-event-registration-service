@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MarkdownPreview } from "./_components/markdown-preview";
+import { AutoTextarea } from "./_components/ui/auto-textarea";
 import { Button } from "./_components/ui/button";
 import { InlineAlert } from "./_components/ui/inline-alert";
 import { datetimeLocalToIso } from "./_lib/datetime";
@@ -196,7 +197,7 @@ export function CreateEventForm({
           onChange={(e) => setLocation(e.target.value)}
         />
         <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
-        <textarea
+        <AutoTextarea
           placeholder={ru ? "Описание (поддерживает Markdown)" : "Description (Markdown supported)"}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -208,7 +209,7 @@ export function CreateEventForm({
             <MarkdownPreview markdown={description} />
           </div>
         ) : null}
-        <textarea
+        <AutoTextarea
           placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
           value={registrationSuccessMessage}
           onChange={(e) => setRegistrationSuccessMessage(e.target.value)}

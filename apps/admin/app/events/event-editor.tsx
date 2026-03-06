@@ -6,6 +6,7 @@ import { CloseButton } from "../close-button";
 import { EventQuestionsEditor } from "../event-questions-editor";
 import { PublishButton } from "../publish-button";
 import { MarkdownPreview } from "../_components/markdown-preview";
+import { AutoTextarea } from "../_components/ui/auto-textarea";
 import { Button } from "../_components/ui/button";
 import { InlineAlert } from "../_components/ui/inline-alert";
 import { datetimeLocalToIso, isoToDatetimeLocal } from "../_lib/datetime";
@@ -182,14 +183,14 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
             <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
             <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
             <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
-            <textarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <AutoTextarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
             <div className="flex gap-2">
               <Button onClick={generateAiDraft} loading={aiLoading} disabled={loading}>
                 {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
               </Button>
             </div>
             <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
-            <textarea
+            <AutoTextarea
               placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
               value={registrationSuccessMessage}
               onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
