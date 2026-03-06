@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "echo 'Use vercel dev from this app root'",
-    "build": "tsc -p tsconfig.json",
+    "build": "yarn --cwd ../../packages/shared build && yarn --cwd ../../packages/db build && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../eslint.workspace.config.cjs \"src/**/*.{ts,tsx}\" \"api/**/*.{ts,tsx}\" \"test/**/*.{ts,tsx}\""
   },
