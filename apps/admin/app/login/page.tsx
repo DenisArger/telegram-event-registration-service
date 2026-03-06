@@ -11,6 +11,7 @@ export default function LoginPage() {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<"info" | "success" | "error">("info");
   const [email, setEmail] = useState("");
   const [otpToken, setOtpToken] = useState("");
   const [otpStep, setOtpStep] = useState(false);
@@ -43,6 +44,7 @@ export default function LoginPage() {
   async function submitEmail() {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
+      setMessageTone("error");
       setMessage(ru ? "Введите корректный email." : "Enter a valid email.");
       return;
     }
@@ -50,6 +52,7 @@ export default function LoginPage() {
     window.localStorage.setItem(ADMIN_LOGIN_EMAIL_STORAGE_KEY, normalizedEmail);
 
     setSending(true);
+    setMessageTone("info");
     setMessage(null);
     try {
       const response = await fetch("/api/admin/auth/email", {
@@ -58,12 +61,15 @@ export default function LoginPage() {
         body: JSON.stringify({ email: normalizedEmail })
       });
       if (!response.ok) {
+        setMessageTone("error");
         setMessage(await getErrorMessage(response));
         return;
       }
       setOtpStep(true);
+      setMessageTone("success");
       setMessage(ru ? "Код отправлен на email." : "OTP code has been sent to your email.");
     } catch {
+      setMessageTone("error");
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
       setSending(false);
@@ -74,6 +80,7 @@ export default function LoginPage() {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedToken = otpToken.trim();
     if (!normalizedEmail || !normalizedEmail.includes("@") || !normalizedToken) {
+      setMessageTone("error");
       setMessage(ru ? "Введите email и код из письма." : "Enter your email and OTP code.");
       return;
     }
@@ -81,6 +88,7 @@ export default function LoginPage() {
     window.localStorage.setItem(ADMIN_LOGIN_EMAIL_STORAGE_KEY, normalizedEmail);
 
     setVerifying(true);
+    setMessageTone("info");
     setMessage(null);
     try {
       const response = await fetch("/api/admin/auth/verify", {
@@ -90,12 +98,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email: normalizedEmail, token: normalizedToken })
       });
       if (!response.ok) {
+        setMessageTone("error");
         setMessage(await getErrorMessage(response));
         return;
       }
       router.push("/");
       router.refresh();
     } catch {
+      setMessageTone("error");
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
       setVerifying(false);
@@ -140,7 +150,7 @@ export default function LoginPage() {
           </>
         )}
       </div>
-      {message ? <div className="mt-3"><InlineAlert message={message} tone="info" /></div> : null}
+      {message ? <div className="mt-3"><InlineAlert message={message} tone={messageTone} /></div> : null}
     </div>
   );
 }
