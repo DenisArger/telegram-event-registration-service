@@ -39,9 +39,14 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"info" | "success" | "error">("info");
 
-  const hasTitlePreview = Boolean(title.trim());
-  const hasDescriptionPreview = Boolean(description.trim());
-  const hasSuccessPreview = Boolean(registrationSuccessMessage.trim());
+  const hasPreviewContent = Boolean(
+    title.trim() ||
+    description.trim() ||
+    registrationSuccessMessage.trim() ||
+    location.trim() ||
+    startsAt.trim() ||
+    endsAt.trim()
+  );
 
   async function save() {
     const base = getClientAdminApiBase();
@@ -237,35 +242,53 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
               </p>
             </div>
 
-            {hasTitlePreview ? (
+            {hasPreviewContent ? (
               <div className="rounded-xl border border-border bg-surface-elevated p-4">
-                <p className="mt-0">{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
-                <MarkdownPreview markdown={title} />
-              </div>
-            ) : null}
+                <p className="mt-0">{ru ? "Карточка события" : "Event card preview"}</p>
+                {title.trim() ? <MarkdownPreview markdown={title} /> : null}
 
-            {hasDescriptionPreview ? (
-              <div className="rounded-xl border border-border bg-surface-elevated p-4">
-                <p className="mt-0">{ru ? "Предпросмотр описания" : "Description preview"}</p>
-                <MarkdownPreview markdown={description} />
-              </div>
-            ) : null}
+                {startsAt.trim() || endsAt.trim() || location.trim() ? (
+                  <div className="mt-3 grid gap-1">
+                    {startsAt.trim() ? (
+                      <p className="m-0 text-xs">
+                        {ru ? "Начало" : "Starts"}: {new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()}
+                      </p>
+                    ) : null}
+                    {endsAt.trim() ? (
+                      <p className="m-0 text-xs">
+                        {ru ? "Окончание" : "Ends"}: {new Date(datetimeLocalToIso(endsAt) ?? endsAt).toLocaleString()}
+                      </p>
+                    ) : null}
+                    {location.trim() ? (
+                      <p className="m-0 text-xs">
+                        {ru ? "Место" : "Location"}: {location.trim()}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
 
-            {hasSuccessPreview ? (
-              <div className="rounded-xl border border-border bg-surface-elevated p-4">
-                <p className="mt-0">{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
-                <MarkdownPreview markdown={registrationSuccessMessage} />
-              </div>
-            ) : null}
+                {description.trim() ? (
+                  <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+                    <p className="mt-0 text-xs font-medium text-text">{ru ? "Описание" : "Description"}</p>
+                    <MarkdownPreview markdown={description} />
+                  </div>
+                ) : null}
 
-            {!hasTitlePreview && !hasDescriptionPreview && !hasSuccessPreview ? (
+                {registrationSuccessMessage.trim() ? (
+                  <div className="mt-4 rounded-xl border border-success/30 bg-success/10 p-3">
+                    <p className="mt-0 text-xs font-medium text-text">{ru ? "Сообщение после регистрации" : "Success message"}</p>
+                    <MarkdownPreview markdown={registrationSuccessMessage} />
+                  </div>
+                ) : null}
+              </div>
+            ) : (
               <div className="rounded-xl border border-dashed border-border bg-surface-elevated/50 p-4">
                 <p className="mt-0">{ru ? "Пока нечего показывать" : "Nothing to preview yet"}</p>
                 <p className="mt-1 text-xs">
                   {ru ? "Введите заголовок, описание или текст поздравления, и здесь появится превью." : "Enter a title, description, or success message and the preview will appear here."}
                 </p>
               </div>
-            ) : null}
+            )}
           </aside>
         </div>
       </section>
