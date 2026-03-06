@@ -37,6 +37,10 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   const [aiLoading, setAiLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const hasTitlePreview = Boolean(title.trim());
+  const hasDescriptionPreview = Boolean(description.trim());
+  const hasSuccessPreview = Boolean(registrationSuccessMessage.trim());
+
   async function save() {
     const base = getClientAdminApiBase();
     if (!base) {
@@ -166,61 +170,84 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
     <div className="section-grid">
       <section className="card">
         <p>{ru ? "Редактировать событие" : "Edit event"}</p>
-        <div className="grid max-w-[560px] gap-2">
-          <input placeholder="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <small>{ru ? "Короткое понятное название. Поддерживается Markdown." : "Short clear title. Markdown is supported."}</small>
-          {title.trim() ? (
-            <div className="rounded-lg border border-border bg-surface-elevated p-3">
-              <p className="mt-0">{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
-              <MarkdownPreview markdown={title} />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,560px)_minmax(280px,1fr)] xl:items-start">
+          <div className="grid gap-2">
+            <input placeholder="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <small>{ru ? "Короткое понятное название. Поддерживается Markdown." : "Short clear title. Markdown is supported."}</small>
+            <input type="datetime-local" placeholder="startsAt" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+            <small>{ru ? "Дата и время начала мероприятия (необязательно)" : "Event start date and time (optional)"}</small>
+            <input type="datetime-local" placeholder="endsAt" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
+            <small>{ru ? "Дата и время окончания (необязательно)" : "Event end date and time (optional)"}</small>
+            <input placeholder="capacity (optional)" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
+            <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
+            <textarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <div className="flex gap-2">
+              <Button onClick={generateAiDraft} loading={aiLoading} disabled={loading}>
+                {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
+              </Button>
             </div>
-          ) : null}
-          <input type="datetime-local" placeholder="startsAt" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-          <small>{ru ? "Дата и время начала мероприятия (необязательно)" : "Event start date and time (optional)"}</small>
-          <input type="datetime-local" placeholder="endsAt" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
-          <small>{ru ? "Дата и время окончания (необязательно)" : "Event end date and time (optional)"}</small>
-          <input placeholder="capacity (optional)" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
-          <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
-          <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
-          <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
-          <textarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <div className="flex gap-2">
-            <Button onClick={generateAiDraft} loading={aiLoading} disabled={loading}>
-              {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
-            </Button>
-          </div>
-          <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
-          {description.trim() ? (
-            <div className="rounded-lg border border-border bg-surface-elevated p-3">
-              <p className="mt-0">{ru ? "Предпросмотр описания" : "Description preview"}</p>
-              <MarkdownPreview markdown={description} />
-            </div>
-          ) : null}
-          <textarea
-            placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
-            value={registrationSuccessMessage}
-            onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
-          />
-          <small>
-            {ru
-              ? "Этот текст бот отправит после успешной регистрации."
-              : "Bot sends this text after successful registration."}
-          </small>
-          {registrationSuccessMessage.trim() ? (
-            <div className="rounded-lg border border-border bg-surface-elevated p-3">
-              <p className="mt-0">{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
-              <MarkdownPreview markdown={registrationSuccessMessage} />
-            </div>
-          ) : null}
+            <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
+            <textarea
+              placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
+              value={registrationSuccessMessage}
+              onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
+            />
+            <small>
+              {ru
+                ? "Этот текст бот отправит после успешной регистрации."
+                : "Bot sends this text after successful registration."}
+            </small>
 
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={save} loading={loading} variant="primary">
-              {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
-            </Button>
-            {event.status === "draft" ? <PublishButton eventId={event.id} organizationId={organizationId} /> : null}
-            {event.status === "published" ? <CloseButton eventId={event.id} organizationId={organizationId} /> : null}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={save} loading={loading} variant="primary">
+                {loading ? (ru ? "Сохранение..." : "Saving...") : (ru ? "Сохранить" : "Save")}
+              </Button>
+              {event.status === "draft" ? <PublishButton eventId={event.id} organizationId={organizationId} /> : null}
+              {event.status === "published" ? <CloseButton eventId={event.id} organizationId={organizationId} /> : null}
+            </div>
+            {message ? <InlineAlert message={message} /> : null}
           </div>
-          {message ? <InlineAlert message={message} /> : null}
+
+          <aside className="grid gap-3 xl:sticky xl:top-6">
+            <div className="rounded-xl border border-border bg-surface-elevated/70 p-4">
+              <p className="mt-0 font-medium text-text">{ru ? "Предварительный просмотр" : "Live preview"}</p>
+              <p className="mt-1 text-xs">
+                {ru ? "Показывает, как текст будет выглядеть в интерфейсе и сообщениях." : "Shows how the text will appear in the UI and messages."}
+              </p>
+            </div>
+
+            {hasTitlePreview ? (
+              <div className="rounded-xl border border-border bg-surface-elevated p-4">
+                <p className="mt-0">{ru ? "Предпросмотр заголовка" : "Title preview"}</p>
+                <MarkdownPreview markdown={title} />
+              </div>
+            ) : null}
+
+            {hasDescriptionPreview ? (
+              <div className="rounded-xl border border-border bg-surface-elevated p-4">
+                <p className="mt-0">{ru ? "Предпросмотр описания" : "Description preview"}</p>
+                <MarkdownPreview markdown={description} />
+              </div>
+            ) : null}
+
+            {hasSuccessPreview ? (
+              <div className="rounded-xl border border-border bg-surface-elevated p-4">
+                <p className="mt-0">{ru ? "Предпросмотр поздравления" : "Success message preview"}</p>
+                <MarkdownPreview markdown={registrationSuccessMessage} />
+              </div>
+            ) : null}
+
+            {!hasTitlePreview && !hasDescriptionPreview && !hasSuccessPreview ? (
+              <div className="rounded-xl border border-dashed border-border bg-surface-elevated/50 p-4">
+                <p className="mt-0">{ru ? "Пока нечего показывать" : "Nothing to preview yet"}</p>
+                <p className="mt-1 text-xs">
+                  {ru ? "Введите заголовок, описание или текст поздравления, и здесь появится превью." : "Enter a title, description, or success message and the preview will appear here."}
+                </p>
+              </div>
+            ) : null}
+          </aside>
         </div>
       </section>
 
