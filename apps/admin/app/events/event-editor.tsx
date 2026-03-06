@@ -342,7 +342,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
                 ) : null}
 
                 {showDescription && description.trim() ? (
-                  <MarkdownPreview markdown={description} className="markdown-preview-inline mt-4" />
+                  <MarkdownPreview markdown={description} className={showTitle && title.trim() ? "markdown-preview-inline mt-2" : "markdown-preview-inline mt-0"} />
                 ) : null}
 
                 {showRegistrationSuccessMessage && registrationSuccessMessage.trim() ? (
