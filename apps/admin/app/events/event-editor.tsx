@@ -64,11 +64,17 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
     (showCapacity && capacity.trim())
   );
   const hasMetaPreview = Boolean(
-    (showStartsAt && startsAt.trim()) ||
-    (showEndsAt && endsAt.trim()) ||
+    showStartsAt ||
+    showEndsAt ||
     (showCapacity && capacity.trim()) ||
     (showLocation && location.trim())
   );
+  const startsAtPreview = startsAt.trim()
+    ? new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()
+    : (ru ? "не указано" : "not specified");
+  const endsAtPreview = endsAt.trim()
+    ? new Date(datetimeLocalToIso(endsAt) ?? endsAt).toLocaleString()
+    : (ru ? "не указано" : "not specified");
 
   async function save() {
     const base = getClientAdminApiBase();
@@ -223,36 +229,35 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   return (
     <div className="section-grid">
       <section className="card">
-        <p>{ru ? "Редактировать событие" : "Edit event"}</p>
         <div className="grid gap-5 xl:grid-cols-[minmax(0,560px)_minmax(280px,1fr)] xl:items-start">
           <div className="grid gap-2">
-            <input placeholder="title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <small>{ru ? "Короткое понятное название. Поддерживается Markdown." : "Short clear title. Markdown is supported."}</small>
-            <input type="datetime-local" placeholder="startsAt" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+            <input placeholder="title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <small>{ru ? "Дата и время начала мероприятия (необязательно)" : "Event start date and time (optional)"}</small>
-            <input type="datetime-local" placeholder="endsAt" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
+            <input type="datetime-local" placeholder="startsAt" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
             <small>{ru ? "Дата и время окончания (необязательно)" : "Event end date and time (optional)"}</small>
-            <input placeholder="capacity (optional)" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            <input type="datetime-local" placeholder="endsAt" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
             <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
-            <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <input placeholder="capacity (optional)" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
             <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
+            <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
+            <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
             <AutoTextarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
             <div className="flex gap-2">
               <Button onClick={generateAiDraft} loading={aiLoading} disabled={loading}>
                 {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
               </Button>
             </div>
-            <small>{ru ? "Поддерживается Markdown разметка" : "Markdown is supported"}</small>
-            <AutoTextarea
-              placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
-              value={registrationSuccessMessage}
-              onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
-            />
             <small>
               {ru
                 ? "Этот текст бот отправит после успешной регистрации."
                 : "Bot sends this text after successful registration."}
             </small>
+            <AutoTextarea
+              placeholder={ru ? "Текст поздравления при регистрации (Markdown, опционально)" : "Registration success message (Markdown, optional)"}
+              value={registrationSuccessMessage}
+              onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
+            />
 
             <div className="flex flex-wrap gap-2">
               <Button onClick={save} loading={loading} variant="primary">
@@ -312,17 +317,17 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
                 {showTitle && title.trim() ? <MarkdownPreview markdown={title} className="markdown-preview-inline mt-3" /> : null}
 
                 {hasMetaPreview ? (
-                  <div className="mt-3 grid gap-1">
-                    {showStartsAt && startsAt.trim() ? (
-                      <p className="m-0 text-xs">
-                        {ru ? "Начало" : "Starts"}: {new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()}
-                      </p>
-                    ) : null}
-                    {showEndsAt && endsAt.trim() ? (
-                      <p className="m-0 text-xs">
-                        {ru ? "Окончание" : "Ends"}: {new Date(datetimeLocalToIso(endsAt) ?? endsAt).toLocaleString()}
-                      </p>
-                    ) : null}
+                    <div className="mt-3 grid gap-1">
+                      {showStartsAt ? (
+                        <p className="m-0 text-xs">
+                          {ru ? "Начало" : "Starts"}: {startsAtPreview}
+                        </p>
+                      ) : null}
+                      {showEndsAt ? (
+                        <p className="m-0 text-xs">
+                          {ru ? "Окончание" : "Ends"}: {endsAtPreview}
+                        </p>
+                      ) : null}
                     {showCapacity && capacity.trim() ? (
                       <p className="m-0 text-xs">
                         {ru ? "Вместимость" : "Capacity"}: {capacity.trim()}
