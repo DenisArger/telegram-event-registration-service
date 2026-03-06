@@ -37,6 +37,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<"info" | "success" | "error">("info");
 
   const hasTitlePreview = Boolean(title.trim());
   const hasDescriptionPreview = Boolean(description.trim());
@@ -45,6 +46,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   async function save() {
     const base = getClientAdminApiBase();
     if (!base) {
+      setMessageTone("error");
       setMessage(missingClientApiBaseMessage(ru));
       return;
     }
@@ -58,27 +60,33 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
     const numericCapacity = normalizedCapacity ? Number(normalizedCapacity) : null;
 
     if (!normalizedTitle) {
+      setMessageTone("error");
       setMessage(ru ? "Укажите название мероприятия." : "Event title is required.");
       return;
     }
     if (normalizedStartsAt && !startsAtIso) {
+      setMessageTone("error");
       setMessage(ru ? "Укажите корректные дату и время начала." : "Valid start date and time are required.");
       return;
     }
     if (normalizedCapacity && (!Number.isInteger(numericCapacity) || (numericCapacity ?? 0) <= 0)) {
+      setMessageTone("error");
       setMessage(ru ? "Вместимость должна быть положительным целым числом." : "Capacity must be a positive integer.");
       return;
     }
     if (normalizedEndsAt && !endsAtIso) {
+      setMessageTone("error");
       setMessage(ru ? "Нужен корректный endsAt." : "Valid endsAt is required.");
       return;
     }
     if (startsAtIso && endsAtIso && new Date(endsAtIso).getTime() <= new Date(startsAtIso).getTime()) {
+      setMessageTone("error");
       setMessage(ru ? "Дата окончания должна быть позже начала." : "End date must be later than start date.");
       return;
     }
 
     setLoading(true);
+    setMessageTone("info");
     setMessage(null);
     try {
       const response = await fetch(`${base}/api/admin/events`, {
@@ -102,13 +110,16 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
 
       const data = await response.json();
       if (!response.ok) {
+        setMessageTone("error");
         setMessage(data?.message ?? (ru ? "Не удалось обновить событие." : "Failed to update event."));
         return;
       }
 
+      setMessageTone("success");
       setMessage(ru ? "Событие обновлено." : "Event updated.");
       router.refresh();
     } catch {
+      setMessageTone("error");
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
       setLoading(false);
@@ -118,17 +129,20 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   async function generateAiDraft() {
     const base = getClientAdminApiBase();
     if (!base) {
+      setMessageTone("error");
       setMessage(missingClientApiBaseMessage(ru));
       return;
     }
 
     const normalizedTitle = title.trim();
     if (!normalizedTitle) {
+      setMessageTone("error");
       setMessage(ru ? "Сначала укажите название мероприятия." : "Set event title first.");
       return;
     }
 
     setAiLoading(true);
+    setMessageTone("info");
     setMessage(null);
     try {
       const response = await fetch(`${base}/api/admin/ai-draft`, {
@@ -149,18 +163,22 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
 
       const data = await response.json();
       if (!response.ok) {
+        setMessageTone("error");
         setMessage(data?.message ?? (ru ? "Не удалось сгенерировать AI-черновик." : "Failed to generate AI draft."));
         return;
       }
 
       const draft = String(data?.draft ?? "").trim();
       if (!draft) {
+        setMessageTone("error");
         setMessage(ru ? "AI вернул пустой черновик." : "AI returned an empty draft.");
         return;
       }
       setDescription(draft);
+      setMessageTone("success");
       setMessage(ru ? "AI-черновик добавлен в описание." : "AI draft inserted into description.");
     } catch {
+      setMessageTone("error");
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
       setAiLoading(false);
@@ -208,7 +226,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
               {event.status === "draft" ? <PublishButton eventId={event.id} organizationId={organizationId} /> : null}
               {event.status === "published" ? <CloseButton eventId={event.id} organizationId={organizationId} /> : null}
             </div>
-            {message ? <InlineAlert message={message} /> : null}
+            {message ? <InlineAlert message={message} tone={messageTone} /> : null}
           </div>
 
           <aside className="grid gap-3 xl:sticky xl:top-6">
