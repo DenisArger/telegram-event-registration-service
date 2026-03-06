@@ -12,11 +12,19 @@ describe("ExportButton", () => {
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
   });
 
-  it("shows missing env message", async () => {
+  it("uses same-origin api when public base is not configured", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: async () => ({ message: "Export not allowed" })
+      })
+    );
+
     render(React.createElement(ExportButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
+    await screen.findByText("Export not allowed");
   });
 
   it("handles failed response", async () => {

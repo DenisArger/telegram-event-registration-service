@@ -12,11 +12,18 @@ describe("PromoteButton", () => {
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
   });
 
-  it("shows missing env message", async () => {
+  it("uses same-origin api when public base is not configured", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: "empty_waitlist" })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
     render(React.createElement(PromoteButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Promote next from waitlist" }));
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
+    await screen.findByText("Waitlist is empty.");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://localhost:3000/api/admin/promote");
   });
 
   it("shows waitlist empty state", async () => {

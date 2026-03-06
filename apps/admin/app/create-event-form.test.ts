@@ -21,16 +21,7 @@ describe("CreateEventForm", () => {
     refresh.mockClear();
   });
 
-  it("shows missing env message", async () => {
-    render(React.createElement(CreateEventForm));
-
-    fireEvent.click(screen.getByRole("button", { name: "Create event" }));
-
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
-  });
-
-  it("validates required fields", async () => {
-    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
+  it("validates required fields without public base env", async () => {
     render(React.createElement(CreateEventForm));
 
     fireEvent.click(screen.getByRole("button", { name: "Create event" }));

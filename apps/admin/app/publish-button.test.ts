@@ -21,11 +21,18 @@ describe("PublishButton", () => {
     refresh.mockClear();
   });
 
-  it("shows missing env message", async () => {
+  it("publishes via same-origin api when public base is not configured", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ event: { id: "e1", status: "published" } })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
     render(React.createElement(PublishButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Publish" }));
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
+    await screen.findByText("Event published.");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://localhost:3000/api/admin/publish");
   });
 
   it("publishes event and refreshes page", async () => {

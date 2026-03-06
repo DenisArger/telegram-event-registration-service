@@ -40,19 +40,10 @@ describe("EventEditor", () => {
     delete process.env.NEXT_PUBLIC_LOCALE;
   });
 
-  it("shows missing env message", async () => {
-    render(<EventEditor event={baseEvent} />);
-    fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
-  });
-
-  it("validates required title", async () => {
-    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
-
+  it("validates required title without public base env", async () => {
     render(<EventEditor event={baseEvent} />);
     fireEvent.change(screen.getAllByPlaceholderText("title")[0]!, { target: { value: "  " } });
-    fireEvent.click(screen.getAllByRole("button", { name: "Save" })[0]!);
-
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await screen.findByText("Event title is required.");
   });
 
@@ -134,7 +125,8 @@ describe("EventEditor", () => {
     expect(screen.getByText("close")).toBeTruthy();
     expect(screen.queryByText("publish")).toBeNull();
 
+    fireEvent.change(screen.getAllByPlaceholderText("title")[0]!, { target: { value: "  " } });
     fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
-    await screen.findByText("Не задан NEXT_PUBLIC_ADMIN_API_BASE_URL.");
+    await screen.findByText("Укажите название мероприятия.");
   });
 });

@@ -21,12 +21,19 @@ describe("DeleteEventButton", () => {
     refresh.mockClear();
   });
 
-  it("shows missing env message", async () => {
+  it("deletes via same-origin api when public base is not configured", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ eventId: "e1" })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
     render(React.createElement(DeleteEventButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[1]!);
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
+    await screen.findByText("Event deleted.");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://localhost:3000/api/admin/events");
   });
 
   it("deletes event and refreshes page", async () => {

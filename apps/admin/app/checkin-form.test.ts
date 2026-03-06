@@ -12,21 +12,24 @@ describe("CheckInForm", () => {
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
   });
 
-  it("shows missing env message", async () => {
-    render(React.createElement(CheckInForm));
-
-    fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
-
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
-  });
-
-  it("validates required fields", async () => {
-    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
+  it("uses same-origin api when public base is not configured", async () => {
     render(React.createElement(CheckInForm));
 
     fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
 
     await screen.findByText("eventId and userId are required.");
+  });
+
+  it("validates required fields", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(React.createElement(CheckInForm));
+
+    fireEvent.click(screen.getByRole("button", { name: "Check in attendee" }));
+
+    await screen.findByText("eventId and userId are required.");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("handles successful and already-checked-in responses", async () => {

@@ -21,12 +21,19 @@ describe("CloseButton", () => {
     refresh.mockClear();
   });
 
-  it("shows missing env message", async () => {
+  it("closes via same-origin api when public base is not configured", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ event: { id: "e1", status: "closed" } })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
     render(React.createElement(CloseButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1]!);
-    await screen.findByText("Missing NEXT_PUBLIC_ADMIN_API_BASE_URL.");
+    await screen.findByText("Event closed.");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://localhost:3000/api/admin/close");
   });
 
   it("closes event and refreshes page", async () => {

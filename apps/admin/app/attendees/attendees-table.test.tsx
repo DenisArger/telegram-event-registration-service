@@ -74,10 +74,10 @@ describe("AttendeesTable", () => {
     fireEvent.drop(screen.getByTestId(`attendee-row-${secondAttendee.userId}`));
 
     await vi.runAllTimersAsync();
-      expect(fetch).toHaveBeenCalledWith(
-        "https://api.example/api/admin/attendees",
-        expect.objectContaining({ method: "PUT" })
-      );
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3000/api/admin/attendees",
+      expect.objectContaining({ method: "PUT" })
+    );
 
     const firstCall = (fetch as any).mock.calls[0];
     if (!firstCall || !firstCall[1]) throw new Error("Fetch call not captured");
