@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../_components/ui/button";
 import { InlineAlert } from "../_components/ui/inline-alert";
+
+const ADMIN_LOGIN_EMAIL_STORAGE_KEY = "admin-login-email";
 
 export default function LoginPage() {
   const ru = process.env.NEXT_PUBLIC_LOCALE === "ru";
@@ -14,6 +16,11 @@ export default function LoginPage() {
   const [otpStep, setOtpStep] = useState(false);
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = window.localStorage.getItem(ADMIN_LOGIN_EMAIL_STORAGE_KEY);
+    if (savedEmail) setEmail(savedEmail);
+  }, []);
 
   const getErrorMessage = useCallback(async (response: Response): Promise<string> => {
     const fallback = ru ? "Ошибка входа." : "Login failed.";
@@ -39,6 +46,8 @@ export default function LoginPage() {
       setMessage(ru ? "Введите корректный email." : "Enter a valid email.");
       return;
     }
+
+    window.localStorage.setItem(ADMIN_LOGIN_EMAIL_STORAGE_KEY, normalizedEmail);
 
     setSending(true);
     setMessage(null);
@@ -69,6 +78,8 @@ export default function LoginPage() {
       return;
     }
 
+    window.localStorage.setItem(ADMIN_LOGIN_EMAIL_STORAGE_KEY, normalizedEmail);
+
     setVerifying(true);
     setMessage(null);
     try {
@@ -97,7 +108,9 @@ export default function LoginPage() {
       <p className="mt-2">{ru ? "Войдите по email-коду, чтобы открыть панель управления." : "Sign in with email OTP to access admin panel."}</p>
       <div className="mt-5 grid gap-3">
         <input
+          name="email"
           type="email"
+          autoComplete="email"
           placeholder="admin@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -110,7 +123,9 @@ export default function LoginPage() {
         ) : (
           <>
             <input
+              name="one-time-code"
               inputMode="numeric"
+              autoComplete="one-time-code"
               placeholder={ru ? "Код из письма" : "OTP code"}
               value={otpToken}
               onChange={(e) => setOtpToken(e.target.value)}
