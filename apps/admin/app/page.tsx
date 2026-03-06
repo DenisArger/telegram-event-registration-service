@@ -33,13 +33,10 @@ export default async function HomePage() {
 
       <section className="quick-links animate-fade-up" aria-label="quick-links">
         {quickLinks.map((item) => (
-          <article key={item.href} className="quick-link-card">
+          <Link key={item.href} href={item.href} className="quick-link-card no-underline">
             <h3>{ui(item.titleKey, locale)}</h3>
             <p>{ui(item.subtitleKey, locale)}</p>
-            <Link href={item.href} className="text-sm font-medium no-underline">
-              {ui("open_section", locale)}
-            </Link>
-          </article>
+          </Link>
         ))}
       </section>
     </>
