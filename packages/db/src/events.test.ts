@@ -37,6 +37,7 @@ describe("events data layer", () => {
       capacity: 10,
       registrationSuccessMessage: null,
       showTitle: true,
+      blankLineAfterTitle: false,
       showSchedule: true,
       showStartsAt: true,
       showEndsAt: true,

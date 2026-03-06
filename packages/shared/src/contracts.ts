@@ -12,6 +12,7 @@ export interface EventEntity {
   capacity: number | null;
   registrationSuccessMessage?: string | null;
   showTitle?: boolean;
+  blankLineAfterTitle?: boolean;
   showSchedule?: boolean;
   showStartsAt?: boolean;
   showEndsAt?: boolean;

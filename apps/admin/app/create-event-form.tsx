@@ -33,6 +33,7 @@ export function CreateEventForm({
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState("");
   const [location, setLocation] = useState("");
   const [messageShowTitle, setMessageShowTitle] = useState(true);
+  const [messageBlankLineAfterTitle, setMessageBlankLineAfterTitle] = useState(false);
   const [messageShowStartsAt, setMessageShowStartsAt] = useState(true);
   const [messageShowEndsAt, setMessageShowEndsAt] = useState(true);
   const [messageShowCapacity, setMessageShowCapacity] = useState(true);
@@ -131,6 +132,7 @@ export function CreateEventForm({
           registrationSuccessMessage: registrationSuccessMessage.trim() || null,
           location: location.trim() || null,
           showTitle: messageShowTitle,
+          blankLineAfterTitle: messageBlankLineAfterTitle,
           showStartsAt: messageShowStartsAt,
           showEndsAt: messageShowEndsAt,
           showCapacity: messageShowCapacity,
@@ -155,6 +157,7 @@ export function CreateEventForm({
       setRegistrationSuccessMessage("");
       setLocation("");
       setMessageShowTitle(true);
+      setMessageBlankLineAfterTitle(false);
       setMessageShowStartsAt(true);
       setMessageShowEndsAt(true);
       setMessageShowCapacity(true);
@@ -221,6 +224,10 @@ export function CreateEventForm({
         <label className="inline-flex items-center gap-2 text-sm text-muted">
           <input type="checkbox" className="h-4 w-4" checked={messageShowTitle} onChange={(e) => setMessageShowTitle(e.target.checked)} />
           {ru ? "Показывать заголовок в сообщении" : "Show title in message"}
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageBlankLineAfterTitle} onChange={(e) => setMessageBlankLineAfterTitle(e.target.checked)} />
+          {ru ? "Пустая строка после заголовка" : "Blank line after title"}
         </label>
         <label className="inline-flex items-center gap-2 text-sm text-muted">
           <input type="checkbox" className="h-4 w-4" checked={messageShowStartsAt} onChange={(e) => setMessageShowStartsAt(e.target.checked)} />

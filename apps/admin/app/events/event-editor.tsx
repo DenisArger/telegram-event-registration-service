@@ -22,6 +22,7 @@ interface EditableEvent {
   endsAt?: string | null;
   capacity: number | null;
   showTitle?: boolean;
+  blankLineAfterTitle?: boolean;
   showSchedule?: boolean;
   showStartsAt?: boolean;
   showEndsAt?: boolean;
@@ -43,6 +44,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState(event.registrationSuccessMessage ?? "");
   const [location, setLocation] = useState(event.location ?? "");
   const [showTitle, setShowTitle] = useState(event.showTitle ?? true);
+  const [blankLineAfterTitle, setBlankLineAfterTitle] = useState(event.blankLineAfterTitle ?? false);
   const [showStartsAt, setShowStartsAt] = useState(event.showStartsAt ?? event.showSchedule ?? true);
   const [showEndsAt, setShowEndsAt] = useState(event.showEndsAt ?? event.showSchedule ?? true);
   const [showCapacity, setShowCapacity] = useState(event.showCapacity ?? event.showSchedule ?? true);
@@ -71,9 +73,10 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   );
   const combinedBodyPreview = [
     showTitle && title.trim() ? title.trim() : null,
+    showTitle && blankLineAfterTitle && showDescription && description.trim() ? "" : null,
     showDescription && description.trim() ? description.trim() : null
   ]
-    .filter(Boolean)
+    .filter((item) => item !== null)
     .join("\n");
   const startsAtPreview = startsAt.trim()
     ? new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()
@@ -146,6 +149,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
           location: location.trim() || null
           ,
           showTitle,
+          blankLineAfterTitle,
           showStartsAt,
           showEndsAt,
           showCapacity,
@@ -291,6 +295,10 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
                   {ru ? "Показывать заголовок" : "Show title"}
                 </label>
                 <label className="inline-flex items-center gap-2 text-sm text-muted">
+                  <input type="checkbox" className="h-4 w-4" checked={blankLineAfterTitle} onChange={(e) => setBlankLineAfterTitle(e.target.checked)} />
+                  {ru ? "Пустая строка после заголовка" : "Blank line after title"}
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-muted">
                   <input type="checkbox" className="h-4 w-4" checked={showStartsAt} onChange={(e) => setShowStartsAt(e.target.checked)} />
                   {ru ? "Показывать дату начала" : "Show start date"}
                 </label>
@@ -323,17 +331,17 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
                 {combinedBodyPreview ? <MarkdownPreview markdown={combinedBodyPreview} className="markdown-preview-inline mt-3" /> : null}
 
                 {hasMetaPreview ? (
-                    <div className="mt-3 grid gap-1">
-                      {showStartsAt ? (
-                        <p className="m-0 text-xs">
-                          {ru ? "Начало" : "Starts"}: {startsAtPreview}
-                        </p>
-                      ) : null}
-                      {showEndsAt ? (
-                        <p className="m-0 text-xs">
-                          {ru ? "Окончание" : "Ends"}: {endsAtPreview}
-                        </p>
-                      ) : null}
+                  <div className="mt-3 grid gap-1">
+                    {showStartsAt ? (
+                      <p className="m-0 text-xs">
+                        {ru ? "Начало" : "Starts"}: {startsAtPreview}
+                      </p>
+                    ) : null}
+                    {showEndsAt ? (
+                      <p className="m-0 text-xs">
+                        {ru ? "Окончание" : "Ends"}: {endsAtPreview}
+                      </p>
+                    ) : null}
                     {showCapacity && capacity.trim() ? (
                       <p className="m-0 text-xs">
                         {ru ? "Вместимость" : "Capacity"}: {capacity.trim()}

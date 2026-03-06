@@ -35,6 +35,21 @@ describe("buildEventMessage", () => {
     expect(message).toContain("Capacity: 20");
     expect(message).toContain("Weekly internal sync");
   });
+
+  it("inserts blank line after title when enabled", () => {
+    const message = buildEventMessage({
+      id: "e1",
+      title: "Team Sync",
+      description: "Weekly internal sync",
+      startsAt: null,
+      endsAt: null,
+      capacity: null,
+      blankLineAfterTitle: true,
+      status: "published"
+    });
+
+    expect(message).toContain("Team Sync\n\nWeekly internal sync");
+  });
 });
 
 describe("buildEventMessageHtml", () => {
@@ -71,5 +86,20 @@ describe("buildEventMessageHtml", () => {
     expect(message).not.toContain("🕒");
     expect(message).not.toContain("🏁");
     expect(message).not.toContain("👥");
+  });
+
+  it("inserts blank line after title in html mode when enabled", () => {
+    const message = buildEventMessageHtml({
+      id: "e1",
+      title: "Event",
+      description: "Desc",
+      startsAt: null,
+      endsAt: null,
+      capacity: null,
+      blankLineAfterTitle: true,
+      status: "published"
+    }, "ru");
+
+    expect(message).toContain("Event\n\nDesc");
   });
 });

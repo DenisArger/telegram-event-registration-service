@@ -45,6 +45,23 @@ function formatCapacity(value: number | null | undefined): string | null {
   return String(value);
 }
 
+function buildTitleAndDescription(
+  title: string,
+  description: string | null | undefined,
+  showTitle: boolean,
+  blankLineAfterTitle: boolean
+): string[] {
+  const parts: string[] = [];
+  if (showTitle) parts.push(title);
+  if (description) {
+    if (showTitle && blankLineAfterTitle) {
+      parts.push("");
+    }
+    parts.push(description);
+  }
+  return parts;
+}
+
 export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"): string {
   const startsAt = formatEventDate(event.startsAt, locale);
   const endsAt = formatEventDate(event.endsAt, locale);
@@ -52,16 +69,20 @@ export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"):
   const showStartsAt = event.showStartsAt ?? event.showSchedule ?? true;
   const showEndsAt = event.showEndsAt ?? event.showSchedule ?? true;
   const showCapacity = event.showCapacity ?? event.showSchedule ?? true;
+  const titleAndDescription = buildTitleAndDescription(
+    event.title,
+    event.showDescription !== false ? event.description : null,
+    event.showTitle !== false,
+    event.blankLineAfterTitle === true
+  );
 
   return [
-    event.showTitle !== false ? event.title : null,
+    ...titleAndDescription,
     showStartsAt && startsAt ? `🕒 ${startsAt}` : null,
     showEndsAt && endsAt ? `🏁 ${endsAt}` : null,
     showCapacity && capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null,
     event.showLocation !== false && event.location ? `📍 ${event.location}` : null,
-    event.showDescription !== false && event.description ? event.description : null
   ]
-    .filter(Boolean)
     .join("\n");
 }
 
@@ -74,16 +95,20 @@ export function buildEventMessageHtml(event: EventEntity, locale: BotLocale = "e
   const showEndsAt = event.showEndsAt ?? event.showSchedule ?? true;
   const showCapacity = event.showCapacity ?? event.showSchedule ?? true;
   const descriptionHtml = event.showDescription !== false && event.description ? renderMarkdownToTelegramHtml(event.description) : null;
+  const titleAndDescription = buildTitleAndDescription(
+    titleHtml,
+    descriptionHtml,
+    event.showTitle !== false,
+    event.blankLineAfterTitle === true
+  );
 
   return [
-    event.showTitle !== false ? titleHtml : null,
+    ...titleAndDescription,
     showStartsAt && startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
     showEndsAt && endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
     showCapacity && capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
     event.showLocation !== false && event.location ? `📍 ${escapeHtml(event.location)}` : null,
-    descriptionHtml ? descriptionHtml : null
   ]
-    .filter(Boolean)
     .join("\n");
 }
 

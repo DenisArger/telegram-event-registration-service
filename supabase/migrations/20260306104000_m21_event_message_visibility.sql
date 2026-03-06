@@ -1,5 +1,6 @@
 alter table public.events
   add column if not exists show_title boolean not null default true,
+  add column if not exists blank_line_after_title boolean not null default false,
   add column if not exists show_schedule boolean not null default true,
   add column if not exists show_starts_at boolean not null default true,
   add column if not exists show_ends_at boolean not null default true,
