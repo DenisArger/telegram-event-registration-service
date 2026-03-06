@@ -69,6 +69,12 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
     (showCapacity && capacity.trim()) ||
     (showLocation && location.trim())
   );
+  const combinedBodyPreview = [
+    showTitle && title.trim() ? title.trim() : null,
+    showDescription && description.trim() ? description.trim() : null
+  ]
+    .filter(Boolean)
+    .join("\n");
   const startsAtPreview = startsAt.trim()
     ? new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()
     : (ru ? "не указано" : "not specified");
@@ -314,7 +320,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
             {hasPreviewContent ? (
               <div className="rounded-xl border border-border bg-surface-elevated p-4">
                 <p className="mt-0">{ru ? "Карточка события" : "Event card preview"}</p>
-                {showTitle && title.trim() ? <MarkdownPreview markdown={title} className="markdown-preview-inline mt-3" /> : null}
+                {combinedBodyPreview ? <MarkdownPreview markdown={combinedBodyPreview} className="markdown-preview-inline mt-3" /> : null}
 
                 {hasMetaPreview ? (
                     <div className="mt-3 grid gap-1">
@@ -339,10 +345,6 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
                       </p>
                     ) : null}
                   </div>
-                ) : null}
-
-                {showDescription && description.trim() ? (
-                  <MarkdownPreview markdown={description} className={showTitle && title.trim() ? "markdown-preview-inline mt-2" : "markdown-preview-inline mt-0"} />
                 ) : null}
 
                 {showRegistrationSuccessMessage && registrationSuccessMessage.trim() ? (
