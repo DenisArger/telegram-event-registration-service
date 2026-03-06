@@ -576,9 +576,24 @@ describe("bot runtime", () => {
     expect(mocks.cancelQuestionSession).toHaveBeenCalled();
     expect(confirmCtx.answerCbQuery).toHaveBeenCalledWith("Questionnaire cancelled.", { show_alert: true });
 
+    mocks.getActiveQuestionSession.mockResolvedValueOnce({
+      eventId: "e1",
+      currentIndex: 2,
+      answers: [],
+      expiresAt: "2026-03-01T10:00:00Z",
+      isExpired: false
+    });
+    mocks.getRegistrationQuestions.mockResolvedValueOnce([
+      { id: "q1", eventId: "e1", version: 1, prompt: "First", isRequired: true, position: 1, isActive: true },
+      { id: "q2", eventId: "e1", version: 1, prompt: "Second", isRequired: false, position: 2, isActive: true }
+    ]);
     const keepCtx = baseCtx({ match: ["qcancel_keep:e1", "e1"] });
     await qcancelKeepAction?.handler(keepCtx);
     expect(keepCtx.answerCbQuery).toHaveBeenCalledWith("Registration kept.", { show_alert: false });
+    expect(keepCtx.reply).toHaveBeenCalledWith(
+      "Question 2/2:\nSecond\nOptional question. You can skip.",
+      expect.anything()
+    );
 
     const keepErrAnswerCbQuery = vi
       .fn()

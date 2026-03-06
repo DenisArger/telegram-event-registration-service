@@ -404,7 +404,41 @@ bot.action(/^qcancel_confirm:(.+)$/, async (ctx) => {
 bot.action(/^qcancel_keep:(.+)$/, async (ctx) => {
   const locale = getLocaleFromCtx(ctx);
   try {
+    const eventId = String(ctx.match[1] ?? "");
+    const from = ctx.from;
+    if (!from || !eventId) {
+      await ctx.answerCbQuery(t(locale, "invalid_action"), { show_alert: true });
+      return;
+    }
+
+    const user = await upsertTelegramUser(db, {
+      telegramId: from.id,
+      fullName: [from.first_name, from.last_name].filter(Boolean).join(" ").trim() || "Telegram User",
+      username: from.username ?? null
+    });
+
+    const session = await getActiveQuestionSession(db, user.id);
+    if (!session || session.eventId !== eventId) {
+      await ctx.answerCbQuery(t(locale, "question_expired"), { show_alert: true });
+      return;
+    }
+
+    if (session.isExpired) {
+      await cancelQuestionSession(db, eventId, user.id);
+      await ctx.answerCbQuery(t(locale, "question_expired"), { show_alert: true });
+      return;
+    }
+
+    const questions = await getRegistrationQuestions(db, eventId);
+    const question = questions[session.currentIndex - 1];
+    if (!question) {
+      await cancelQuestionSession(db, eventId, user.id);
+      await ctx.answerCbQuery(t(locale, "question_expired"), { show_alert: true });
+      return;
+    }
+
     await ctx.answerCbQuery(t(locale, "cancel_kept"), { show_alert: false });
+    await askRegistrationQuestion(ctx, locale, eventId, questions, session.currentIndex);
   } catch (error) {
     logError("question_cancel_keep_failed", { error });
     await ctx.answerCbQuery(t(locale, "unexpected_error"), { show_alert: true });
