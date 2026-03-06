@@ -17,6 +17,7 @@ import waitlistHandler from "./waitlist";
 
 type Handler = (req: VercelRequest, res: VercelResponse) => Promise<void> | void;
 
+// Keep route registration centralized so every /api/admin/* path resolves through one entrypoint.
 const HANDLERS_BY_ROUTE: Record<string, Handler> = {
   "ai-draft": aiDraftHandler,
   attendees: attendeesHandler,
