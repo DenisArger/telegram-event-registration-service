@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "./ui/cn";
 
 function escapeHtml(input: string): string {
   return input
@@ -34,7 +35,7 @@ function toHtml(markdown: string): string {
   return html.join("\n").replace(/(<li>.*?<\/li>(\n<li>.*?<\/li>)*)/gs, "<ul>$1</ul>");
 }
 
-export function MarkdownPreview({ markdown }: { markdown: string }) {
+export function MarkdownPreview({ markdown, className }: { markdown: string; className?: string }) {
   const safeHtml = toHtml(markdown);
-  return <div className="markdown-preview" dangerouslySetInnerHTML={{ __html: safeHtml }} />;
+  return <div className={cn("markdown-preview", className)} dangerouslySetInnerHTML={{ __html: safeHtml }} />;
 }

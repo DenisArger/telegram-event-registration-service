@@ -304,7 +304,7 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
               <div className="rounded-xl border border-border bg-surface-elevated p-4">
                 <p className="mt-0">{ru ? "Карточка события" : "Event card preview"}</p>
                 <div className="mt-3 rounded-xl border border-border bg-surface p-3">
-                  {showTitle && title.trim() ? <MarkdownPreview markdown={title} /> : null}
+                  {showTitle && title.trim() ? <MarkdownPreview markdown={title} className="markdown-preview-inline" /> : null}
 
                   {hasMetaPreview ? (
                     <div className="mt-3 grid gap-1">

@@ -357,6 +357,10 @@
     @apply mt-3 rounded-xl border border-border bg-surface-elevated p-4;
   }
 
+  .markdown-preview-inline {
+    @apply mt-0 rounded-none border-0 bg-transparent p-0;
+  }
+
   .markdown-preview p,
   .markdown-preview h2,
   .markdown-preview h3,
