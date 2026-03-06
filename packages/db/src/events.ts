@@ -25,6 +25,9 @@ function mapEventRow(row: any): EventEntity {
     registrationSuccessMessage: row.registration_success_message,
     showTitle: row.show_title ?? true,
     showSchedule: row.show_schedule ?? true,
+    showStartsAt: row.show_starts_at ?? row.show_schedule ?? true,
+    showEndsAt: row.show_ends_at ?? row.show_schedule ?? true,
+    showCapacity: row.show_capacity ?? row.show_schedule ?? true,
     showLocation: row.show_location ?? true,
     showDescription: row.show_description ?? true,
     showRegistrationSuccessMessage: row.show_registration_success_message ?? true,
@@ -35,7 +38,7 @@ function mapEventRow(row: any): EventEntity {
 export async function listPublishedEvents(db: SupabaseClient, organizationId?: string): Promise<EventEntity[]> {
   const withDeletedFilterQuery = db
     .from("events")
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .eq("status", "published")
     .is("deleted_at", null)
     .order("starts_at", { ascending: true });
@@ -49,7 +52,7 @@ export async function listPublishedEvents(db: SupabaseClient, organizationId?: s
 
   const fallbackQuery = db
     .from("events")
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .eq("status", "published")
     .order("starts_at", { ascending: true });
   const fallback = organizationId
@@ -71,6 +74,9 @@ export async function createEvent(
     registrationSuccessMessage?: string | null;
     showTitle?: boolean;
     showSchedule?: boolean;
+    showStartsAt?: boolean;
+    showEndsAt?: boolean;
+    showCapacity?: boolean;
     showLocation?: boolean;
     showDescription?: boolean;
     showRegistrationSuccessMessage?: boolean;
@@ -90,6 +96,9 @@ export async function createEvent(
       registration_success_message: payload.registrationSuccessMessage ?? null,
       show_title: payload.showTitle ?? true,
       show_schedule: payload.showSchedule ?? true,
+      show_starts_at: payload.showStartsAt ?? payload.showSchedule ?? true,
+      show_ends_at: payload.showEndsAt ?? payload.showSchedule ?? true,
+      show_capacity: payload.showCapacity ?? payload.showSchedule ?? true,
       show_location: payload.showLocation ?? true,
       show_description: payload.showDescription ?? true,
       show_registration_success_message: payload.showRegistrationSuccessMessage ?? true,
@@ -97,7 +106,7 @@ export async function createEvent(
       status: "draft",
       created_by: payload.createdBy
     })
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .single();
 
   if (error) throw error;
@@ -111,7 +120,7 @@ export async function getEventById(
 ): Promise<EventEntity | null> {
   const withDeletedFilter = await db
     .from("events")
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .eq("id", eventId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -123,7 +132,7 @@ export async function getEventById(
 
   const fallback = await db
     .from("events")
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .eq("id", eventId)
     .maybeSingle();
   if (fallback.error) throw fallback.error;
@@ -141,7 +150,7 @@ export async function publishEvent(
     .eq("id", eventId)
     .eq("status", "draft")
     .is("deleted_at", null)
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .maybeSingle();
   if (!withDeletedFilter.error) {
     if (!withDeletedFilter.data) return null;
@@ -154,7 +163,7 @@ export async function publishEvent(
     .update({ status: "published" })
     .eq("id", eventId)
     .eq("status", "draft")
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .maybeSingle();
   if (fallback.error) throw fallback.error;
   if (!fallback.data) return null;
@@ -171,7 +180,7 @@ export async function closeEvent(
     .eq("id", eventId)
     .eq("status", "published")
     .is("deleted_at", null)
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .maybeSingle();
   if (!withDeletedFilter.error) {
     if (!withDeletedFilter.data) return null;
@@ -184,7 +193,7 @@ export async function closeEvent(
     .update({ status: "closed" })
     .eq("id", eventId)
     .eq("status", "published")
-    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+    .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
     .maybeSingle();
   if (fallback.error) throw fallback.error;
   if (!fallback.data) return null;

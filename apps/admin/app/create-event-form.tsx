@@ -33,7 +33,9 @@ export function CreateEventForm({
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState("");
   const [location, setLocation] = useState("");
   const [messageShowTitle, setMessageShowTitle] = useState(true);
-  const [messageShowSchedule, setMessageShowSchedule] = useState(true);
+  const [messageShowStartsAt, setMessageShowStartsAt] = useState(true);
+  const [messageShowEndsAt, setMessageShowEndsAt] = useState(true);
+  const [messageShowCapacity, setMessageShowCapacity] = useState(true);
   const [messageShowLocation, setMessageShowLocation] = useState(true);
   const [messageShowDescription, setMessageShowDescription] = useState(true);
   const [messageShowRegistrationSuccessMessage, setMessageShowRegistrationSuccessMessage] = useState(true);
@@ -129,7 +131,9 @@ export function CreateEventForm({
           registrationSuccessMessage: registrationSuccessMessage.trim() || null,
           location: location.trim() || null,
           showTitle: messageShowTitle,
-          showSchedule: messageShowSchedule,
+          showStartsAt: messageShowStartsAt,
+          showEndsAt: messageShowEndsAt,
+          showCapacity: messageShowCapacity,
           showLocation: messageShowLocation,
           showDescription: messageShowDescription,
           showRegistrationSuccessMessage: messageShowRegistrationSuccessMessage,
@@ -151,7 +155,9 @@ export function CreateEventForm({
       setRegistrationSuccessMessage("");
       setLocation("");
       setMessageShowTitle(true);
-      setMessageShowSchedule(true);
+      setMessageShowStartsAt(true);
+      setMessageShowEndsAt(true);
+      setMessageShowCapacity(true);
       setMessageShowLocation(true);
       setMessageShowDescription(true);
       setMessageShowRegistrationSuccessMessage(true);
@@ -217,8 +223,16 @@ export function CreateEventForm({
           {ru ? "Показывать заголовок в сообщении" : "Show title in message"}
         </label>
         <label className="inline-flex items-center gap-2 text-sm text-muted">
-          <input type="checkbox" className="h-4 w-4" checked={messageShowSchedule} onChange={(e) => setMessageShowSchedule(e.target.checked)} />
-          {ru ? "Показывать дату, время и вместимость" : "Show date, time, and capacity"}
+          <input type="checkbox" className="h-4 w-4" checked={messageShowStartsAt} onChange={(e) => setMessageShowStartsAt(e.target.checked)} />
+          {ru ? "Показывать дату начала" : "Show start date"}
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowEndsAt} onChange={(e) => setMessageShowEndsAt(e.target.checked)} />
+          {ru ? "Показывать дату окончания" : "Show end date"}
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowCapacity} onChange={(e) => setMessageShowCapacity(e.target.checked)} />
+          {ru ? "Показывать вместимость" : "Show capacity"}
         </label>
         <label className="inline-flex items-center gap-2 text-sm text-muted">
           <input type="checkbox" className="h-4 w-4" checked={messageShowLocation} onChange={(e) => setMessageShowLocation(e.target.checked)} />

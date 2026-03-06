@@ -13,6 +13,9 @@ export interface EventEntity {
   registrationSuccessMessage?: string | null;
   showTitle?: boolean;
   showSchedule?: boolean;
+  showStartsAt?: boolean;
+  showEndsAt?: boolean;
+  showCapacity?: boolean;
   showLocation?: boolean;
   showDescription?: boolean;
   showRegistrationSuccessMessage?: boolean;

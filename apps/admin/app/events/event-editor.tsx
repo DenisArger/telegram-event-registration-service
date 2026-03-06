@@ -23,6 +23,9 @@ interface EditableEvent {
   capacity: number | null;
   showTitle?: boolean;
   showSchedule?: boolean;
+  showStartsAt?: boolean;
+  showEndsAt?: boolean;
+  showCapacity?: boolean;
   showLocation?: boolean;
   showDescription?: boolean;
   showRegistrationSuccessMessage?: boolean;
@@ -40,7 +43,9 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState(event.registrationSuccessMessage ?? "");
   const [location, setLocation] = useState(event.location ?? "");
   const [showTitle, setShowTitle] = useState(event.showTitle ?? true);
-  const [showSchedule, setShowSchedule] = useState(event.showSchedule ?? true);
+  const [showStartsAt, setShowStartsAt] = useState(event.showStartsAt ?? event.showSchedule ?? true);
+  const [showEndsAt, setShowEndsAt] = useState(event.showEndsAt ?? event.showSchedule ?? true);
+  const [showCapacity, setShowCapacity] = useState(event.showCapacity ?? event.showSchedule ?? true);
   const [showLocation, setShowLocation] = useState(event.showLocation ?? true);
   const [showDescription, setShowDescription] = useState(event.showDescription ?? true);
   const [showRegistrationSuccessMessage, setShowRegistrationSuccessMessage] = useState(event.showRegistrationSuccessMessage ?? true);
@@ -54,11 +59,14 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
     (showDescription && description.trim()) ||
     (showRegistrationSuccessMessage && registrationSuccessMessage.trim()) ||
     (showLocation && location.trim()) ||
-    (showSchedule && startsAt.trim()) ||
-    (showSchedule && endsAt.trim())
+    (showStartsAt && startsAt.trim()) ||
+    (showEndsAt && endsAt.trim()) ||
+    (showCapacity && capacity.trim())
   );
   const hasMetaPreview = Boolean(
-    (showSchedule && (startsAt.trim() || endsAt.trim() || capacity.trim())) ||
+    (showStartsAt && startsAt.trim()) ||
+    (showEndsAt && endsAt.trim()) ||
+    (showCapacity && capacity.trim()) ||
     (showLocation && location.trim())
   );
 
@@ -126,7 +134,9 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
           location: location.trim() || null
           ,
           showTitle,
-          showSchedule,
+          showStartsAt,
+          showEndsAt,
+          showCapacity,
           showLocation,
           showDescription,
           showRegistrationSuccessMessage
@@ -231,8 +241,16 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
               {ru ? "Показывать заголовок в сообщении" : "Show title in message"}
             </label>
             <label className="inline-flex items-center gap-2 text-sm text-muted">
-              <input type="checkbox" className="h-4 w-4" checked={showSchedule} onChange={(e) => setShowSchedule(e.target.checked)} />
-              {ru ? "Показывать дату, время и вместимость" : "Show date, time, and capacity"}
+              <input type="checkbox" className="h-4 w-4" checked={showStartsAt} onChange={(e) => setShowStartsAt(e.target.checked)} />
+              {ru ? "Показывать дату начала" : "Show start date"}
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showEndsAt} onChange={(e) => setShowEndsAt(e.target.checked)} />
+              {ru ? "Показывать дату окончания" : "Show end date"}
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showCapacity} onChange={(e) => setShowCapacity(e.target.checked)} />
+              {ru ? "Показывать вместимость" : "Show capacity"}
             </label>
             <label className="inline-flex items-center gap-2 text-sm text-muted">
               <input type="checkbox" className="h-4 w-4" checked={showLocation} onChange={(e) => setShowLocation(e.target.checked)} />
@@ -290,17 +308,17 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
 
                   {hasMetaPreview ? (
                     <div className="mt-3 grid gap-1">
-                      {showSchedule && startsAt.trim() ? (
+                      {showStartsAt && startsAt.trim() ? (
                         <p className="m-0 text-xs">
                           {ru ? "Начало" : "Starts"}: {new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()}
                         </p>
                       ) : null}
-                      {showSchedule && endsAt.trim() ? (
+                      {showEndsAt && endsAt.trim() ? (
                         <p className="m-0 text-xs">
                           {ru ? "Окончание" : "Ends"}: {new Date(datetimeLocalToIso(endsAt) ?? endsAt).toLocaleString()}
                         </p>
                       ) : null}
-                      {showSchedule && capacity.trim() ? (
+                      {showCapacity && capacity.trim() ? (
                         <p className="m-0 text-xs">
                           {ru ? "Вместимость" : "Capacity"}: {capacity.trim()}
                         </p>

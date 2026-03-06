@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
         const withDeletedFilter = db
           .from("events")
-          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
           .eq("id", eventId)
           .is("deleted_at", null);
         let data: any = null;
@@ -105,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         if (error && isMissingDeletedAtColumn(error)) {
           const fallback = db
             .from("events")
-            .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+            .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
             .eq("id", eventId);
           if (organizationId) {
             const result = await fallback.eq("organization_id", organizationId).maybeSingle();
@@ -137,6 +137,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             registrationSuccessMessage: data.registration_success_message,
             showTitle: (data as any).show_title ?? true,
             showSchedule: (data as any).show_schedule ?? true,
+            showStartsAt: (data as any).show_starts_at ?? (data as any).show_schedule ?? true,
+            showEndsAt: (data as any).show_ends_at ?? (data as any).show_schedule ?? true,
+            showCapacity: (data as any).show_capacity ?? (data as any).show_schedule ?? true,
             showLocation: (data as any).show_location ?? true,
             showDescription: (data as any).show_description ?? true,
             showRegistrationSuccessMessage: (data as any).show_registration_success_message ?? true,
@@ -273,6 +276,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           ,
           show_title: parseBooleanFlag(req.body?.showTitle, true),
           show_schedule: parseBooleanFlag(req.body?.showSchedule, true),
+          show_starts_at: parseBooleanFlag(req.body?.showStartsAt, parseBooleanFlag(req.body?.showSchedule, true)),
+          show_ends_at: parseBooleanFlag(req.body?.showEndsAt, parseBooleanFlag(req.body?.showSchedule, true)),
+          show_capacity: parseBooleanFlag(req.body?.showCapacity, parseBooleanFlag(req.body?.showSchedule, true)),
           show_location: parseBooleanFlag(req.body?.showLocation, true),
           show_description: parseBooleanFlag(req.body?.showDescription, true),
           show_registration_success_message: parseBooleanFlag(req.body?.showRegistrationSuccessMessage, true)
@@ -282,10 +288,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const { data, error } = organizationId
         ? await query
           .eq("organization_id", organizationId)
-          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
           .maybeSingle()
         : await query
-          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
+          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_starts_at,show_ends_at,show_capacity,show_location,show_description,show_registration_success_message,status")
           .maybeSingle();
 
       if (error) throw error;
@@ -307,6 +313,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             registrationSuccessMessage: data.registration_success_message,
             showTitle: (data as any).show_title ?? true,
             showSchedule: (data as any).show_schedule ?? true,
+            showStartsAt: (data as any).show_starts_at ?? (data as any).show_schedule ?? true,
+            showEndsAt: (data as any).show_ends_at ?? (data as any).show_schedule ?? true,
+            showCapacity: (data as any).show_capacity ?? (data as any).show_schedule ?? true,
             showLocation: (data as any).show_location ?? true,
             showDescription: (data as any).show_description ?? true,
             showRegistrationSuccessMessage: (data as any).show_registration_success_message ?? true,
@@ -382,6 +391,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       location,
       showTitle: parseBooleanFlag(req.body?.showTitle, true),
       showSchedule: parseBooleanFlag(req.body?.showSchedule, true),
+      showStartsAt: parseBooleanFlag(req.body?.showStartsAt, parseBooleanFlag(req.body?.showSchedule, true)),
+      showEndsAt: parseBooleanFlag(req.body?.showEndsAt, parseBooleanFlag(req.body?.showSchedule, true)),
+      showCapacity: parseBooleanFlag(req.body?.showCapacity, parseBooleanFlag(req.body?.showSchedule, true)),
       showLocation: parseBooleanFlag(req.body?.showLocation, true),
       showDescription: parseBooleanFlag(req.body?.showDescription, true),
       showRegistrationSuccessMessage: parseBooleanFlag(req.body?.showRegistrationSuccessMessage, true),

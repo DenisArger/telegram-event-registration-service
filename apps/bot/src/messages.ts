@@ -49,13 +49,15 @@ export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"):
   const startsAt = formatEventDate(event.startsAt, locale);
   const endsAt = formatEventDate(event.endsAt, locale);
   const capacity = formatCapacity(event.capacity);
-  const scheduleBlock = event.showSchedule !== false
-    ? [startsAt ? `🕒 ${startsAt}` : null, endsAt ? `🏁 ${endsAt}` : null, capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null]
-    : [];
+  const showStartsAt = event.showStartsAt ?? event.showSchedule ?? true;
+  const showEndsAt = event.showEndsAt ?? event.showSchedule ?? true;
+  const showCapacity = event.showCapacity ?? event.showSchedule ?? true;
 
   return [
     event.showTitle !== false ? event.title : null,
-    ...scheduleBlock,
+    showStartsAt && startsAt ? `🕒 ${startsAt}` : null,
+    showEndsAt && endsAt ? `🏁 ${endsAt}` : null,
+    showCapacity && capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null,
     event.showLocation !== false && event.location ? `📍 ${event.location}` : null,
     event.showDescription !== false && event.description ? event.description : null
   ]
@@ -68,13 +70,16 @@ export function buildEventMessageHtml(event: EventEntity, locale: BotLocale = "e
   const startsAt = formatEventDate(event.startsAt, locale);
   const endsAt = formatEventDate(event.endsAt, locale);
   const capacity = formatCapacity(event.capacity);
+  const showStartsAt = event.showStartsAt ?? event.showSchedule ?? true;
+  const showEndsAt = event.showEndsAt ?? event.showSchedule ?? true;
+  const showCapacity = event.showCapacity ?? event.showSchedule ?? true;
   const descriptionHtml = event.showDescription !== false && event.description ? renderMarkdownToTelegramHtml(event.description) : null;
 
   return [
     event.showTitle !== false ? titleHtml : null,
-    event.showSchedule !== false && startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
-    event.showSchedule !== false && endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
-    event.showSchedule !== false && capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
+    showStartsAt && startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
+    showEndsAt && endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
+    showCapacity && capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
     event.showLocation !== false && event.location ? `📍 ${escapeHtml(event.location)}` : null,
     descriptionHtml ? descriptionHtml : null
   ]
