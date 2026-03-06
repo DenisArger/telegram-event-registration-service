@@ -49,13 +49,15 @@ export function buildEventMessage(event: EventEntity, locale: BotLocale = "en"):
   const startsAt = formatEventDate(event.startsAt, locale);
   const endsAt = formatEventDate(event.endsAt, locale);
   const capacity = formatCapacity(event.capacity);
+  const scheduleBlock = event.showSchedule !== false
+    ? [startsAt ? `🕒 ${startsAt}` : null, endsAt ? `🏁 ${endsAt}` : null, capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null]
+    : [];
 
   return [
-    event.title,
-    startsAt ? `🕒 ${startsAt}` : null,
-    endsAt ? `🏁 ${endsAt}` : null,
-    capacity ? `👥 ${t(locale, "capacity_label")}: ${capacity}` : null,
-    event.description ? event.description : null
+    event.showTitle !== false ? event.title : null,
+    ...scheduleBlock,
+    event.showLocation !== false && event.location ? `📍 ${event.location}` : null,
+    event.showDescription !== false && event.description ? event.description : null
   ]
     .filter(Boolean)
     .join("\n");
@@ -66,13 +68,14 @@ export function buildEventMessageHtml(event: EventEntity, locale: BotLocale = "e
   const startsAt = formatEventDate(event.startsAt, locale);
   const endsAt = formatEventDate(event.endsAt, locale);
   const capacity = formatCapacity(event.capacity);
-  const descriptionHtml = event.description ? renderMarkdownToTelegramHtml(event.description) : null;
+  const descriptionHtml = event.showDescription !== false && event.description ? renderMarkdownToTelegramHtml(event.description) : null;
 
   return [
-    titleHtml,
-    startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
-    endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
-    capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
+    event.showTitle !== false ? titleHtml : null,
+    event.showSchedule !== false && startsAt ? `🕒 ${escapeHtml(startsAt)}` : null,
+    event.showSchedule !== false && endsAt ? `🏁 ${escapeHtml(endsAt)}` : null,
+    event.showSchedule !== false && capacity ? `👥 ${escapeHtml(t(locale, "capacity_label"))}: ${capacity}` : null,
+    event.showLocation !== false && event.location ? `📍 ${escapeHtml(event.location)}` : null,
     descriptionHtml ? descriptionHtml : null
   ]
     .filter(Boolean)

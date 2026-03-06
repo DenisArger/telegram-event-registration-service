@@ -39,6 +39,16 @@ function parseQuestions(raw: unknown): { value: Array<{ prompt: string; isRequir
   return { value: mapped };
 }
 
+function parseBooleanFlag(raw: unknown, fallback = true): boolean {
+  if (typeof raw === "boolean") return raw;
+  if (typeof raw === "string") {
+    const normalized = raw.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return fallback;
+}
+
 function isMissingDeletedAtColumn(error: unknown): boolean {
   const message = String((error as { message?: unknown } | null)?.message ?? "");
   return message.includes("deleted_at") && (message.includes("column") || message.includes("schema cache"));
@@ -77,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
         const withDeletedFilter = db
           .from("events")
-          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
+          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
           .eq("id", eventId)
           .is("deleted_at", null);
         let data: any = null;
@@ -95,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         if (error && isMissingDeletedAtColumn(error)) {
           const fallback = db
             .from("events")
-            .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
+            .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
             .eq("id", eventId);
           if (organizationId) {
             const result = await fallback.eq("organization_id", organizationId).maybeSingle();
@@ -125,6 +135,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
             endsAt: data.ends_at,
             capacity: data.capacity,
             registrationSuccessMessage: data.registration_success_message,
+            showTitle: (data as any).show_title ?? true,
+            showSchedule: (data as any).show_schedule ?? true,
+            showLocation: (data as any).show_location ?? true,
+            showDescription: (data as any).show_description ?? true,
+            showRegistrationSuccessMessage: (data as any).show_registration_success_message ?? true,
             status: data.status
           }
         });
@@ -255,16 +270,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           ends_at: endsAtIso,
           capacity: capacity.value,
           registration_success_message: registrationSuccessMessage
+          ,
+          show_title: parseBooleanFlag(req.body?.showTitle, true),
+          show_schedule: parseBooleanFlag(req.body?.showSchedule, true),
+          show_location: parseBooleanFlag(req.body?.showLocation, true),
+          show_description: parseBooleanFlag(req.body?.showDescription, true),
+          show_registration_success_message: parseBooleanFlag(req.body?.showRegistrationSuccessMessage, true)
         })
         .eq("id", eventId);
 
       const { data, error } = organizationId
         ? await query
           .eq("organization_id", organizationId)
-          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
+          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
           .maybeSingle()
         : await query
-          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,status")
+          .select("id,organization_id,title,description,location,starts_at,ends_at,capacity,registration_success_message,show_title,show_schedule,show_location,show_description,show_registration_success_message,status")
           .maybeSingle();
 
       if (error) throw error;
@@ -283,8 +304,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           startsAt: data.starts_at,
           endsAt: data.ends_at,
           capacity: data.capacity,
-          registrationSuccessMessage: data.registration_success_message,
-          status: data.status
+            registrationSuccessMessage: data.registration_success_message,
+            showTitle: (data as any).show_title ?? true,
+            showSchedule: (data as any).show_schedule ?? true,
+            showLocation: (data as any).show_location ?? true,
+            showDescription: (data as any).show_description ?? true,
+            showRegistrationSuccessMessage: (data as any).show_registration_success_message ?? true,
+            status: data.status
         }
       });
     } catch (error) {
@@ -354,6 +380,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       registrationSuccessMessage,
       description,
       location,
+      showTitle: parseBooleanFlag(req.body?.showTitle, true),
+      showSchedule: parseBooleanFlag(req.body?.showSchedule, true),
+      showLocation: parseBooleanFlag(req.body?.showLocation, true),
+      showDescription: parseBooleanFlag(req.body?.showDescription, true),
+      showRegistrationSuccessMessage: parseBooleanFlag(req.body?.showRegistrationSuccessMessage, true),
       createdBy: creatorId,
       organizationId
     });

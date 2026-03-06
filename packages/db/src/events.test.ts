@@ -31,10 +31,16 @@ describe("events data layer", () => {
       id: "e1",
       title: "T",
       description: null,
+      location: null,
       startsAt: "2026",
       endsAt: null,
       capacity: 10,
       registrationSuccessMessage: null,
+      showTitle: true,
+      showSchedule: true,
+      showLocation: true,
+      showDescription: true,
+      showRegistrationSuccessMessage: true,
       status: "published"
     });
   });

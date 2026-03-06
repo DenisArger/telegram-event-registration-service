@@ -32,6 +32,11 @@ export function CreateEventForm({
   const [description, setDescription] = useState("");
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState("");
   const [location, setLocation] = useState("");
+  const [messageShowTitle, setMessageShowTitle] = useState(true);
+  const [messageShowSchedule, setMessageShowSchedule] = useState(true);
+  const [messageShowLocation, setMessageShowLocation] = useState(true);
+  const [messageShowDescription, setMessageShowDescription] = useState(true);
+  const [messageShowRegistrationSuccessMessage, setMessageShowRegistrationSuccessMessage] = useState(true);
   const [questions, setQuestions] = useState<NewQuestionInput[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -123,6 +128,11 @@ export function CreateEventForm({
           description: description.trim() || null,
           registrationSuccessMessage: registrationSuccessMessage.trim() || null,
           location: location.trim() || null,
+          showTitle: messageShowTitle,
+          showSchedule: messageShowSchedule,
+          showLocation: messageShowLocation,
+          showDescription: messageShowDescription,
+          showRegistrationSuccessMessage: messageShowRegistrationSuccessMessage,
           questions: normalizedQuestions
         })
       });
@@ -140,6 +150,11 @@ export function CreateEventForm({
       setDescription("");
       setRegistrationSuccessMessage("");
       setLocation("");
+      setMessageShowTitle(true);
+      setMessageShowSchedule(true);
+      setMessageShowLocation(true);
+      setMessageShowDescription(true);
+      setMessageShowRegistrationSuccessMessage(true);
       setQuestions([]);
       setMessage(ru ? "Событие создано в статусе draft." : "Event created in draft status.");
       router.refresh();
@@ -197,11 +212,27 @@ export function CreateEventForm({
           onChange={(e) => setLocation(e.target.value)}
         />
         <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowTitle} onChange={(e) => setMessageShowTitle(e.target.checked)} />
+          {ru ? "Показывать заголовок в сообщении" : "Show title in message"}
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowSchedule} onChange={(e) => setMessageShowSchedule(e.target.checked)} />
+          {ru ? "Показывать дату, время и вместимость" : "Show date, time, and capacity"}
+        </label>
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowLocation} onChange={(e) => setMessageShowLocation(e.target.checked)} />
+          {ru ? "Показывать место проведения" : "Show location"}
+        </label>
         <AutoTextarea
           placeholder={ru ? "Описание (поддерживает Markdown)" : "Description (Markdown supported)"}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowDescription} onChange={(e) => setMessageShowDescription(e.target.checked)} />
+          {ru ? "Показывать описание" : "Show description"}
+        </label>
         <small>{ru ? "Поддерживаются # заголовки, **жирный**, *курсив*, `код`, [ссылка](https://...)" : "Supports # headings, **bold**, *italic*, `code`, [link](https://...)"}</small>
         {description.trim() ? (
           <div className="rounded-lg border border-border bg-surface-elevated p-3">
@@ -214,6 +245,10 @@ export function CreateEventForm({
           value={registrationSuccessMessage}
           onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
         />
+        <label className="inline-flex items-center gap-2 text-sm text-muted">
+          <input type="checkbox" className="h-4 w-4" checked={messageShowRegistrationSuccessMessage} onChange={(e) => setMessageShowRegistrationSuccessMessage(e.target.checked)} />
+          {ru ? "Отправлять это сообщение после регистрации" : "Send this message after registration"}
+        </label>
         <small>
           {ru
             ? "Этот текст бот отправит после успешной регистрации."

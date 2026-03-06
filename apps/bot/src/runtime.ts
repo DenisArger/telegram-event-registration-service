@@ -646,7 +646,9 @@ async function sendRegistrationResultMessage(
   }
 
   const event = await getEventById(db, eventId);
-  const customMessage = event?.registrationSuccessMessage?.trim();
+  const customMessage = event?.showRegistrationSuccessMessage === false
+    ? ""
+    : event?.registrationSuccessMessage?.trim();
   if (!customMessage) {
     await ctx.reply(registrationStatusToText(result, locale));
     return;

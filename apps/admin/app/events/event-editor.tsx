@@ -21,6 +21,11 @@ interface EditableEvent {
   startsAt: string | null;
   endsAt?: string | null;
   capacity: number | null;
+  showTitle?: boolean;
+  showSchedule?: boolean;
+  showLocation?: boolean;
+  showDescription?: boolean;
+  showRegistrationSuccessMessage?: boolean;
   status: "draft" | "published" | "closed";
 }
 
@@ -34,6 +39,11 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
   const [description, setDescription] = useState(event.description ?? "");
   const [registrationSuccessMessage, setRegistrationSuccessMessage] = useState(event.registrationSuccessMessage ?? "");
   const [location, setLocation] = useState(event.location ?? "");
+  const [showTitle, setShowTitle] = useState(event.showTitle ?? true);
+  const [showSchedule, setShowSchedule] = useState(event.showSchedule ?? true);
+  const [showLocation, setShowLocation] = useState(event.showLocation ?? true);
+  const [showDescription, setShowDescription] = useState(event.showDescription ?? true);
+  const [showRegistrationSuccessMessage, setShowRegistrationSuccessMessage] = useState(event.showRegistrationSuccessMessage ?? true);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -41,11 +51,15 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
 
   const hasPreviewContent = Boolean(
     title.trim() ||
-    description.trim() ||
-    registrationSuccessMessage.trim() ||
-    location.trim() ||
-    startsAt.trim() ||
-    endsAt.trim()
+    (showDescription && description.trim()) ||
+    (showRegistrationSuccessMessage && registrationSuccessMessage.trim()) ||
+    (showLocation && location.trim()) ||
+    (showSchedule && startsAt.trim()) ||
+    (showSchedule && endsAt.trim())
+  );
+  const hasMetaPreview = Boolean(
+    (showSchedule && (startsAt.trim() || endsAt.trim() || capacity.trim())) ||
+    (showLocation && location.trim())
   );
 
   async function save() {
@@ -110,6 +124,12 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
           description: description.trim() || null,
           registrationSuccessMessage: registrationSuccessMessage.trim() || null,
           location: location.trim() || null
+          ,
+          showTitle,
+          showSchedule,
+          showLocation,
+          showDescription,
+          showRegistrationSuccessMessage
         })
       });
 
@@ -206,7 +226,23 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
             <small>{ru ? "Количество доступных мест (целое число, если указано)" : "Number of available seats (integer, if provided)"}</small>
             <input placeholder="location (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
             <small>{ru ? "Где проходит мероприятие" : "Where the event takes place"}</small>
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showTitle} onChange={(e) => setShowTitle(e.target.checked)} />
+              {ru ? "Показывать заголовок в сообщении" : "Show title in message"}
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showSchedule} onChange={(e) => setShowSchedule(e.target.checked)} />
+              {ru ? "Показывать дату, время и вместимость" : "Show date, time, and capacity"}
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showLocation} onChange={(e) => setShowLocation(e.target.checked)} />
+              {ru ? "Показывать место проведения" : "Show location"}
+            </label>
             <AutoTextarea placeholder="description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showDescription} onChange={(e) => setShowDescription(e.target.checked)} />
+              {ru ? "Показывать описание" : "Show description"}
+            </label>
             <div className="flex gap-2">
               <Button onClick={generateAiDraft} loading={aiLoading} disabled={loading}>
                 {aiLoading ? (ru ? "Генерация..." : "Generating...") : (ru ? "AI-черновик" : "AI draft")}
@@ -218,6 +254,10 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
               value={registrationSuccessMessage}
               onChange={(e) => setRegistrationSuccessMessage(e.target.value)}
             />
+            <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <input type="checkbox" className="h-4 w-4" checked={showRegistrationSuccessMessage} onChange={(e) => setShowRegistrationSuccessMessage(e.target.checked)} />
+              {ru ? "Отправлять это сообщение после регистрации" : "Send this message after registration"}
+            </label>
             <small>
               {ru
                 ? "Этот текст бот отправит после успешной регистрации."
@@ -245,41 +285,48 @@ export function EventEditor({ event, organizationId }: { event: EditableEvent; o
             {hasPreviewContent ? (
               <div className="rounded-xl border border-border bg-surface-elevated p-4">
                 <p className="mt-0">{ru ? "Карточка события" : "Event card preview"}</p>
-                {title.trim() ? <MarkdownPreview markdown={title} /> : null}
+                <div className="mt-3 rounded-xl border border-border bg-surface p-3">
+                  {showTitle && title.trim() ? <MarkdownPreview markdown={title} /> : null}
 
-                {startsAt.trim() || endsAt.trim() || location.trim() ? (
-                  <div className="mt-3 grid gap-1">
-                    {startsAt.trim() ? (
-                      <p className="m-0 text-xs">
-                        {ru ? "Начало" : "Starts"}: {new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()}
-                      </p>
-                    ) : null}
-                    {endsAt.trim() ? (
-                      <p className="m-0 text-xs">
-                        {ru ? "Окончание" : "Ends"}: {new Date(datetimeLocalToIso(endsAt) ?? endsAt).toLocaleString()}
-                      </p>
-                    ) : null}
-                    {location.trim() ? (
-                      <p className="m-0 text-xs">
-                        {ru ? "Место" : "Location"}: {location.trim()}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
+                  {hasMetaPreview ? (
+                    <div className="mt-3 grid gap-1">
+                      {showSchedule && startsAt.trim() ? (
+                        <p className="m-0 text-xs">
+                          {ru ? "Начало" : "Starts"}: {new Date(datetimeLocalToIso(startsAt) ?? startsAt).toLocaleString()}
+                        </p>
+                      ) : null}
+                      {showSchedule && endsAt.trim() ? (
+                        <p className="m-0 text-xs">
+                          {ru ? "Окончание" : "Ends"}: {new Date(datetimeLocalToIso(endsAt) ?? endsAt).toLocaleString()}
+                        </p>
+                      ) : null}
+                      {showSchedule && capacity.trim() ? (
+                        <p className="m-0 text-xs">
+                          {ru ? "Вместимость" : "Capacity"}: {capacity.trim()}
+                        </p>
+                      ) : null}
+                      {showLocation && location.trim() ? (
+                        <p className="m-0 text-xs">
+                          {ru ? "Место" : "Location"}: {location.trim()}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
 
-                {description.trim() ? (
-                  <div className="mt-4 rounded-xl border border-border bg-surface p-3">
-                    <p className="mt-0 text-xs font-medium text-text">{ru ? "Описание" : "Description"}</p>
-                    <MarkdownPreview markdown={description} />
-                  </div>
-                ) : null}
+                  {showDescription && description.trim() ? (
+                    <div className="mt-4">
+                      <p className="mt-0 text-xs font-medium text-text">{ru ? "Описание" : "Description"}</p>
+                      <MarkdownPreview markdown={description} />
+                    </div>
+                  ) : null}
 
-                {registrationSuccessMessage.trim() ? (
-                  <div className="mt-4 rounded-xl border border-success/30 bg-success/10 p-3">
-                    <p className="mt-0 text-xs font-medium text-text">{ru ? "Сообщение после регистрации" : "Success message"}</p>
-                    <MarkdownPreview markdown={registrationSuccessMessage} />
-                  </div>
-                ) : null}
+                  {showRegistrationSuccessMessage && registrationSuccessMessage.trim() ? (
+                    <div className="mt-4 rounded-xl border border-success/30 bg-success/10 p-3">
+                      <p className="mt-0 text-xs font-medium text-text">{ru ? "Сообщение после регистрации" : "Success message"}</p>
+                      <MarkdownPreview markdown={registrationSuccessMessage} />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-border bg-surface-elevated/50 p-4">

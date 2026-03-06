@@ -6,10 +6,16 @@ export interface EventEntity {
   organizationId?: string | null;
   title: string;
   description: string | null;
+  location?: string | null;
   startsAt: string | null;
   endsAt: string | null;
   capacity: number | null;
   registrationSuccessMessage?: string | null;
+  showTitle?: boolean;
+  showSchedule?: boolean;
+  showLocation?: boolean;
+  showDescription?: boolean;
+  showRegistrationSuccessMessage?: boolean;
   status: "draft" | "published" | "closed";
 }
 
