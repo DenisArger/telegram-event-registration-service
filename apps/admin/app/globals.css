@@ -168,7 +168,11 @@
     @apply grid w-full gap-2 sm:w-auto 2xl:grid-cols-2;
   }
 
-  .attendees-count {
+  .attendees-heading {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .attendees-count-inline {
     @apply rounded-lg border border-border bg-surface-elevated px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted;
   }
 
