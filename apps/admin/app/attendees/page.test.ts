@@ -42,6 +42,7 @@ describe("AttendeesPage", () => {
     expect(html).toContain("selector");
     expect(html).toContain("attendees-table");
     expect(html).toContain("Table");
+    expect(html).toContain("Attendees: 1");
   });
 
   it("renders list mode with attendee summary", async () => {
@@ -52,5 +53,6 @@ describe("AttendeesPage", () => {
     expect(html).toContain("John");
     expect(html).toContain("@john");
     expect(html).toContain("checked in");
+    expect(html).toContain("Attendees: 1");
   });
 });

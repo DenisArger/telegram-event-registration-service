@@ -168,6 +168,10 @@
     @apply grid w-full gap-2 sm:w-auto 2xl:grid-cols-2;
   }
 
+  .attendees-count {
+    @apply rounded-lg border border-border bg-surface-elevated px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+
   .inline-field {
     @apply grid gap-1.5;
   }

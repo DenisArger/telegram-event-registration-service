@@ -77,6 +77,11 @@ export default async function AttendeesPage({
           />
           <div className="attendees-toolbar-switch">
             <div className="attendees-toolbar-controls">
+              {selectedEvent ? (
+                <div className="attendees-count" aria-live="polite">
+                  {ui("attendees_count", locale)}: {attendees.length}
+                </div>
+              ) : null}
               <div className="attendees-view-switch" role="tablist" aria-label="view-switch">
                 <a href={listHref} className={viewMode === "list" ? "active" : ""}>{ui("attendees_view_list", locale)}</a>
                 <a href={tableHref} className={viewMode === "table" ? "active" : ""}>{ui("attendees_view_table", locale)}</a>
