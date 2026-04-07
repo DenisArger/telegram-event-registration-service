@@ -3,12 +3,14 @@ import { createRes, setRequiredEnv } from "../testUtils";
 
 const mocks = vi.hoisted(() => ({
   db: {},
+  cancelRegistration: vi.fn(),
   listEventAttendees: vi.fn(),
   logError: vi.fn()
 }));
 
 vi.mock("@event/db", () => ({
   createServiceClient: vi.fn(() => mocks.db),
+  cancelRegistration: mocks.cancelRegistration,
   listEventAttendees: mocks.listEventAttendees
 }));
 
@@ -76,5 +78,24 @@ describe("GET /api/admin/attendees", () => {
 
     expect(res.statusCode).toBe(500);
     expect(mocks.logError).toHaveBeenCalled();
+  });
+
+  it("cancels attendee registration with DELETE", async () => {
+    mocks.cancelRegistration.mockResolvedValueOnce({ status: "cancelled" });
+    const { default: handler } = await import("../../../api/admin/attendees");
+    const res = createRes();
+
+    await handler(
+      {
+        method: "DELETE",
+        headers: { "x-admin-email": "admin@example.com" },
+        body: { eventId: "e1", userId: "u1" }
+      } as any,
+      res as any
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toEqual({ status: "cancelled" });
+    expect(mocks.cancelRegistration).toHaveBeenCalledWith(mocks.db, "e1", "u1");
   });
 });

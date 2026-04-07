@@ -211,6 +211,13 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
     schedulePersist(nextRows);
   }
 
+  function handleAttendeeCancelled(userId: string) {
+    setRows((current) => current.map((item) => (item.userId === userId ? { ...item, status: "cancelled" } : item)));
+    setLastPersistedRows((current) => current.map((item) => (item.userId === userId ? { ...item, status: "cancelled" } : item)));
+    setMessageType("ok");
+    setMessage(locale === "ru" ? "Регистрация отменена." : "Registration cancelled.");
+  }
+
   return (
     <>
       {message ? <p className={`attendees-order-message ${messageType ?? "info"}`}>{message}</p> : null}
@@ -294,7 +301,13 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
         </table>
       </div>
 
-      <AttendeeDrawer attendee={selectedAttendee} onClose={() => setSelectedUserId(null)} />
-    </>
+        <AttendeeDrawer
+          attendee={selectedAttendee}
+          onClose={() => setSelectedUserId(null)}
+          eventId={eventId}
+          organizationId={organizationId}
+          onAttendeeCancelled={handleAttendeeCancelled}
+        />
+      </>
   );
 }

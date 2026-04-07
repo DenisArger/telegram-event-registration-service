@@ -2,15 +2,21 @@
 
 import React, { useEffect } from "react";
 import type { AttendeeItem } from "../_lib/admin-api";
+import { cancelAttendeeRegistration } from "../_lib/admin-api";
 import { getUiLocale, ui } from "../i18n";
 
 interface AttendeeDrawerProps {
   attendee: AttendeeItem | null;
   onClose: () => void;
+  eventId: string;
+  organizationId?: string;
+  onAttendeeCancelled?: (userId: string) => void;
 }
 
-export function AttendeeDrawer({ attendee, onClose }: AttendeeDrawerProps) {
+export function AttendeeDrawer({ attendee, onClose, eventId, organizationId, onAttendeeCancelled }: AttendeeDrawerProps) {
   const locale = getUiLocale();
+  const [isCancelling, setIsCancelling] = React.useState(false);
+  const [actionMessage, setActionMessage] = React.useState<string | null>(null);
 
   useEffect(() => {
     if (!attendee) return;
@@ -25,7 +31,34 @@ export function AttendeeDrawer({ attendee, onClose }: AttendeeDrawerProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [attendee, onClose]);
 
+  useEffect(() => {
+    setIsCancelling(false);
+    setActionMessage(null);
+  }, [attendee]);
+
   if (!attendee) return null;
+
+  async function handleCancelRegistration() {
+    if (!attendee || isCancelling) return;
+    const confirmed = window.confirm(
+      locale === "ru"
+        ? "Отменить регистрацию участника? Он будет снят с события."
+        : "Cancel this attendee's registration? They will be removed from the event."
+    );
+    if (!confirmed) return;
+
+    setIsCancelling(true);
+    setActionMessage(null);
+    const ok = await cancelAttendeeRegistration(eventId, attendee.userId, organizationId);
+    setIsCancelling(false);
+    if (!ok) {
+      setActionMessage(locale === "ru" ? "Не удалось отменить регистрацию." : "Failed to cancel registration.");
+      return;
+    }
+
+    onAttendeeCancelled?.(attendee.userId);
+    onClose();
+  }
 
   return (
     <div className="attendee-drawer-overlay" onClick={onClose} role="presentation">
@@ -66,6 +99,24 @@ export function AttendeeDrawer({ attendee, onClose }: AttendeeDrawerProps) {
               ))}
             </ul>
           )}
+        </div>
+
+        <div className="mt-4 border-t border-border pt-4">
+          {actionMessage ? <p className="mb-3 text-sm text-red-600">{actionMessage}</p> : null}
+          <button
+            type="button"
+            onClick={handleCancelRegistration}
+            disabled={isCancelling || attendee.status === "cancelled"}
+            className="rounded-xl border border-red-400 px-3 py-2 text-sm font-medium text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isCancelling
+              ? locale === "ru"
+                ? "Отменяем..."
+                : "Cancelling..."
+              : locale === "ru"
+                ? "Отменить регистрацию"
+                : "Cancel registration"}
+          </button>
         </div>
       </aside>
     </div>

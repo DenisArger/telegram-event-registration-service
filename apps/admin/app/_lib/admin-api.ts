@@ -168,6 +168,36 @@ export async function getAttendees(eventId: string, organizationId?: string): Pr
   }
 }
 
+export async function cancelAttendeeRegistration(
+  eventId: string,
+  userId: string,
+  organizationId?: string
+): Promise<boolean> {
+  const cfg = getAdminConfig();
+  if (!cfg) return false;
+  const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/attendees", cfg.base), organizationId);
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: "DELETE",
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json",
+        ...(cookieHeader ? { cookie: cookieHeader } : {})
+      },
+      body: JSON.stringify({
+        eventId,
+        userId,
+        ...(organizationId ? { organizationId } : {})
+      })
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function getWaitlist(eventId: string, organizationId?: string): Promise<WaitlistItem[]> {
   const cfg = getAdminConfig();
   if (!cfg) return [];

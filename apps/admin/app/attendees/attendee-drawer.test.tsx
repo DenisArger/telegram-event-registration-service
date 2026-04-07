@@ -29,10 +29,11 @@ const attendee = {
 describe("AttendeeDrawer", () => {
   it("renders details and closes by button", () => {
     const onClose = vi.fn();
-    render(<AttendeeDrawer attendee={attendee} onClose={onClose} />);
+    render(<AttendeeDrawer attendee={attendee} onClose={onClose} eventId="e1" />);
 
     expect(screen.getByText("Attendee details")).toBeTruthy();
     expect(screen.getByText("Why?: Because")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Cancel registration" })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Close details" }));
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -40,7 +41,7 @@ describe("AttendeeDrawer", () => {
 
   it("closes by escape key", () => {
     const onClose = vi.fn();
-    render(<AttendeeDrawer attendee={attendee} onClose={onClose} />);
+    render(<AttendeeDrawer attendee={attendee} onClose={onClose} eventId="e1" />);
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(onClose).toHaveBeenCalledTimes(1);

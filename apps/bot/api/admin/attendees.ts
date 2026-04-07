@@ -1,5 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createServiceClient, listEventAttendees, saveEventAttendeeOrder, saveEventAttendeeRowColor } from "@event/db";
+import {
+  cancelRegistration,
+  createServiceClient,
+  listEventAttendees,
+  saveEventAttendeeOrder,
+  saveEventAttendeeRowColor
+} from "@event/db";
 import { logError } from "@event/shared";
 import { requireAdminSession, sendError } from "../../src/adminApi.js";
 import { applyCors } from "../../src/cors.js";
@@ -16,7 +22,7 @@ function hasUniqueItems(values: string[]): boolean {
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   if (applyCors(req, res)) return;
 
-  if (req.method !== "GET" && req.method !== "PUT") {
+  if (req.method !== "GET" && req.method !== "PUT" && req.method !== "DELETE") {
     res.status(405).json({ message: "Method not allowed" });
     return;
   }
@@ -41,6 +47,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     } catch (error) {
       logError("admin_attendees_failed", { error, eventId, requestId: ctx.requestId });
       sendError(res, 500, ctx.requestId, "attendees_load_failed", "Failed to load attendees");
+    }
+    return;
+  }
+
+  if (req.method === "DELETE") {
+    const eventId = String(req.body?.eventId ?? "").trim();
+    const organizationId = String(req.body?.organizationId ?? "").trim() || undefined;
+    const userId = String(req.body?.userId ?? "").trim();
+
+    if (!eventId || !userId) {
+      sendError(res, 400, ctx.requestId, "invalid_payload", "eventId and userId are required");
+      return;
+    }
+
+    const hasAccess = await requireEventOrganizationAccess(req, res, db, ctx, organizationId, eventId);
+    if (!hasAccess) return;
+
+    try {
+      const result = await cancelRegistration(db, eventId, userId);
+      if (result.status === "not_registered") {
+        sendError(res, 404, ctx.requestId, "registration_not_found", "Registration not found");
+        return;
+      }
+
+      res.status(200).json(result);
+    } catch (error) {
+      logError("admin_attendees_cancel_failed", { error, eventId, userId, requestId: ctx.requestId });
+      sendError(res, 500, ctx.requestId, "cancel_registration_failed", "Failed to cancel registration");
     }
     return;
   }
