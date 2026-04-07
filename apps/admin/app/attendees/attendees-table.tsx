@@ -45,7 +45,6 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
   const [draggingUserId, setDraggingUserId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"ok" | "error" | "info" | null>(null);
-  const saveTimerRef = useRef<number | null>(null);
   const colorTimerByUserRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -56,9 +55,6 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
   useEffect(() => {
     const colorTimers = colorTimerByUserRef.current;
     return () => {
-      if (saveTimerRef.current !== null) {
-        window.clearTimeout(saveTimerRef.current);
-      }
       for (const timerId of colorTimers.values()) {
         window.clearTimeout(timerId);
       }
@@ -122,13 +118,7 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
   }
 
   function schedulePersist(nextRows: AttendeeItem[]) {
-    if (saveTimerRef.current !== null) {
-      window.clearTimeout(saveTimerRef.current);
-    }
-
-    saveTimerRef.current = window.setTimeout(() => {
-      void persistOrder(nextRows);
-    }, 500);
+    void persistOrder(nextRows);
   }
 
   async function persistRowColor(
