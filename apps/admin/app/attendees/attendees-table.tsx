@@ -259,7 +259,6 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
                       type="button"
                       className="drag-handle"
                       draggable
-                      onMouseDown={(event) => event.preventDefault()}
                       onClick={(event) => event.stopPropagation()}
                       onDragStart={(event) => {
                         event.stopPropagation();
