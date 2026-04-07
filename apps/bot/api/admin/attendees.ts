@@ -73,7 +73,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
       res.status(200).json(result);
     } catch (error) {
-      logError("admin_attendees_cancel_failed", { error, eventId, userId, requestId: ctx.requestId });
+      logError("admin_attendees_cancel_failed", {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        eventId,
+        userId,
+        requestId: ctx.requestId
+      });
       sendError(res, 500, ctx.requestId, "cancel_registration_failed", "Failed to cancel registration");
     }
     return;
@@ -132,7 +138,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       await saveEventAttendeeOrder(db, eventId, orderedUserIds);
       res.status(200).json({ ok: true });
     } catch (error) {
-      logError("admin_attendees_order_failed", { error, eventId, requestId: ctx.requestId });
+      logError("admin_attendees_order_failed", {
+        error,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        eventId,
+        orderedUserIds,
+        requestId: ctx.requestId
+      });
       sendError(res, 500, ctx.requestId, "attendees_order_failed", "Failed to save attendees order");
     }
     return;
@@ -160,7 +172,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     await saveEventAttendeeRowColor(db, eventId, userId, rowColor);
     res.status(200).json({ ok: true });
   } catch (error) {
-    logError("admin_attendees_color_failed", { error, eventId, requestId: ctx.requestId });
+    logError("admin_attendees_color_failed", {
+      error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      eventId,
+      userId,
+      rowColor,
+      requestId: ctx.requestId
+    });
     sendError(res, 500, ctx.requestId, "attendees_color_failed", "Failed to save attendee color");
   }
 }
