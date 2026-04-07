@@ -12,6 +12,13 @@ export interface UserByTelegramRecord {
   telegramId: number;
 }
 
+export interface UserContactRecord {
+  id: string;
+  role: UserRole;
+  telegramId: number | null;
+  fullName: string | null;
+}
+
 export interface UserByAuthRecord {
   id: string;
   role: UserRole;
@@ -65,6 +72,27 @@ export async function getUserByTelegramId(
     id: data.id as string,
     role: data.role as UserRole,
     telegramId: Number(data.telegram_id)
+  };
+}
+
+export async function getUserById(
+  db: SupabaseClient,
+  userId: string
+): Promise<UserContactRecord | null> {
+  const { data, error } = await db
+    .from("users")
+    .select("id,role,telegram_id,full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return {
+    id: data.id as string,
+    role: data.role as UserRole,
+    telegramId: data.telegram_id == null ? null : Number(data.telegram_id),
+    fullName: (data.full_name as string | null) ?? null
   };
 }
 

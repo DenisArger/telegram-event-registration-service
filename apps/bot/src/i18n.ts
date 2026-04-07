@@ -9,6 +9,12 @@ export function getLocaleFromCtx(ctx: any): BotLocale {
   return resolveLocale(ctx?.from?.language_code);
 }
 
+export function getDefaultBotLocale(envSource: Record<string, string | undefined> = process.env): BotLocale {
+  const raw = String(envSource.BOT_LOCALE ?? envSource.NEXT_PUBLIC_LOCALE ?? "").trim().toLowerCase();
+  if (raw.startsWith("en")) return "en";
+  return "ru";
+}
+
 type Vars = Record<string, string | number | undefined>;
 type Messages = Record<string, string | ((vars?: Vars) => string)>;
 
@@ -47,6 +53,10 @@ const translations: Record<BotLocale, Messages> = {
     action_event_update_failed: "Event update failed.",
     action_event_updated: (v) => `Event is now ${String(v?.status)}.`,
     action_update_failed: "Could not update event.",
+    waitlist_promoted_user: (v) =>
+      `You have been moved from the waitlist to registration for "${String(v?.eventTitle ?? "")}".`,
+    waitlist_promoted_admin: (v) =>
+      `Moved ${String(v?.userName ?? "participant")} from waitlist to registration for "${String(v?.eventTitle ?? "")}".`,
     status_registered: "You are registered ✅",
     status_waitlisted: (v) => `Event is full. Added to waitlist (#${String(v?.position ?? "?")})`,
     status_already_registered: "You are already registered.",
@@ -98,6 +108,10 @@ const translations: Record<BotLocale, Messages> = {
     action_event_update_failed: "Не удалось обновить мероприятие.",
     action_event_updated: (v) => `Статус мероприятия: ${String(v?.status)}.`,
     action_update_failed: "Не удалось обновить мероприятие.",
+    waitlist_promoted_user: (v) =>
+      `Вас перевели из листа ожидания в регистрацию на мероприятие «${String(v?.eventTitle ?? "")}».`,
+    waitlist_promoted_admin: (v) =>
+      `${String(v?.userName ?? "Участник")} переведён из листа ожидания в регистрацию на мероприятие «${String(v?.eventTitle ?? "")}».`,
     status_registered: "Вы успешно зарегистрированы ✅",
     status_waitlisted: (v) => `Мест нет. Вы добавлены в лист ожидания (#${String(v?.position ?? "?")})`,
     status_already_registered: "Вы уже зарегистрированы.",
