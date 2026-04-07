@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  cancelAttendeeRegistration,
   getAdminEventById,
   getAdminEvents,
   getAttendees,
@@ -92,19 +91,5 @@ describe("admin-api", () => {
     expect(attendees[0]?.userId).toBe("u1");
     expect(waitlist[0]?.userId).toBe("u2");
     expect(stats?.registeredCount).toBe(1);
-  });
-
-  it("cancelAttendeeRegistration returns true on success and false on failure", async () => {
-    process.env.ADMIN_API_BASE_URL = "https://api.example";
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn()
-        .mockResolvedValueOnce({ ok: true })
-        .mockRejectedValueOnce(new Error("network"))
-    );
-
-    await expect(cancelAttendeeRegistration("e1", "u1")).resolves.toBe(true);
-    await expect(cancelAttendeeRegistration("e1", "u1")).resolves.toBe(false);
   });
 });

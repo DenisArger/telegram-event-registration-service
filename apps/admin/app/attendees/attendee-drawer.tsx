@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import type { AttendeeItem } from "../_lib/admin-api";
-import { cancelAttendeeRegistration } from "../_lib/admin-api";
+import { cancelAttendeeRegistration } from "../_lib/admin-client";
 import { getUiLocale, ui } from "../i18n";
 
 interface AttendeeDrawerProps {
