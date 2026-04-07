@@ -118,7 +118,7 @@ describe("AttendeesTable", () => {
     expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 
-  it("rolls back row order when persistence fails", async () => {
+  it("keeps row order visible when persistence fails", async () => {
     const secondAttendee = attendees[1];
     if (!secondAttendee) {
       throw new Error("Test attendees are not initialized");
@@ -147,8 +147,8 @@ describe("AttendeesTable", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 700));
 
-    const rowsAfterRollback = Array.from(document.querySelectorAll("tbody tr"));
-    expect(rowsAfterRollback[0]?.textContent).toContain("John");
+    const rowsAfterFailure = Array.from(document.querySelectorAll("tbody tr"));
+    expect(rowsAfterFailure[0]?.textContent).toContain("Jane");
   });
 
   it("updates row color and persists colorUpdate payload", async () => {

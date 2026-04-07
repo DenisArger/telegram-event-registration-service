@@ -116,7 +116,6 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
       setMessageType("ok");
       setMessage(ui("attendees_order_saved", locale));
     } catch {
-      setRows(lastPersistedRows);
       setMessageType("error");
       setMessage(ui("attendees_order_save_failed", locale));
     }
