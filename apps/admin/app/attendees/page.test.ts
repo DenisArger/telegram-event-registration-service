@@ -27,6 +27,17 @@ vi.mock("../_lib/admin-api", () => ({
       registeredAt: "2026-02-19T10:00:00Z",
       checkedIn: true,
       answers: [{ questionId: "q1", questionVersion: 1, prompt: "Why?", answerText: "Because", isSkipped: false, createdAt: "2026" }]
+    },
+    {
+      userId: "u2",
+      fullName: "Jane",
+      username: "jane",
+      displayOrder: 2,
+      rowColor: null,
+      status: "cancelled",
+      registeredAt: "2026-02-19T11:00:00Z",
+      checkedIn: false,
+      answers: []
     }
   ])
 }));
@@ -43,6 +54,7 @@ describe("AttendeesPage", () => {
     expect(html).toContain("attendees-table");
     expect(html).toContain("Table");
     expect(html).toContain("Attendees: 1");
+    expect(html).toContain("Active");
   });
 
   it("renders list mode with attendee summary", async () => {
@@ -54,5 +66,14 @@ describe("AttendeesPage", () => {
     expect(html).toContain("@john");
     expect(html).toContain("checked in");
     expect(html).toContain("Attendees: 1");
+  });
+
+  it("renders cancelled tab as read-only list", async () => {
+    const html = renderToStaticMarkup(await AttendeesPage({
+      searchParams: Promise.resolve({ organizationId: "org1", eventId: "e1", status: "cancelled" })
+    } as any));
+    expect(html).toContain("Cancelled");
+    expect(html).toContain("Jane");
+    expect(html).toContain("Cancelled: 1");
   });
 });

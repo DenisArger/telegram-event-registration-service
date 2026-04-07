@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { AttendeeItem } from "../_lib/admin-api";
 import { getUiLocale, ui } from "../i18n";
 import { AttendeeDrawer } from "./attendee-drawer";
@@ -37,6 +38,7 @@ function hexToRgba(hex: string, alpha: number): string {
 
 export function AttendeesTable({ eventId, organizationId, attendees, density = "comfortable" }: AttendeesTableProps) {
   const locale = getUiLocale();
+  const router = useRouter();
   const [rows, setRows] = useState<AttendeeItem[]>(attendees);
   const [lastPersistedRows, setLastPersistedRows] = useState<AttendeeItem[]>(attendees);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -216,6 +218,7 @@ export function AttendeesTable({ eventId, organizationId, attendees, density = "
     setLastPersistedRows((current) => current.map((item) => (item.userId === userId ? { ...item, status: "cancelled" } : item)));
     setMessageType("ok");
     setMessage(locale === "ru" ? "Регистрация отменена." : "Registration cancelled.");
+    router.refresh();
   }
 
   return (

@@ -5,6 +5,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { AttendeesTable } from "./attendees-table";
 
+const refreshMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: refreshMock })
+}));
+
 const attendees = [
   {
     userId: "11111111-1111-4111-8111-111111111111",
@@ -45,6 +51,7 @@ describe("AttendeesTable", () => {
     vi.restoreAllMocks();
     vi.useRealTimers();
     delete process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
+    refreshMock.mockReset();
   });
 
   it("reorders rows and persists order", async () => {
@@ -83,6 +90,32 @@ describe("AttendeesTable", () => {
     if (!firstCall || !firstCall[1]) throw new Error("Fetch call not captured");
     const body = JSON.parse(firstCall[1].body);
     expect(body.orderedUserIds).toEqual([secondAttendee.userId, firstAttendee.userId]);
+  });
+
+  it("refreshes after attendee cancellation", async () => {
+    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ok: true })
+      })
+    );
+    vi.stubGlobal("confirm", vi.fn(() => true));
+
+    render(<AttendeesTable eventId="e1" attendees={attendees} />);
+    const firstRow = screen.getByTestId(`attendee-row-${attendees[0]?.userId}`);
+    fireEvent.click(firstRow);
+    fireEvent.click(screen.getByRole("button", { name: "Cancel registration" }));
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://localhost:3000/api/admin/attendees",
+      expect.objectContaining({ method: "DELETE" })
+    );
+    expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 
   it("rolls back row order when persistence fails", async () => {
