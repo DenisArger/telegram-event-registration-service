@@ -117,14 +117,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     try {
       const attendees = await listEventAttendees(db, eventId);
-      const attendeeIds = attendees.map((item) => item.userId);
+      const activeAttendees = attendees.filter((item) => item.status === "registered");
+      const attendeeIds = activeAttendees.map((item) => item.userId);
       if (attendeeIds.length !== orderedUserIds.length) {
-        sendError(res, 400, ctx.requestId, "invalid_payload", "orderedUserIds must match event attendees");
+        sendError(res, 400, ctx.requestId, "invalid_payload", "orderedUserIds must match active attendees");
         return;
       }
       const attendeeSet = new Set(attendeeIds);
       if (!orderedUserIds.every((userId) => attendeeSet.has(userId))) {
-        sendError(res, 400, ctx.requestId, "invalid_payload", "orderedUserIds must match event attendees");
+        sendError(res, 400, ctx.requestId, "invalid_payload", "orderedUserIds must match active attendees");
         return;
       }
 
@@ -151,7 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   try {
     const attendees = await listEventAttendees(db, eventId);
-    if (!attendees.some((item) => item.userId === userId)) {
+    if (!attendees.some((item) => item.userId === userId && item.status === "registered")) {
       sendError(res, 400, ctx.requestId, "invalid_payload", "colorUpdate user must match event attendees");
       return;
     }

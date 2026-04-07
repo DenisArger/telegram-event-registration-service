@@ -94,8 +94,11 @@ describe("PUT /api/admin/attendees", () => {
     expect(resDuplicate.statusCode).toBe(400);
   });
 
-  it("returns 400 when ordered users do not match attendees", async () => {
-    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }, { userId: U2 }]);
+  it("returns 400 when ordered users do not match active attendees", async () => {
+    mocks.listEventAttendees.mockResolvedValueOnce([
+      { userId: U1, status: "registered" },
+      { userId: U2, status: "cancelled" }
+    ]);
     const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
 
@@ -108,12 +111,15 @@ describe("PUT /api/admin/attendees", () => {
       res as any
     );
 
-    expect(res.statusCode).toBe(400);
-    expect(mocks.saveEventAttendeeOrder).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+    expect(mocks.saveEventAttendeeOrder).toHaveBeenCalledWith(mocks.db, "e1", [U1]);
   });
 
   it("saves attendee order", async () => {
-    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }, { userId: U2 }]);
+    mocks.listEventAttendees.mockResolvedValueOnce([
+      { userId: U1, status: "registered" },
+      { userId: U2, status: "registered" }
+    ]);
     mocks.saveEventAttendeeOrder.mockResolvedValueOnce(undefined);
 
     const { default: handler } = await import("../../../api/admin/attendees");
@@ -134,7 +140,7 @@ describe("PUT /api/admin/attendees", () => {
   });
 
   it("returns 500 on failure", async () => {
-    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1, status: "registered" }]);
     mocks.saveEventAttendeeOrder.mockRejectedValueOnce(new Error("boom"));
 
     const { default: handler } = await import("../../../api/admin/attendees");
@@ -171,7 +177,7 @@ describe("PUT /api/admin/attendees", () => {
   });
 
   it("returns 400 when color user is not attendee", async () => {
-    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1, status: "registered" }]);
     const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
 
@@ -189,7 +195,7 @@ describe("PUT /api/admin/attendees", () => {
   });
 
   it("saves attendee row color", async () => {
-    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1, status: "registered" }]);
     mocks.saveEventAttendeeRowColor.mockResolvedValueOnce(undefined);
     const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
@@ -208,7 +214,7 @@ describe("PUT /api/admin/attendees", () => {
   });
 
   it("returns 500 on color save failure", async () => {
-    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1 }]);
+    mocks.listEventAttendees.mockResolvedValueOnce([{ userId: U1, status: "registered" }]);
     mocks.saveEventAttendeeRowColor.mockRejectedValueOnce(new Error("boom"));
     const { default: handler } = await import("../../../api/admin/attendees");
     const res = createRes();
