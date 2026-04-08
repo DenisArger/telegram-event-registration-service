@@ -24,7 +24,9 @@ export function PromoteWaitlistButton({
     setLoading(true);
     setMessage(null);
     try {
+      console.debug("[waitlist-promote] button click", { eventId, userId, organizationId });
       const result = await promoteWaitlistAttendee(eventId, userId, organizationId);
+      console.debug("[waitlist-promote] button result", { eventId, userId, organizationId, result });
       if (result?.status === "promoted") {
         setMessage(ru ? "Участник переведён в список участников." : "Moved to attendees.");
         router.refresh();

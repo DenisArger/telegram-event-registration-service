@@ -15,6 +15,7 @@ import promoteWaitlistUserHandler from "./promote-waitlist-user";
 import publishHandler from "./publish";
 import statsHandler from "./stats";
 import waitlistHandler from "./waitlist";
+import { logError, logInfo } from "@event/shared";
 
 type Handler = (req: VercelRequest, res: VercelResponse) => Promise<void> | void;
 
@@ -41,13 +42,26 @@ const HANDLERS_BY_ROUTE: Record<string, Handler> = {
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   const routeParam = req.query.route;
   const route = Array.isArray(routeParam) ? routeParam[0] : routeParam;
+  logInfo("admin_route_dispatch", {
+    route,
+    method: req.method,
+    path: req.url,
+    hasBody: Boolean(req.body),
+    bodyKeys: req.body && typeof req.body === "object" ? Object.keys(req.body as Record<string, unknown>) : []
+  });
   if (!route) {
+    logError("admin_route_missing", { path: req.url, query: req.query });
     res.status(404).json({ error: "Not found" });
     return;
   }
 
   const targetHandler = HANDLERS_BY_ROUTE[route];
   if (!targetHandler) {
+    logError("admin_route_unknown", {
+      route,
+      availableRoutes: Object.keys(HANDLERS_BY_ROUTE),
+      path: req.url
+    });
     res.status(404).json({ error: "Not found" });
     return;
   }

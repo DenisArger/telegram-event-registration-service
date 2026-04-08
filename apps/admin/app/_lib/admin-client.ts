@@ -44,27 +44,52 @@ export async function promoteWaitlistAttendee(
   eventId: string,
   userId: string,
   organizationId?: string
-): Promise<{ status?: "promoted" | "empty_waitlist" | "not_found"; user_id?: string } | null> {
+): Promise<{ status?: "promoted" | "empty_waitlist" | "not_found"; user_id?: string; requestId?: string } | null> {
   const base = getClientAdminApiBase();
-  if (!base) return null;
+  console.debug("[waitlist-promote] client base", { base, eventId, userId, organizationId });
+  if (!base) {
+    console.debug("[waitlist-promote] missing base");
+    return null;
+  }
 
   try {
+    const payload = {
+      eventId,
+      userId,
+      ...(organizationId ? { organizationId } : {})
+    };
+    console.debug("[waitlist-promote] request", { url: `${base}/api/admin/promote-waitlist-user`, payload });
+    const requestId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     const response = await fetch(`${base}/api/admin/promote-waitlist-user`, {
       method: "POST",
       headers: {
-        "content-type": "application/json"
+        "content-type": "application/json",
+        "x-request-id": requestId
       },
       credentials: "include",
-      body: JSON.stringify({
-        eventId,
-        userId,
-        ...(organizationId ? { organizationId } : {})
-      })
+      body: JSON.stringify(payload)
+    });
+    console.debug("[waitlist-promote] response", {
+      ok: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      requestId
     });
 
-    if (!response.ok) return null;
-    return (await response.json()) as { status?: "promoted" | "empty_waitlist" | "not_found"; user_id?: string };
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      console.debug("[waitlist-promote] error payload", payload);
+      return {
+        status: payload?.status ?? "not_found",
+        user_id: payload?.user_id,
+        requestId
+      };
+    }
+    const data = (await response.json()) as { status?: "promoted" | "empty_waitlist" | "not_found"; user_id?: string };
+    console.debug("[waitlist-promote] success payload", { ...data, requestId });
+    return { ...data, requestId };
   } catch {
+    console.debug("[waitlist-promote] network error");
     return null;
   }
 }
