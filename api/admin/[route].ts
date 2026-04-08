@@ -42,6 +42,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       const mod = await import("../../apps/bot/api/admin/promote.js");
       return mod.default(req, res);
     }
+    if (route === "promote-waitlist-user") {
+      const mod = await import("../../apps/bot/api/admin/promote-waitlist-user.js");
+      return mod.default(req, res);
+    }
     if (route === "publish") {
       const mod = await import("../../apps/bot/api/admin/publish.js");
       return mod.default(req, res);
