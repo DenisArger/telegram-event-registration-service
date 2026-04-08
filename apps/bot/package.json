@@ -12,7 +12,7 @@
   "dependencies": {
     "@event/db": "0.1.0",
     "@event/shared": "0.1.0",
-    "@vercel/node": "^5.1.15",
+    "@vercel/node": "^5.7.1",
     "telegraf": "^4.16.3",
     "zod": "^3.24.2"
   },
