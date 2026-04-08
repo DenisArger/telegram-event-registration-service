@@ -188,6 +188,34 @@ export async function getWaitlist(eventId: string, organizationId?: string): Pro
   }
 }
 
+export async function promoteWaitlistUser(eventId: string, userId: string, organizationId?: string): Promise<{
+  status: "promoted" | "empty_waitlist" | "not_found";
+  user_id?: string;
+}> {
+  const cfg = getAdminConfig();
+  if (!cfg) return { status: "not_found" };
+  const cookieHeader = await getServerCookieHeader();
+  const url = withOrganizationParam(new URL("/api/admin/promote-waitlist-user", cfg.base), organizationId);
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "content-type": "application/json",
+        ...(cookieHeader ? { cookie: cookieHeader } : {})
+      },
+      body: JSON.stringify({ eventId, userId })
+    });
+    if (!response.ok) {
+      return { status: "not_found" };
+    }
+    return (await response.json()) as { status: "promoted" | "empty_waitlist" | "not_found"; user_id?: string };
+  } catch {
+    return { status: "not_found" };
+  }
+}
+
 export async function getStats(eventId: string, organizationId?: string): Promise<EventStats | null> {
   const cfg = getAdminConfig();
   if (!cfg) return null;

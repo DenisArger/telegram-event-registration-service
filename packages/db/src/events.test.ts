@@ -12,6 +12,7 @@ import {
   saveEventAttendeeOrder,
   saveEventAttendeeRowColor,
   promoteNextFromWaitlist,
+  promoteWaitlistUser,
   publishEvent,
   upsertEventQuestions
 } from "./events";
@@ -422,6 +423,16 @@ describe("events data layer", () => {
     const result = await promoteNextFromWaitlist(db, "e1");
 
     expect(rpc).toHaveBeenCalledWith("promote_next_waitlist", { p_event_id: "e1" });
+    expect(result.status).toBe("promoted");
+  });
+
+  it("promoteWaitlistUser calls rpc", async () => {
+    const rpc = vi.fn(async () => ({ data: { status: "promoted", user_id: "u2" }, error: null }));
+    const db = { rpc } as any;
+
+    const result = await promoteWaitlistUser(db, "e1", "u2");
+
+    expect(rpc).toHaveBeenCalledWith("promote_waitlist_user", { p_event_id: "e1", p_user_id: "u2" });
     expect(result.status).toBe("promoted");
   });
 

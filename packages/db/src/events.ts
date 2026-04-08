@@ -450,6 +450,20 @@ export async function promoteNextFromWaitlist(
   return data as { status: "promoted" | "empty_waitlist"; user_id?: string };
 }
 
+export async function promoteWaitlistUser(
+  db: SupabaseClient,
+  eventId: string,
+  userId: string
+): Promise<{ status: "promoted" | "empty_waitlist" | "not_found"; user_id?: string }> {
+  const { data, error } = await db.rpc("promote_waitlist_user", {
+    p_event_id: eventId,
+    p_user_id: userId
+  });
+
+  if (error) throw error;
+  return data as { status: "promoted" | "empty_waitlist" | "not_found"; user_id?: string };
+}
+
 export async function listEventQuestions(
   db: SupabaseClient,
   eventId: string

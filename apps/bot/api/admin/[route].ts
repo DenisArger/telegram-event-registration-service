@@ -11,6 +11,7 @@ import organizationWebhookHandler from "./organization-webhook";
 import organizationMembersHandler from "./organization-members";
 import organizationTransferOwnershipHandler from "./organization-transfer-ownership";
 import promoteHandler from "./promote";
+import promoteWaitlistUserHandler from "./promote-waitlist-user";
 import publishHandler from "./publish";
 import statsHandler from "./stats";
 import waitlistHandler from "./waitlist";
@@ -31,6 +32,7 @@ const HANDLERS_BY_ROUTE: Record<string, Handler> = {
   "organization-members": organizationMembersHandler,
   "organization-transfer-ownership": organizationTransferOwnershipHandler,
   promote: promoteHandler,
+  "promote-waitlist-user": promoteWaitlistUserHandler,
   publish: publishHandler,
   stats: statsHandler,
   waitlist: waitlistHandler

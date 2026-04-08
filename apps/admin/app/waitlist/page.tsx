@@ -8,6 +8,7 @@ import { EmptyState } from "../_components/ui/empty-state";
 import { PageHeader } from "../_components/ui/page-header";
 import { Panel } from "../_components/ui/panel";
 import { EmojiText } from "../_components/emoji-text";
+import { PromoteWaitlistButton } from "./promote-waitlist-button";
 
 export default async function WaitlistPage({
   searchParams
@@ -62,6 +63,7 @@ export default async function WaitlistPage({
                   <th>#</th>
                   <th>{ui("attendees_column_name", locale)}</th>
                   <th>{ui("attendees_column_username", locale)}</th>
+                  <th>{ui("attendees_column_status", locale)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -70,6 +72,13 @@ export default async function WaitlistPage({
                     <td>{entry.position}</td>
                     <td>{entry.fullName}</td>
                     <td>{entry.username ? `@${entry.username}` : "-"}</td>
+                    <td>
+                      <PromoteWaitlistButton
+                        eventId={selectedEventId!}
+                        userId={entry.userId}
+                        organizationId={selectedOrganizationId ?? undefined}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

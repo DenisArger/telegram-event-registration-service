@@ -39,3 +39,32 @@ export async function cancelAttendeeRegistration(
     return false;
   }
 }
+
+export async function promoteWaitlistAttendee(
+  eventId: string,
+  userId: string,
+  organizationId?: string
+): Promise<{ status?: "promoted" | "empty_waitlist" | "not_found"; user_id?: string } | null> {
+  const base = getClientAdminApiBase();
+  if (!base) return null;
+
+  try {
+    const response = await fetch(`${base}/api/admin/promote-waitlist-user`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        eventId,
+        userId,
+        ...(organizationId ? { organizationId } : {})
+      })
+    });
+
+    if (!response.ok) return null;
+    return (await response.json()) as { status?: "promoted" | "empty_waitlist" | "not_found"; user_id?: string };
+  } catch {
+    return null;
+  }
+}

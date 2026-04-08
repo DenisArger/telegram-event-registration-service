@@ -7,6 +7,9 @@ vi.mock("../_components/event-selector", () => ({
 vi.mock("../_components/organization-selector", () => ({
   OrganizationSelector: () => "org-selector"
 }));
+vi.mock("./promote-waitlist-button", () => ({
+  PromoteWaitlistButton: () => "promote-btn"
+}));
 vi.mock("../_lib/admin-api", () => ({
   getAuthMe: vi.fn(async () => ({
     authenticated: true,
@@ -27,5 +30,6 @@ describe("WaitlistPage", () => {
     expect(html).toContain("selector");
     expect(html).toContain(">1<");
     expect(html).toContain("Jane");
+    expect(html).toContain("promote-btn");
   });
 });
