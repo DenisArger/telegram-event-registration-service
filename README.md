@@ -85,6 +85,11 @@ yarn typecheck
 yarn test
 ```
 
+Commit workflow:
+- Commit messages follow Conventional Commits, validated by `commitlint` in `.husky/commit-msg`.
+- `pre-commit` and `pre-push` both run `yarn verify` (`yarn build && yarn test`).
+- Husky is activated automatically from `prepare` after `yarn install`.
+
 Admin build check:
 ```bash
 yarn workspace @event/admin build
@@ -184,6 +189,11 @@ yarn lint
 yarn typecheck
 yarn test
 ```
+
+Workflow коммитов:
+- Сообщения коммитов следуют Conventional Commits и проверяются `commitlint` в `.husky/commit-msg`.
+- `pre-commit` и `pre-push` запускают `yarn verify` (`yarn build && yarn test`).
+- Husky поднимается автоматически через `prepare` после `yarn install`.
 
 Проверка сборки админки:
 ```bash
