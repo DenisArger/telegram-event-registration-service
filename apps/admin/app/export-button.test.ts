@@ -44,11 +44,12 @@ describe("ExportButton", () => {
     await screen.findByText("Export not allowed");
   });
 
-  it("downloads csv on success", async () => {
+  it("downloads excel on success", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
 
     const createObjectURL = vi.fn(() => "blob:url");
     const revokeObjectURL = vi.fn();
+    const setTimeoutSpy = vi.spyOn(window, "setTimeout");
 
     vi.stubGlobal("URL", { createObjectURL, revokeObjectURL } as any);
 
@@ -66,7 +67,8 @@ describe("ExportButton", () => {
     await screen.findByText("Excel downloaded.");
 
     expect(createObjectURL).toHaveBeenCalled();
-    expect(revokeObjectURL).toHaveBeenCalledWith("blob:url");
+    expect(setTimeoutSpy).toHaveBeenCalled();
+    expect(revokeObjectURL).not.toHaveBeenCalled();
   });
 
   it("handles network error", async () => {
