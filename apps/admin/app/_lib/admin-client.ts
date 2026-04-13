@@ -1,10 +1,10 @@
 export function getClientAdminApiBase(): string | null {
+  const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
+  if (base) return base;
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
-  const base = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
-  if (!base) return null;
-  return base;
+  return null;
 }
 
 export function missingClientApiBaseMessage(ru: boolean): string {

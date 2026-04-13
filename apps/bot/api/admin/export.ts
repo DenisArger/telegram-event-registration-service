@@ -39,7 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.setHeader("x-request-id", ctx.requestId);
     res.setHeader("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("content-disposition", `attachment; filename=\"event-${eventId}.xlsx\"`);
-    res.status(200).send(workbook);
+    res.setHeader("content-length", String(workbook.length));
+    res.status(200).end(workbook);
   } catch (error) {
     logError("admin_export_failed", { error, eventId, requestId: ctx.requestId });
     sendError(res, 500, ctx.requestId, "export_failed", "Failed to export Excel");

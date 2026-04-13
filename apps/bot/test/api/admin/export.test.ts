@@ -69,8 +69,7 @@ describe("GET /api/admin/export", () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toContain("spreadsheetml.sheet");
     expect(res.headers["content-disposition"]).toContain("event-e1.xlsx");
-    expect(Buffer.isBuffer(res.payload)).toBe(true);
-    expect((res.payload as Buffer).toString()).toBe("xlsx-content");
+    expect(res.end).toHaveBeenCalledWith(Buffer.from("xlsx-content"));
   });
 
   it("returns 500 when export fails", async () => {

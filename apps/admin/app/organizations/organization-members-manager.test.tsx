@@ -142,7 +142,7 @@ describe("OrganizationMembersManager", () => {
     });
 
     const firstCall = fetchMock.mock.calls[0];
-    expect(firstCall?.[0]).toBe("http://localhost:3000/api/admin/organization-members");
+    expect(firstCall?.[0]).toBe("https://api.example/api/admin/organization-members");
     const payload = JSON.parse((firstCall?.[1] as any).body);
     expect(payload).toEqual({
       organizationId: "11111111-1111-4111-8111-111111111111",
