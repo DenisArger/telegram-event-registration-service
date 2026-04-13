@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createServiceClient, listEventAttendees, listEventWaitlist } from "@event/db";
 import { logError } from "@event/shared";
 import { requireAdminSession, sendError } from "../../src/adminApi.js";
-import { buildEventExportCsv } from "../../src/csv.js";
+import { buildEventExportWorkbook } from "../../src/exportWorkbook.js";
 import { applyCors } from "../../src/cors.js";
 import { readEventId, readOrganizationId, requireEventOrganizationAccess } from "../../src/adminOrgAccess.js";
 
@@ -35,13 +35,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       listEventWaitlist(db, eventId)
     ]);
 
-    const csv = buildEventExportCsv(eventId, attendees, waitlist);
+    const workbook = await buildEventExportWorkbook(eventId, attendees, waitlist);
     res.setHeader("x-request-id", ctx.requestId);
-    res.setHeader("content-type", "text/csv; charset=utf-8");
-    res.setHeader("content-disposition", `attachment; filename=\"event-${eventId}.csv\"`);
-    res.status(200).send(csv);
+    res.setHeader("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("content-disposition", `attachment; filename=\"event-${eventId}.xlsx\"`);
+    res.status(200).send(workbook);
   } catch (error) {
     logError("admin_export_failed", { error, eventId, requestId: ctx.requestId });
-    sendError(res, 500, ctx.requestId, "export_failed", "Failed to export CSV");
+    sendError(res, 500, ctx.requestId, "export_failed", "Failed to export Excel");
   }
 }

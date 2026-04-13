@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   db: {},
   listEventAttendees: vi.fn(),
   listEventWaitlist: vi.fn(),
-  buildEventExportCsv: vi.fn(),
+  buildEventExportWorkbook: vi.fn(),
   logError: vi.fn()
 }));
 
@@ -15,8 +15,8 @@ vi.mock("@event/db", () => ({
   listEventWaitlist: mocks.listEventWaitlist
 }));
 
-vi.mock("../../../src/csv", () => ({
-  buildEventExportCsv: mocks.buildEventExportCsv
+vi.mock("../../../src/exportWorkbook", () => ({
+  buildEventExportWorkbook: mocks.buildEventExportWorkbook
 }));
 
 vi.mock("@event/shared", async () => {
@@ -49,10 +49,10 @@ describe("GET /api/admin/export", () => {
     expect(resEvent.statusCode).toBe(400);
   });
 
-  it("returns csv with download headers", async () => {
+  it("returns xlsx with download headers", async () => {
     mocks.listEventAttendees.mockResolvedValueOnce([{ userId: "u1" }]);
     mocks.listEventWaitlist.mockResolvedValueOnce([{ userId: "u2" }]);
-    mocks.buildEventExportCsv.mockReturnValueOnce("csv-content");
+    mocks.buildEventExportWorkbook.mockResolvedValueOnce(Buffer.from("xlsx-content"));
 
     const { default: handler } = await import("../../../api/admin/export");
     const res = createRes();
@@ -67,9 +67,10 @@ describe("GET /api/admin/export", () => {
     );
 
     expect(res.statusCode).toBe(200);
-    expect(res.headers["content-type"]).toContain("text/csv");
-    expect(res.headers["content-disposition"]).toContain("event-e1.csv");
-    expect(res.payload).toBe("csv-content");
+    expect(res.headers["content-type"]).toContain("spreadsheetml.sheet");
+    expect(res.headers["content-disposition"]).toContain("event-e1.xlsx");
+    expect(Buffer.isBuffer(res.payload)).toBe(true);
+    expect((res.payload as Buffer).toString()).toBe("xlsx-content");
   });
 
   it("returns 500 when export fails", async () => {

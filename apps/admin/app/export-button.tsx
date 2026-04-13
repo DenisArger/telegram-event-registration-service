@@ -22,17 +22,14 @@ export function ExportButton({ eventId, organizationId }: { eventId: string; org
     try {
       const params = new URLSearchParams({ eventId });
       if (organizationId) params.set("organizationId", organizationId);
-      const response = await fetch(
-        `${base}/api/admin/export?${params.toString()}`,
-        {
-          method: "GET",
-          credentials: "include"
-        }
-      );
+      const response = await fetch(`${base}/api/admin/export?${params.toString()}`, {
+        method: "GET",
+        credentials: "include"
+      });
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        setMessage(err?.message ?? (ru ? "Не удалось экспортировать CSV." : "Export failed."));
+        setMessage(err?.message ?? (ru ? "Не удалось экспортировать Excel." : "Export failed."));
         return;
       }
 
@@ -40,12 +37,12 @@ export function ExportButton({ eventId, organizationId }: { eventId: string; org
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `event-${eventId}.csv`;
+      a.download = `event-${eventId}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      setMessage(ru ? "CSV скачан." : "CSV downloaded.");
+      setMessage(ru ? "Excel скачан." : "Excel downloaded.");
     } catch {
       setMessage(ru ? "Сетевая ошибка." : "Network error.");
     } finally {
@@ -56,7 +53,7 @@ export function ExportButton({ eventId, organizationId }: { eventId: string; org
   return (
     <div className="grid gap-2">
       <Button onClick={onExport} loading={loading}>
-        {loading ? (ru ? "Экспорт..." : "Exporting...") : "Export CSV"}
+        {loading ? (ru ? "Экспорт..." : "Exporting...") : "Export Excel"}
       </Button>
       {message ? <InlineAlert message={message} tone="info" /> : null}
     </div>

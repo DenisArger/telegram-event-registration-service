@@ -23,7 +23,7 @@ describe("ExportButton", () => {
 
     render(React.createElement(ExportButton, { eventId: "e1" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export Excel" }));
     await screen.findByText("Export not allowed");
   });
 
@@ -40,7 +40,7 @@ describe("ExportButton", () => {
 
     render(React.createElement(ExportButton, { eventId: "e1" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export Excel" }));
     await screen.findByText("Export not allowed");
   });
 
@@ -62,8 +62,8 @@ describe("ExportButton", () => {
 
     render(React.createElement(ExportButton, { eventId: "e1" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
-    await screen.findByText("CSV downloaded.");
+    fireEvent.click(screen.getByRole("button", { name: "Export Excel" }));
+    await screen.findByText("Excel downloaded.");
 
     expect(createObjectURL).toHaveBeenCalled();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:url");
@@ -75,7 +75,7 @@ describe("ExportButton", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
 
     render(React.createElement(ExportButton, { eventId: "e1" }));
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export Excel" }));
 
     await screen.findByText("Network error.");
   });
