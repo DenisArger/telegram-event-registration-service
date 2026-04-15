@@ -20,7 +20,7 @@ export function applyCors(req: VercelRequest, res: VercelResponse): boolean {
   res.setHeader("access-control-allow-origin", resolveCorsOrigin(req, process.env));
   res.setHeader("access-control-allow-methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.setHeader("access-control-allow-credentials", "true");
-  res.setHeader("access-control-allow-headers", "content-type,x-admin-email");
+  res.setHeader("access-control-allow-headers", "content-type,x-admin-email,x-request-id");
 
   if (req.method === "OPTIONS") {
     res.status(204).end();

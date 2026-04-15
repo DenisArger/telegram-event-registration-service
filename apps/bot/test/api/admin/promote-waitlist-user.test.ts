@@ -32,6 +32,11 @@ describe("POST /api/admin/promote-waitlist-user", () => {
   it("validates method, auth and body", async () => {
     const { default: handler } = await import("../../../api/admin/promote-waitlist-user");
 
+    const resOptions = createRes();
+    await handler({ method: "OPTIONS", headers: {}, body: {} } as any, resOptions as any);
+    expect(resOptions.statusCode).toBe(204);
+    expect(resOptions.headers["access-control-allow-headers"]).toContain("x-request-id");
+
     const resMethod = createRes();
     await handler({ method: "GET", headers: {}, body: {} } as any, resMethod as any);
     expect(resMethod.statusCode).toBe(405);
