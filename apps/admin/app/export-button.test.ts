@@ -30,18 +30,17 @@ describe("ExportButton", () => {
   it("handles failed response", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: false,
-        json: async () => ({ message: "Export not allowed" })
-      })
-    );
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({ message: "Export not allowed" })
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(React.createElement(ExportButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Export Excel" }));
     await screen.findByText("Export not allowed");
+    expect(fetchMock.mock.calls[0]?.[0]).toContain("http://localhost:3000/api/admin/export");
   });
 
   it("downloads excel on success", async () => {

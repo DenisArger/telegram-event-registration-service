@@ -82,7 +82,7 @@ describe("AttendeesTable", () => {
 
     await vi.runAllTimersAsync();
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.example/api/admin/attendees",
+      "http://localhost:3000/api/admin/attendees",
       expect.objectContaining({ method: "PUT" })
     );
 
@@ -112,7 +112,7 @@ describe("AttendeesTable", () => {
     await Promise.resolve();
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.example/api/admin/attendees",
+      "http://localhost:3000/api/admin/attendees",
       expect.objectContaining({ method: "DELETE" })
     );
     expect(refreshMock).toHaveBeenCalledTimes(1);

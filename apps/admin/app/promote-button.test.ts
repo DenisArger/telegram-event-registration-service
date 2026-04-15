@@ -29,18 +29,17 @@ describe("PromoteButton", () => {
   it("shows waitlist empty state", async () => {
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL = "https://api.example";
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ status: "empty_waitlist" })
-      })
-    );
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: "empty_waitlist" })
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
     render(React.createElement(PromoteButton, { eventId: "e1" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Promote next from waitlist" }));
     await screen.findByText("Waitlist is empty.");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("http://localhost:3000/api/admin/promote");
   });
 
   it("shows promoted user", async () => {
